@@ -20,11 +20,21 @@ export async function POST(req: Request) {
       return NextResponse.json({ error: 'Data pendaftaran tidak lengkap.' }, { status: 400 });
     }
 
+    const cleanUsername = username.trim().toLowerCase();
+    const usernameRegex = /^[a-z._]{4,}$/;
+    if (!usernameRegex.test(cleanUsername)) {
+      return NextResponse.json({ error: 'Username minimal 4 karakter dan hanya boleh berisi huruf kecil, titik, dan garis bawah.' }, { status: 400 });
+    }
+
+    if (password.length < 6) {
+      return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+    }
+
     // 1. Check if username is taken (Case-insensitive)
     const { data: existingProfile, error: profileCheckError } = await supabaseAdmin
       .from('profiles')
       .select('id')
-      .ilike('username', username.trim())
+      .ilike('username', cleanUsername)
       .maybeSingle();
 
     if (profileCheckError) {
@@ -40,7 +50,7 @@ export async function POST(req: Request) {
     const { data: tag, error: tagError } = await supabaseAdmin
       .from('nfc_tags')
       .select('id, user_id')
-      .ilike('token', nfcTagCode.trim())
+      .eq('token', nfcTagCode.trim())
       .maybeSingle();
 
     if (tagError) {
@@ -64,7 +74,7 @@ export async function POST(req: Request) {
       email_confirm: true,
       phone_confirm: true,
       user_metadata: {
-        username: username,
+        username: cleanUsername,
         full_name: username,
       }
     });
@@ -74,18 +84,23 @@ export async function POST(req: Request) {
     }
 
     // 3. Link tag to the newly created user
-    const { error: tagLinkError } = await supabaseAdmin
+    const { data: updatedTag, error: tagLinkError } = await supabaseAdmin
       .from('nfc_tags')
       .update({ 
         user_id: data.user!.id,
         status: 'active',
         tag_name: 'Tag Utama'
       })
-      .eq('id', tag.id);
+      .eq('id', tag.id)
+      .is('user_id', null)
+      .select()
+      .maybeSingle();
 
-    if (tagLinkError) {
-      console.error('Failed to link tag during registration:', tagLinkError);
-      // We still proceed since user is created, but we could notify admin or log it heavily.
+    if (tagLinkError || !updatedTag) {
+      console.error('Failed to link tag during registration. Possible race condition.', tagLinkError);
+      // Delete the created user if tag linking failed to avoid orphaned accounts without tags
+      await supabaseAdmin.auth.admin.deleteUser(data.user!.id);
+      return NextResponse.json({ error: 'Gagal menautkan tag NFC. Tag mungkin sudah digunakan. Silakan coba lagi dengan tag baru.' }, { status: 400 });
     }
 
     // Await the email sending so the server doesn't terminate before it completes.

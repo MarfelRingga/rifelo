@@ -5,14 +5,13 @@ import Link from 'next/link';
 import { ExternalLink, Loader2, AlertCircle, RefreshCw, CheckCircle2, Eye, EyeOff } from 'lucide-react';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
-import { formatIndonesianPhoneNumber } from '@/lib/phone';
 
 export default function ForgotPasswordPage() {
   const [supportLink, setSupportLink] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   
   // Form state
-  const [phone, setPhone] = useState('');
+  const [identifier, setIdentifier] = useState('');
   const [code, setCode] = useState('');
   const [newPassword, setNewPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
@@ -53,16 +52,13 @@ export default function ForgotPasswordPage() {
     setIsSubmitting(true);
 
     try {
-      // Format phone number (ensure it has + prefix if needed)
-      const formattedPhone = formatIndonesianPhoneNumber(phone);
-
       const response = await fetch('/api/auth/reset-password', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          phone: formattedPhone,
+          identifier: identifier.trim(),
           code,
           newPassword,
         }),
@@ -76,7 +72,7 @@ export default function ForgotPasswordPage() {
 
       setSuccess(true);
     } catch (err: any) {
-      setError('Gagal mengatur ulang kata sandi. Silakan periksa kembali kode Anda dan coba lagi.');
+      setError(err.message || 'Gagal mengatur ulang kata sandi. Silakan periksa kembali kode Anda dan coba lagi.');
     } finally {
       setIsSubmitting(false);
     }
@@ -97,7 +93,7 @@ export default function ForgotPasswordPage() {
           Reset password
         </h2>
         <p className="mt-2 text-center text-sm text-[#0c0e0b]/70 px-4 sm:px-0">
-          Enter your phone number, the reset code from admin, and your new password.
+          Enter your phone number or email, the reset code from admin, and your new password.
         </p>
       </div>
 
@@ -128,23 +124,19 @@ export default function ForgotPasswordPage() {
               )}
 
               <div>
-                <label htmlFor="phone" className="block text-sm font-medium text-[#0c0e0b]">
-                  Phone Number
+                <label htmlFor="identifier" className="block text-sm font-medium text-[#0c0e0b]">
+                  Email or Phone Number
                 </label>
                 <div className="mt-2 flex rounded-xl shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#a299af] bg-[#F4F3EE]/50 overflow-hidden">
-                  <span className="flex select-none items-center pl-4 pr-3 text-[#0c0e0b]/60 sm:text-sm border-r border-[#aaafbc]/20 font-medium">
-                    +62
-                  </span>
                   <input
-                    id="phone"
-                    name="phone"
-                    type="tel"
-                    autoComplete="tel"
+                    id="identifier"
+                    name="identifier"
+                    type="text"
                     required
-                    value={phone}
-                    onChange={(e) => setPhone(e.target.value)}
-                    className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-3"
-                    placeholder="Phone number"
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
+                    className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-4"
+                    placeholder="mail@example.com / 0812..."
                   />
                 </div>
               </div>

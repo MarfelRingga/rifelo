@@ -123,13 +123,13 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
       primary: '#7c3aed', // Purple
       secondary: '#f3f4f6', // Light gray
       accent: '#ec4899', // Pink
-      background: '#ffffff',
+      background: 'linear-gradient(135deg, #fdf4ff 0%, #e0e7ff 100%)', // Fuchsia 50 to Indigo 100
       text: '#111827',
-      cardBg: 'linear-gradient(135deg, #fce7f3 0%, #dbeafe 100%)',
+      cardBg: 'rgba(255, 255, 255, 0.7)',
       cardBorder: '#7c3aed20',
-      linkBg: '#f3f4f6',
+      linkBg: 'rgba(255, 255, 255, 0.6)',
       linkBorder: 'transparent',
-      inputBg: '#ffffff',
+      inputBg: 'rgba(255, 255, 255, 0.8)',
       inputBorder: '#11182720'
     },
     fonts: {
@@ -144,12 +144,12 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     mode: ['creative'],
     colors: {
       primary: '#ffffff',
-      secondary: '#1e293b', // Slate 800
-      accent: '#38bdf8', // Sky 400
-      background: 'linear-gradient(to bottom right, #0f172a, #312e81)',
+      secondary: 'rgba(255, 255, 255, 0.1)',
+      accent: '#818cf8', // Indigo 400 (softer, doesn't clash)
+      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', // Slate 900 to Indigo 950
       text: '#f8fafc',
-      cardBg: 'rgba(255, 255, 255, 0.1)',
-      cardBorder: 'rgba(255, 255, 255, 0.2)',
+      cardBg: 'rgba(255, 255, 255, 0.08)',
+      cardBorder: 'rgba(255, 255, 255, 0.15)',
       linkBg: 'rgba(255, 255, 255, 0.05)',
       linkBorder: 'rgba(255, 255, 255, 0.1)',
       inputBg: 'rgba(255, 255, 255, 0.05)',

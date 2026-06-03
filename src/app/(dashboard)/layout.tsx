@@ -309,7 +309,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     switch (activeWorkspace.type) {
       case 'photobooth':
         return [
-          { name: 'App Terminals', href: `/queue-hub/${activeWorkspace.eventCode}`, icon: Camera, show: true },
+          { name: 'Queue Manager', href: `/queue-hub/${activeWorkspace.eventCode}`, icon: Camera, show: true },
         ];
       case 'circle':
         return [
@@ -332,7 +332,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           { name: 'My Digital ID', href: '/profile', icon: User, show: true },
           { name: 'Inbox', href: '/inbox', icon: MessageSquare, show: true },
           { name: 'NFC Tags', href: '/tags', icon: ScanLine, show: true },
-          { name: 'Queue Manager', href: '/admin/queues', icon: Camera, show: true },
           { name: 'Settings', href: '/settings', icon: Settings, show: true },
         ];
     }
@@ -766,7 +765,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 type="text"
                 value={joinCode}
                 onChange={(e) => setJoinCode(e.target.value)}
-                placeholder="ENTER ACTIVATION CODE"
+                placeholder="ENTER CODE"
                 className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 focus:border-transparent transition-all uppercase placeholder:normal-case font-medium text-center tracking-widest text-sm"
                 required
               />

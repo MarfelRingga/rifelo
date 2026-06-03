@@ -13,7 +13,12 @@ function SignupForm() {
   const searchParams = useSearchParams();
   const claimToken = searchParams.get('claimToken');
   const redirectParamsUrl = searchParams.get('redirect');
-  const redirectUrl = redirectParamsUrl || '/profile';
+  
+  // Safe redirect validation
+  let redirectUrl = '/profile';
+  if (redirectParamsUrl && redirectParamsUrl.startsWith('/') && !redirectParamsUrl.startsWith('//')) {
+    redirectUrl = redirectParamsUrl;
+  }
 
   const [username, setUsername] = useState('');
   const [email, setEmail] = useState('');

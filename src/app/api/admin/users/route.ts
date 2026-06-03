@@ -47,12 +47,13 @@ export async function GET(request: Request) {
     
     if (authUsersError) throw authUsersError;
 
-    // Merge phone numbers into profiles
+    // Merge phone numbers and emails into profiles
     const mergedProfiles = profiles.map(p => {
       const authUser = authUsers.users.find(u => u.id === p.id);
       return {
         ...p,
-        phone: authUser?.phone || p.phone || null
+        phone: authUser?.phone || p.phone || null,
+        email: authUser?.email || p.email || null
       };
     });
 

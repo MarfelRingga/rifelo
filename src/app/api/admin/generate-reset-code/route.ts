@@ -35,19 +35,21 @@ export async function POST(request: Request) {
     }
 
     // 3. Process Request
-    const { phone } = await request.json();
+    const { phone, identifier } = await request.json();
+    const finalIdentifier = identifier || phone;
 
-    if (!phone) {
-      return NextResponse.json({ error: 'Phone number is required' }, { status: 400 });
+    if (!finalIdentifier) {
+      return NextResponse.json({ error: 'Phone number or Email is required' }, { status: 400 });
     }
 
     // Generate a 6-digit code
     const code = Math.floor(100000 + Math.random() * 900000).toString();
 
+    // we will save it in phone column for backward compatibility, although it could be an email
     const { error: insertError } = await supabaseAdmin
       .from('reset_codes')
       .insert({
-        phone: phone,
+        phone: finalIdentifier,
         secret_code: code,
         is_used: false,
         created_at: new Date().toISOString()

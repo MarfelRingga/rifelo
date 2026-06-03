@@ -11,6 +11,7 @@ interface Profile {
   full_name: string;
   username: string;
   phone: string | null;
+  email: string | null;
   is_admin: boolean;
   created_at: string;
 }
@@ -21,7 +22,7 @@ export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('');
   const [copiedId, setCopiedId] = useState<string | null>(null);
   const [adminToggleInfo, setAdminToggleInfo] = useState<{ userId: string; currentStatus: boolean } | null>(null);
-  const [resetCodeInfo, setResetCodeInfo] = useState<{ userId: string; phone: string } | null>(null);
+  const [resetCodeInfo, setResetCodeInfo] = useState<{ userId: string; identifier: string; identifierType: 'phone' | 'email' } | null>(null);
   const [generatedCode, setGeneratedCode] = useState<string | null>(null);
   const [isGeneratingCode, setIsGeneratingCode] = useState(false);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
@@ -112,7 +113,7 @@ export default function AdminUsersPage() {
           'Authorization': `Bearer ${session.access_token}`
         },
         body: JSON.stringify({
-          phone: resetCodeInfo.phone
+          identifier: resetCodeInfo.identifier
         })
       });
 
@@ -214,8 +215,8 @@ export default function AdminUsersPage() {
               {!generatedCode ? (
                 <>
                   <p className="text-slate-500 mb-6">
-                    Generate a password reset code for phone number: <br/>
-                    <strong className="text-slate-700">{resetCodeInfo.phone}</strong>
+                    Generate a password reset code for {resetCodeInfo.identifierType}: <br/>
+                    <strong className="text-slate-700">{resetCodeInfo.identifier}</strong>
                   </p>
                   <button
                     onClick={generateResetCode}
@@ -331,13 +332,20 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4">
                       <div className="text-slate-600 space-y-1">
-                        {user.phone ? (
-                          <div className="flex items-center gap-1.5">
+                        {user.phone && (
+                          <div className="flex items-center gap-1.5 text-xs">
                             <Phone className="w-3 h-3" />
                             {user.phone}
                           </div>
-                        ) : (
-                          <span className="text-slate-400 italic">No phone</span>
+                        )}
+                        {user.email && (
+                          <div className="flex items-center gap-1.5 text-xs">
+                            <Mail className="w-3 h-3" />
+                            {user.email}
+                          </div>
+                        )}
+                        {!user.phone && !user.email && (
+                          <span className="text-slate-400 italic text-xs">No contact Info</span>
                         )}
                       </div>
                     </td>
@@ -369,9 +377,13 @@ export default function AdminUsersPage() {
                     </td>
                     <td className="px-6 py-4 text-right">
                       <div className="flex items-center justify-end gap-2">
-                        {user.phone && (
+                        {(user.phone || user.email) && (
                           <button
-                            onClick={() => setResetCodeInfo({ userId: user.id, phone: user.phone! })}
+                            onClick={() => setResetCodeInfo({ 
+                              userId: user.id, 
+                              identifier: user.phone || user.email!,
+                              identifierType: user.phone ? 'phone' : 'email'
+                            })}
                             className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-colors"
                             title="Generate Reset Code"
                           >

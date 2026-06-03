@@ -11,7 +11,11 @@ import { formatIndonesianPhoneNumber } from '@/lib/phone';
 function LoginForm() {
   const router = useRouter();
   const searchParams = useSearchParams();
-  const redirectUrl = searchParams.get('redirect') || '/profile';
+  const redirectParamsUrl = searchParams.get('redirect');
+  let redirectUrl = '/profile';
+  if (redirectParamsUrl && redirectParamsUrl.startsWith('/') && !redirectParamsUrl.startsWith('//')) {
+    redirectUrl = redirectParamsUrl;
+  }
   
   const [identifier, setIdentifier] = useState('');
   const [password, setPassword] = useState('');

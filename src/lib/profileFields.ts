@@ -16,7 +16,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
     },
     job_title: {
       label: 'Status/Headline',
-      placeholder: 'e.g., Siswa SMA, Lagi sibuk ujian...',
+      placeholder: 'Siswa SMA, Lagi butuh healing...',
       type: 'text',
       required: false,
       icon: 'Smile',

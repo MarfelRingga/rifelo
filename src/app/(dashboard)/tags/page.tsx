@@ -59,6 +59,9 @@ function NFCTagsContent() {
   const [isCircleWorkspace, setIsCircleWorkspace] = useState(false);
   const [deleteId, setDeleteId] = useState<string | null>(null);
   const [errorMessage, setErrorMessage] = useState<string | null>(null);
+  
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [hasQueueMode, setHasQueueMode] = useState(false);
 
   // Dropdown States
   const [isInteractionModeOpen, setIsInteractionModeOpen] = useState(false);
@@ -125,6 +128,17 @@ function NFCTagsContent() {
       setIsCircleWorkspace(saved !== 'personal' && saved !== 'admin');
     }
 
+    // Check for array in pb_events
+    try {
+      const storedPb = localStorage.getItem('pb_events');
+      if (storedPb) {
+        const events = JSON.parse(storedPb);
+        if (Array.isArray(events) && events.length > 0) {
+          setHasQueueMode(true);
+        }
+      }
+    } catch (_) {}
+
     const handleWorkspaceChange = () => {
       const newSaved = localStorage.getItem('activeWorkspaceId');
       if (newSaved) {
@@ -167,6 +181,7 @@ function NFCTagsContent() {
         .maybeSingle();
 
       if (profile?.is_admin) {
+        setIsAdmin(true);
         // Admins see all circles
         const { data: allCircles, error: circlesError } = await supabase
           .from('circles')
@@ -557,7 +572,7 @@ function NFCTagsContent() {
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
                     placeholder="Enter the code on your physical tag"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all font-mono"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400 placeholder:font-sans font-mono"
                   />
                 </div>
 
@@ -570,7 +585,7 @@ function NFCTagsContent() {
                     value={tagName}
                     onChange={(e) => setTagName(e.target.value)}
                     placeholder="Tag label"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
@@ -641,7 +656,7 @@ function NFCTagsContent() {
                     value={tagName}
                     onChange={(e) => setTagName(e.target.value)}
                     placeholder="New tag label"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
+                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
                   />
                 </div>
 
@@ -690,15 +705,17 @@ function NFCTagsContent() {
                             >
                               Custom URL Redirect
                             </li>
-                            <li
-                              onClick={() => {
-                                setInteractionMode('photobooth');
-                                setIsInteractionModeOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'photobooth' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                            >
-                              Queue Customer
-                            </li>
+                            {(isAdmin || hasQueueMode) && (
+                              <li
+                                onClick={() => {
+                                  setInteractionMode('photobooth');
+                                  setIsInteractionModeOpen(false);
+                                }}
+                                className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'photobooth' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                              >
+                                Queue Customer
+                              </li>
+                            )}
                             
                             {userCircles.length === 1 && (
                               <li

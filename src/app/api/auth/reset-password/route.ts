@@ -13,10 +13,15 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Too many requests. Please try again later.' }, { status: 429 });
     }
 
-    const { phone, code: rawCode, newPassword } = await request.json();
+    const { identifier, phone, code: rawCode, newPassword } = await request.json();
+    const finalIdentifier = identifier || phone;
 
-    if (!phone || !rawCode || !newPassword) {
+    if (!finalIdentifier || !rawCode || !newPassword) {
       return NextResponse.json({ error: 'Missing required fields' }, { status: 400 });
+    }
+
+    if (newPassword.length < 6) {
+      return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
     }
 
     const code = rawCode.trim();
@@ -40,13 +45,17 @@ export async function POST(request: Request) {
       },
     });
 
-    // Clean phone number (remove spaces and dashes)
-    const formattedPhone = formatIndonesianPhoneNumber(phone);
-    const phoneWithoutPlus = formattedPhone.startsWith('+') ? formattedPhone.substring(1) : formattedPhone;
-    const localPhone = phoneWithoutPlus.startsWith('62') ? '0' + phoneWithoutPlus.substring(2) : phoneWithoutPlus;
+    const isEmail = finalIdentifier.includes('@');
+
+    let formattedPhone = finalIdentifier;
+    let phoneWithoutPlus = finalIdentifier;
+    
+    if (!isEmail) {
+      formattedPhone = formatIndonesianPhoneNumber(finalIdentifier);
+      phoneWithoutPlus = formattedPhone.startsWith('+') ? formattedPhone.substring(1) : formattedPhone;
+    }
 
     // 2. Verify the code in reset_codes table
-    // We fetch by secret_code first, then filter by phone in JS to handle any phone formatting in the database
     const { data: resetRecords, error: resetError } = await supabaseAdmin
       .from('reset_codes')
       .select('*')
@@ -56,19 +65,23 @@ export async function POST(request: Request) {
     if (resetError) {
       console.error('[Reset Password] External DB error:', resetError.message);
       return NextResponse.json(
-        { error: 'Server operation failed. Please try again later.' },
+        { error: 'Terjadi kesalahan sistem(500). Silakan coba beberapa saat lagi.' },
         { status: 500 }
       );
     }
 
-    // Find a record where the cleaned phone matches
+    // Find a record where the cleaned identifier matches
     const resetRecord = resetRecords?.find(record => {
       if (!record.phone) return false;
-      const dbPhoneStr = String(record.phone);
+      const dbIdentifierStr = String(record.phone);
       
+      if (isEmail) {
+        return dbIdentifierStr.toLowerCase() === finalIdentifier.toLowerCase();
+      }
+
       // Clean both phones (remove all non-digits)
-      let dbPhoneCleaned = dbPhoneStr.replace(/\D/g, '');
-      let inputPhoneCleaned = phone.replace(/\D/g, '');
+      let dbPhoneCleaned = dbIdentifierStr.replace(/\D/g, '');
+      let inputPhoneCleaned = finalIdentifier.replace(/\D/g, '');
       
       // Strip leading country codes or local prefixes
       if (dbPhoneCleaned.startsWith('62')) dbPhoneCleaned = dbPhoneCleaned.substring(2);
@@ -82,7 +95,7 @@ export async function POST(request: Request) {
 
     if (!resetRecord) {
       return NextResponse.json(
-        { error: 'Invalid or expired reset code. Please check your phone number and code.' },
+        { error: 'Kode reset tidak valid. Silakan periksa kembali email/nomor telepon dan kode Anda.' },
         { status: 400 }
       );
     }
@@ -90,60 +103,79 @@ export async function POST(request: Request) {
     // Check expiration (15 minutes from created_at)
     const createdAt = new Date(resetRecord.created_at).getTime();
     const now = Date.now();
-    const expirationTimeMs = 15 * 60 * 1000; // 15 minutes
+    const expirationTimeMs = 15 * 60 * 1000;
     
     if (now - createdAt > expirationTimeMs) {
       return NextResponse.json(
-        { error: 'Reset code has expired. Please request a new one.' },
+        { error: 'Kode reset sudah kedaluwarsa. Silakan minta admin untuk membuat kode baru.' },
         { status: 400 }
       );
     }
 
-    // 2. Get the user ID using our secure RPC function
-    // Try with '+' first (standard E.164 format)
-    let { data: userId, error: rpcError } = await supabaseAdmin.rpc('get_user_id_by_phone', {
-      phone_number: formattedPhone
-    });
+    // 2. Get the user ID
+    let userId;
+    
+    if (isEmail) {
+      console.log('[Reset Password] Using listUsers to find by email', finalIdentifier);
+      let page = 1;
+      let hasNextPage = true;
+      while (hasNextPage) {
+        const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
+        if (listError) break;
+        const users = listData.users;
+        if (!users || users.length === 0) break;
+        
+        const foundUser = users.find(u => u.email?.toLowerCase() === finalIdentifier.toLowerCase());
 
-    // If not found, try without '+' (in case it was saved differently during registration)
-    if (!userId && !rpcError) {
-      const fallbackResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
-        phone_number: phoneWithoutPlus
+        if (foundUser) {
+           userId = foundUser.id;
+           break;
+        }
+
+        if (users.length < 100) hasNextPage = false;
+        page++;
+      }
+    } else {
+      let { data: rpcUserId, error: rpcError } = await supabaseAdmin.rpc('get_user_id_by_phone', {
+        phone_number: formattedPhone
       });
-      userId = fallbackResult.data;
-      rpcError = fallbackResult.error;
-    }
 
-    // If still not found, try local format (08...)
-    if (!userId && !rpcError) {
-      const localResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
-        phone_number: localPhone
-      });
-      userId = localResult.data;
-      rpcError = localResult.error;
-    }
+      userId = rpcUserId;
 
-    // If still not found, try raw phone without prefix (8...)
-    if (!userId && !rpcError) {
-      const rawPhone = phoneWithoutPlus.startsWith('62') ? phoneWithoutPlus.substring(2) : phoneWithoutPlus;
-      const rawResult = await supabaseAdmin.rpc('get_user_id_by_phone', {
-        phone_number: rawPhone
-      });
-      userId = rawResult.data;
-      rpcError = rawResult.error;
-    }
+      if (!userId) {
+        // Fallback: Use listUsers with pagination to find the user by phone
+        console.log('[Reset Password] RPC fallback: listing users to find phone', formattedPhone);
+        let page = 1;
+        let hasNextPage = true;
+        while (hasNextPage) {
+          const { data: listData, error: listError } = await supabaseAdmin.auth.admin.listUsers({ page, perPage: 100 });
+          if (listError) break;
+          const users = listData.users;
+          if (!users || users.length === 0) break;
+          
+          const foundUser = users.find(u => {
+             if (!u.phone) return false;
+             const uPhone = u.phone.replace(/\D/g, '');
+             const tPhone1 = phoneWithoutPlus.replace(/\D/g, '');
+             const tPhone2 = formattedPhone.replace(/\D/g, '');
+             return uPhone === tPhone1 || uPhone === tPhone2 || uPhone.endsWith(tPhone1);
+          });
 
-    if (rpcError) {
-      console.error('RPC error when getting user ID:', rpcError.message);
-      return NextResponse.json(
-        { error: 'System error while identifying user account.' },
-        { status: 500 }
-      );
+          if (foundUser) {
+             userId = foundUser.id;
+             break;
+          }
+
+          if (users.length < 100) hasNextPage = false;
+          page++;
+        }
+      }
     }
 
     if (!userId) {
+      console.error('Failed to find user ID for identifier:', finalIdentifier);
       return NextResponse.json(
-        { error: 'User account not found for this phone number in the authentication system.' },
+        { error: 'Akun tidak ditemukan untuk email/nomor telepon ini.' },
         { status: 404 }
       );
     }

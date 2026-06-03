@@ -172,12 +172,24 @@ export default async function PublicProfilePage({ params, searchParams }: { para
         
         {/* Header */}
         <div className="flex flex-col space-y-2">
-          <h1 
-            className="text-3xl sm:text-4xl font-bold tracking-tight"
-            style={{ fontFamily: theme.fonts.heading }}
-          >
-            {profile.fullName}
-          </h1>
+          <div className="flex">
+            <h1 
+              className={`text-3xl sm:text-4xl font-bold tracking-tight ${profile.themePreset === 'gradient' ? 'px-4 py-1.5 -ml-2 rounded-xl backdrop-blur-md shadow-sm' : ''}`}
+              style={{ 
+                fontFamily: theme.fonts.heading,
+                ...(profile.themePreset === 'gradient'
+                  ? {
+                      background: 'linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(255, 255, 255, 0.05))',
+                      border: '1px solid rgba(255, 255, 255, 0.2)',
+                      borderLeft: '4px solid #818cf8',
+                      textShadow: '0 2px 4px rgba(0,0,0,0.3)'
+                    }
+                  : {})
+              }}
+            >
+              {profile.fullName}
+            </h1>
+          </div>
           
           {profile.jobTitle && (
             <div className="flex items-center text-lg mt-1 opacity-80" style={{ color: appliedColors.text }}>
