@@ -17,6 +17,7 @@ import {
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { getPlatformInfo } from '@/lib/platforms';
 
 interface NFCTag {
   id: string;
@@ -66,7 +67,6 @@ function NFCTagsContent() {
   // Dropdown States
   const [isInteractionModeOpen, setIsInteractionModeOpen] = useState(false);
   const [isSelectCircleOpen, setIsSelectCircleOpen] = useState(false);
-  const [isRedirectDestOpen, setIsRedirectDestOpen] = useState(false);
 
   useEffect(() => {
     const claimToken = searchParams.get('claim');
@@ -358,7 +358,11 @@ function NFCTagsContent() {
     setRedirectUrl(tag.redirect_url || '');
     
     if (tag.interaction_mode === 'redirect' && tag.redirect_url) {
-      const isLink = userLinks.some(l => l.url === tag.redirect_url);
+      const isLink = userLinks.some(l => {
+        const platform = getPlatformInfo(l.title, l.url);
+        const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+        return resolved === tag.redirect_url || l.url === tag.redirect_url;
+      });
       setCustomRedirectMode(isLink ? 'link' : 'custom');
     } else {
       setCustomRedirectMode('link');
@@ -571,7 +575,7 @@ function NFCTagsContent() {
                     required
                     value={token}
                     onChange={(e) => setToken(e.target.value)}
-                    placeholder="Enter the code on your physical tag"
+                    placeholder="Enter the code or paste the link (e.g. AB12CD34 or rifelo.com/t/...)"
                     className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400 placeholder:font-sans font-mono"
                   />
                 </div>
@@ -673,7 +677,11 @@ function NFCTagsContent() {
                     >
                       <span className="truncate">
                         {interactionMode === 'profile' ? 'Digital Profile (Default)' :
-                         interactionMode === 'redirect' ? 'Custom URL Redirect' :
+                         interactionMode === 'redirect' ? (customRedirectMode === 'custom' ? 'Custom URL' : (userLinks.find(l => {
+                           const platform = getPlatformInfo(l.title, l.url);
+                           const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+                           return resolved === redirectUrl || l.url === redirectUrl;
+                         })?.title || 'Custom URL')) :
                          interactionMode === 'photobooth' ? 'Queue Customer' :
                           interactionMode === 'circle' && userCircles.length === 1 ? `Circle (${userCircles[0].name})` :
                          'Circle Protocol'}
@@ -684,7 +692,7 @@ function NFCTagsContent() {
                     {isInteractionModeOpen && (
                       <>
                         <div className="fixed inset-0 z-40" onClick={() => setIsInteractionModeOpen(false)} />
-                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto hide-scrollbar">
+                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto">
                           <ul className="flex flex-col">
                             <li
                               onClick={() => {
@@ -696,14 +704,34 @@ function NFCTagsContent() {
                             >
                               Digital Profile (Default)
                             </li>
+                            {userLinks.map(link => {
+                              const platform = getPlatformInfo(link.title, link.url);
+                              const resolvedTarget = platform ? platform.finalUrl : (link.url.startsWith('http') ? link.url : `https://${link.url}`);
+                              return (
+                                <li
+                                  key={link.id}
+                                  onClick={() => {
+                                    setInteractionMode('redirect');
+                                    setCustomRedirectMode('link');
+                                    setRedirectUrl(resolvedTarget);
+                                    setIsInteractionModeOpen(false);
+                                  }}
+                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'redirect' && customRedirectMode === 'link' && redirectUrl === resolvedTarget ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                                >
+                                  {link.title || link.url}
+                                </li>
+                              );
+                            })}
                             <li
                               onClick={() => {
                                 setInteractionMode('redirect');
+                                setCustomRedirectMode('custom');
+                                setRedirectUrl('https://');
                                 setIsInteractionModeOpen(false);
                               }}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'redirect' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'redirect' && customRedirectMode === 'custom' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
                             >
-                              Custom URL Redirect
+                              Custom URL
                             </li>
                             {(isAdmin || hasQueueMode) && (
                               <li
@@ -771,7 +799,7 @@ function NFCTagsContent() {
                       {isSelectCircleOpen && (
                         <>
                           <div className="fixed inset-0 z-40" onClick={() => setIsSelectCircleOpen(false)} />
-                          <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto hide-scrollbar">
+                          <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto">
                             <ul className="flex flex-col">
                               <li
                                 onClick={() => {
@@ -807,60 +835,11 @@ function NFCTagsContent() {
 
                 {interactionMode === 'redirect' && (
                   <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Redirect Destination
-                      </label>
-                      <div className="relative">
-                        <input type="hidden" name="customRedirectMode" value={customRedirectMode} />
-                        <button
-                          type="button"
-                          onClick={() => setIsRedirectDestOpen(!isRedirectDestOpen)}
-                          className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
-                        >
-                          <span className="truncate">
-                            {customRedirectMode === 'custom' ? 'Custom URL...' : 
-                             (userLinks.find(l => l.url === redirectUrl)?.title || userLinks.find(l => l.url === redirectUrl)?.url || 'Custom URL...')}
-                          </span>
-                          <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
-                        </button>
-                        
-                        {isRedirectDestOpen && (
-                          <>
-                            <div className="fixed inset-0 z-40" onClick={() => setIsRedirectDestOpen(false)} />
-                            <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto hide-scrollbar">
-                              <ul className="flex flex-col">
-                                <li
-                                  onClick={() => {
-                                    setCustomRedirectMode('custom');
-                                    setRedirectUrl('https://');
-                                    setIsRedirectDestOpen(false);
-                                  }}
-                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${customRedirectMode === 'custom' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                                >
-                                  Custom URL...
-                                </li>
-                                {userLinks.map(link => (
-                                  <li
-                                    key={link.id}
-                                    onClick={() => {
-                                      setCustomRedirectMode('link');
-                                      setRedirectUrl(link.url);
-                                      setIsRedirectDestOpen(false);
-                                    }}
-                                    className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${customRedirectMode === 'link' && redirectUrl === link.url ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                                  >
-                                    {link.title || link.url}
-                                  </li>
-                                ))}
-                              </ul>
-                            </div>
-                          </>
-                        )}
-                      </div>
-                    </div>
-
-                    {(customRedirectMode === 'custom' || !userLinks.find(l => l.url === redirectUrl)) && (
+                    {(customRedirectMode === 'custom' || !userLinks.find(l => {
+                      const platform = getPlatformInfo(l.title, l.url);
+                      const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+                      return resolved === redirectUrl || l.url === redirectUrl;
+                    })) && (
                       <div>
                         <label className="block text-sm font-medium text-slate-700 mb-1">
                           Custom URL

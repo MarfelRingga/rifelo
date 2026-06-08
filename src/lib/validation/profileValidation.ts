@@ -61,7 +61,7 @@ export const getValidationErrors = (
     }
 
     if (phone && !isValidPhone(phone)) {
-      errors.push({ field: 'phone', message: 'Please enter a valid phone number (e.g. with numbers, +, and spaces).', type: 'error' });
+      errors.push({ field: 'phone', message: 'Please enter a valid phone number (with numbers, +, and spaces).', type: 'error' });
     }
 
     if (bio && bio.length > 300) {

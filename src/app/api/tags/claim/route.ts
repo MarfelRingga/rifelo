@@ -29,11 +29,16 @@ export async function POST(request: Request) {
       return NextResponse.json({ error: 'Tag token is required' }, { status: 400 });
     }
 
+    let cleanToken = tagToken.trim();
+    if (cleanToken.includes('/t/')) {
+      cleanToken = cleanToken.split('/t/').pop()?.split('?')[0] || cleanToken;
+    }
+
     // Find the tag by token where user_id is null
     const { data: tag, error: findError } = await supabaseAdmin
       .from('nfc_tags')
       .select('id, circle_id, user_id')
-      .ilike('token', tagToken.trim())
+      .ilike('token', cleanToken)
       .maybeSingle();
 
     if (findError) {
@@ -46,7 +51,10 @@ export async function POST(request: Request) {
     }
 
     if (tag.user_id) {
-      return NextResponse.json({ error: 'Tag is already claimed.' }, { status: 400 });
+      if (tag.user_id === user.id) {
+        return NextResponse.json({ success: true, message: 'Tag is already claimed by you.', tag });
+      }
+      return NextResponse.json({ error: 'Tag is already claimed by another user.' }, { status: 400 });
     }
 
     // Claim the tag
@@ -80,7 +88,8 @@ export async function POST(request: Request) {
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             username: user.user_metadata?.username || `user_${user.id.slice(0, 5)}`,
-            phone: user.phone || null
+            phone: user.phone || null,
+            email: user.email || null
           });
       }
 

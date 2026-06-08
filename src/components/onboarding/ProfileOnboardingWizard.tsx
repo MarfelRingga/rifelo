@@ -225,7 +225,7 @@ export function ProfileOnboardingWizard() {
                               type="text"
                               value={link.title}
                               onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
-                              placeholder="e.g. LinkedIn, Instagram"
+                              placeholder="LinkedIn, Instagram"
                               className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg text-sm focus:outline-none focus:ring-2 focus:ring-slate-900"
                             />
                           </div>

@@ -1,18 +1,25 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Smartphone, CheckCircle2, X, ExternalLink } from 'lucide-react';
+import { Shield, Smartphone, ExternalLink, Mail, Phone } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '@/lib/supabase';
 
 export default function SettingsPage() {
-  const [showSuccess, setShowSuccess] = useState(false);
   const [contactSupportLink, setContactSupportLink] = useState('');
   const [contactSupportText, setContactSupportText] = useState('');
+  const [userPhone, setUserPhone] = useState<string | null>(null);
+  const [userEmail, setUserEmail] = useState<string | null>(null);
 
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        const { data: { user } } = await supabase.auth.getUser();
+        if (user) {
+          setUserPhone(user.phone || null);
+          setUserEmail(user.email || null);
+        }
+
         const { data, error } = await supabase
           .from('app_settings')
           .select('id, value')
@@ -37,11 +44,6 @@ export default function SettingsPage() {
     fetchSettings();
   }, []);
 
-  const handleSave = () => {
-    setShowSuccess(true);
-    setTimeout(() => setShowSuccess(false), 3000);
-  };
-
   return (
     <div className="space-y-8 font-sans max-w-3xl mx-auto">
       <div>
@@ -61,7 +63,7 @@ export default function SettingsPage() {
             <div>
               <label className="block text-sm font-medium text-slate-700 mb-2">Need Help?</label>
               <p className="text-sm text-slate-600 mb-4">
-                {contactSupportText || "Your phone number is your primary identifier and cannot be changed directly. Contact support if you lost access."}
+                {contactSupportText || "Your email or phone number is your primary identifier and cannot be changed directly. Contact support if you lost access."}
               </p>
               <button 
                 onClick={() => {
@@ -77,33 +79,26 @@ export default function SettingsPage() {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Recovery Email (Optional)</label>
-              <input 
-                type="email" 
-                placeholder="Email address" 
-                defaultValue=""
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-              />
-              <p className="text-xs text-slate-500 mt-2">
-                Used for account recovery in case you lose access to your phone number.
-              </p>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Account Information</label>
+              <div className="space-y-3">
+                <div className="flex items-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <Phone className="w-5 h-5 text-slate-400 mr-3" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-0.5">Phone Number</p>
+                    <p className="text-sm text-slate-900 font-medium">{userPhone || 'Not provided'}</p>
+                  </div>
+                </div>
+                
+                <div className="flex items-center px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl">
+                  <Mail className="w-5 h-5 text-slate-400 mr-3" />
+                  <div className="flex-1">
+                    <p className="text-xs text-slate-500 font-medium uppercase tracking-wider mb-0.5">Email Address</p>
+                    <p className="text-sm text-slate-900 font-medium">{userEmail || 'Not provided'}</p>
+                  </div>
+                </div>
+              </div>
             </div>
           </div>
-        </div>
-
-        <div className="pt-6 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-end gap-4">
-          {showSuccess && (
-            <span className="flex items-center text-sm text-emerald-600 font-medium animate-in fade-in slide-in-from-right-4">
-              <CheckCircle2 className="w-4 h-4 mr-1.5" />
-              Saved successfully!
-            </span>
-          )}
-          <button 
-            onClick={handleSave} 
-            className="w-full sm:w-auto flex items-center justify-center px-6 py-2.5 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-all shadow-sm active:scale-[0.98]"
-          >
-            Save Preferences
-          </button>
         </div>
       </div>
     </div>

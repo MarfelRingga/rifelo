@@ -62,7 +62,8 @@ export async function PUT(
             id: user.id,
             full_name: user.user_metadata?.full_name || user.email?.split('@')[0] || 'User',
             username: user.user_metadata?.username || `user_${user.id.slice(0, 5)}`,
-            phone: user.phone || null
+            phone: user.phone || null,
+            email: user.email || null
           });
       }
 
@@ -114,9 +115,16 @@ export async function DELETE(
     if (tag.user_id !== user.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
     // "Delete" for tags means detaching user_id (setting it to null)
+    // We also reset interaction_mode, redirect_url, circle_id, and tag_name so the next owner starts fresh
     const { error: updateError } = await supabaseAdmin
       .from('nfc_tags')
-      .update({ user_id: null })
+      .update({ 
+        user_id: null,
+        tag_name: null,
+        interaction_mode: 'profile',
+        redirect_url: null,
+        circle_id: null
+      })
       .eq('id', id);
 
     if (updateError) throw updateError;

@@ -58,7 +58,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
     },
     job_title: {
       label: 'Job Title',
-      placeholder: 'e.g., Founder, Software Engineer',
+      placeholder: 'Founder, Software Engineer',
       type: 'text',
       required: false,
       icon: 'Briefcase',
@@ -108,7 +108,7 @@ export const profileFields: Record<ProfileMode, Record<string, ProfileField>> = 
     },
     job_title: {
       label: 'Creative Role',
-      placeholder: 'e.g., UI/UX Designer, Illustrator',
+      placeholder: 'UI/UX Designer, Illustrator',
       type: 'text',
       required: false,
       icon: 'Palette',
