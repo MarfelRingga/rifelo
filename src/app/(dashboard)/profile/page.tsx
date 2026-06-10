@@ -9,6 +9,7 @@ import { getPlatformInfo } from '@/lib/platforms';
 import { revalidateProfile } from '@/app/actions/revalidate';
 import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { encodeMessageSettings, decodeMessageSettings } from '@/lib/messageSettings';
+import { useToast } from '@/components/ui/ToastContext';
 
 import { ModeSelector } from '@/components/profile/ModeSelector';
 import { ThemeSelector } from '@/components/profile/ThemeSelector';
@@ -43,7 +44,7 @@ export default function ProfilePage() {
   const [messagePlaceholderName, setMessagePlaceholderName] = useState('Your Name (Optional)');
   const [messagePlaceholderContent, setMessagePlaceholderContent] = useState('Write a secret message...');
   const [allowMessages, setAllowMessages] = useState(true);
-  const [toast, setToast] = useState<{ message: string; type: 'success' | 'error' } | null>(null);
+  const { showToast } = useToast();
 
   // --- NEW STATES (Multi-Mode) ---
   const [profileMode, setProfileMode] = useState<ProfileMode>('casual');
@@ -83,11 +84,6 @@ export default function ProfilePage() {
   };
 
   const hasUnsavedChanges = !isLoading && originalStateHash !== '' && originalStateHash !== getCurrentStateHash();
-
-  const showToast = (message: string, type: 'success' | 'error' = 'success') => {
-    setToast({ message, type });
-    setTimeout(() => setToast(null), 3000);
-  };
 
   // --- INITIALIZATION ---
   useEffect(() => {
@@ -818,15 +814,6 @@ export default function ProfilePage() {
           </div>
         </div>
       </div>
-
-      {toast && (
-        <div className={`fixed bottom-24 md:bottom-8 right-6 md:right-8 z-[100] flex items-center px-4 py-3 rounded-xl shadow-lg border animate-in fade-in slide-in-from-bottom-4 ${
-          toast.type === 'success' ? 'bg-emerald-50 border-emerald-200 text-emerald-700' : 'bg-red-50 border-red-200 text-red-700'
-        }`}>
-          {toast.type === 'success' ? <CheckCircle2 className="w-5 h-5 mr-2" /> : <AlertCircle className="w-5 h-5 mr-2" />}
-          <span className="text-sm font-medium">{toast.message}</span>
-        </div>
-      )}
 
       {/* Confirmation Modal */}
       {pendingMode && (

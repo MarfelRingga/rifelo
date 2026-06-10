@@ -31,7 +31,7 @@ interface NFCTag {
 
 export default function NFCTagsPage() {
   return (
-    <Suspense fallback={<PageSkeleton />}>
+    <Suspense fallback={<PageSkeleton type="tags" />}>
       <NFCTagsContent />
     </Suspense>
   );
@@ -406,7 +406,7 @@ function NFCTagsContent() {
     }
   };
 
-  if (isLoading) return <PageSkeleton />;
+  if (isLoading) return <PageSkeleton type="tags" />;
 
   return (
     <div className="p-6 max-w-4xl mx-auto">

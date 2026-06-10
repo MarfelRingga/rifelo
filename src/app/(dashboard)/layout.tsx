@@ -29,6 +29,7 @@ import {
 import { motion, AnimatePresence } from 'motion/react';
 
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/ToastContext';
 
 type WorkspaceRole = 'personal' | 'circle' | 'admin' | 'photobooth';
 
@@ -45,6 +46,7 @@ type Workspace = {
 export default function DashboardLayout({ children }: { children: ReactNode }) {
   const pathname = usePathname();
   const router = useRouter();
+  const { success: showSuccess, error: showError } = useToast();
   
   const [user, setUser] = useState<any>(null);
   const [profile, setProfile] = useState<any>(null);
@@ -219,10 +221,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   checkUser();
 
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      if (session?.user) {
-        setUser(session.user);
-      } else {
+      if (_event === 'SIGNED_OUT') {
         router.push('/login');
+      } else if (session?.user) {
+        setUser(session.user);
       }
     });
 
@@ -291,11 +293,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     
     console.log('Found workspace:', ws?.name, 'type:', ws?.type);
 
-    if (lastPath) {
+    if (lastPath && !(ws?.type === 'circle' && lastPath.startsWith('/c/'))) {
       router.push(lastPath);
     } else {
       // Auto-navigate based on workspace type if no last path
-      if (ws?.type === 'circle') router.push(`/c/${ws.slug || ws.inviteCode}`);
+      if (ws?.type === 'circle') router.push('/circle');
       else if (ws?.type === 'photobooth') router.push(`/queue-hub/${ws.eventCode}`);
       else if (ws?.type === 'admin') router.push('/admin/users');
       else if (ws?.type === 'personal') router.push('/profile');
@@ -313,10 +315,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         ];
       case 'circle':
         return [
+          { name: 'Circle', href: '/circle', icon: CircleDot, show: true },
           { name: 'Circle Hub', href: `/c/${activeWorkspace.slug || activeWorkspace.inviteCode}`, icon: Sparkles, show: true },
-          { name: 'Circle Management', href: '/circle', icon: CircleDot, show: true },
           { name: 'NFC Tags', href: '/tags', icon: ScanLine, show: true },
-          { name: 'Settings', href: '/settings', icon: Settings, show: true },
+          { name: 'Settings', href: '/circle/settings', icon: Settings, show: true },
         ];
       case 'admin':
         return [
@@ -442,7 +444,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         
         handleWorkspaceChange(pbEvent.id, newWs);
         window.dispatchEvent(new Event('workspace-joined'));
-        alert('Successfully joined queue mode!');
+        showSuccess('Successfully joined queue mode!');
         
         // Close modal on success
         setIsLoading(false);
@@ -489,7 +491,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       
       handleWorkspaceChange(circle.id, newWs);
       window.dispatchEvent(new Event('workspace-joined'));
-      alert('Successfully joined mode!');
+      showSuccess('Successfully joined mode!');
       
       // Close modal on success
       setIsLoading(false);
@@ -602,7 +604,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </nav>
 
         <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center mb-4 px-2">
+          <div className="flex items-center px-2">
             <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">
               {profile?.full_name?.charAt(0) || user?.phone?.charAt(1) || '?'}
             </div>
@@ -611,10 +613,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <p className="text-xs text-slate-500 truncate">{user?.phone || user?.email}</p>
             </div>
           </div>
-          <button onClick={handleSignOut} className="w-full flex items-center px-3 py-2 text-sm font-medium text-slate-600 rounded-lg hover:bg-slate-50 hover:text-slate-900 transition-colors">
-            <LogOut className="w-5 h-5 mr-3 text-slate-400" />
-            Sign Out
-          </button>
         </div>
       </aside>
 
@@ -696,16 +694,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                     >
                       <Plus className="w-4 h-4 mr-3 text-slate-400" />
                       Join with Code
-                    </li>
-
-                    <li className="h-px bg-slate-100 my-2" />
-
-                    <li 
-                      onClick={handleSignOut} 
-                      className="w-full flex items-center px-4 py-3 text-sm text-red-600 hover:bg-red-50 cursor-pointer transition-colors"
-                    >
-                      <LogOut className="w-4 h-4 mr-3 text-red-500" />
-                      Sign Out
                     </li>
                     </ul>
                   </motion.div>

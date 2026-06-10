@@ -13,6 +13,7 @@ import { useRouter } from 'next/navigation';
 import { getPlatformInfo } from '@/lib/platforms';
 import { migrateFieldData } from '@/lib/profileMigration';
 import { cn } from '@/lib/utils';
+import { useToast } from '@/components/ui/ToastContext';
 
 interface LinkData {
   id: string;
@@ -22,6 +23,7 @@ interface LinkData {
 
 export function ProfileOnboardingWizard() {
   const router = useRouter();
+  const { error: showError } = useToast();
   const [currentStep, setCurrentStep] = useState(0);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [success, setSuccess] = useState(false);
@@ -106,7 +108,7 @@ export function ProfileOnboardingWizard() {
       setSuccess(true);
     } catch (error) {
       console.error('Publish error:', error);
-      alert('Failed to publish profile. Please try again.');
+      showError('Failed to publish profile. Please try again.');
     } finally {
       setIsSubmitting(false);
     }

@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import Script from "next/script";
 import "./globals.css";
+import { ToastProvider } from "@/components/ui/ToastContext";
 
 const headingFont = Plus_Jakarta_Sans({ 
   subsets: ["latin"],
@@ -74,7 +75,9 @@ export default function RootLayout({
         </Script>
       </head>
       <body className="font-body antialiased overflow-x-clip">
-        {children}
+        <ToastProvider>
+          {children}
+        </ToastProvider>
       </body>
     </html>
   );

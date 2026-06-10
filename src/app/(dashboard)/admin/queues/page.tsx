@@ -5,8 +5,10 @@ import { supabase } from '@/lib/supabase';
 import { Settings, Plus, Camera, QrCode } from 'lucide-react';
 import { QRCodeSVG } from 'qrcode.react';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
+import { useToast } from '@/components/ui/ToastContext';
 
 export default function AdminPhotoboothPage() {
+  const { error: showError, success: showSuccess } = useToast();
   const [events, setEvents] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isCreating, setIsCreating] = useState(false);
@@ -47,7 +49,7 @@ export default function AdminPhotoboothPage() {
 
   const createEvent = async () => {
     if (!newEventName || !newEventCode) {
-      alert("Name and Event ID/Code are required");
+      showError("Name and Event ID/Code are required");
       return;
     }
     setIsCreating(true);
@@ -62,8 +64,9 @@ export default function AdminPhotoboothPage() {
       
       if (!res.ok || json.error) {
         console.error("Error creating event:", json.error);
-        alert(`Failed to create event: ${json.error}`);
+        showError(`Failed to create event: ${json.error}`);
       } else if (json.data) {
+        showSuccess("Event created successfully");
         setEvents([json.data, ...events]);
         setNewEventName('');
         setNewEventCode('');
@@ -71,7 +74,7 @@ export default function AdminPhotoboothPage() {
       }
     } catch (err: any) {
       console.error(err);
-      alert(`Error: ${err.message}`);
+      showError(`Error: ${err.message}`);
     }
     setIsCreating(false);
   };

@@ -1,11 +1,15 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { Shield, Smartphone, ExternalLink, Mail, Phone } from 'lucide-react';
+import { Shield, Smartphone, ExternalLink, Mail, Phone, LogOut } from 'lucide-react';
 import { motion, AnimatePresence } from 'motion/react';
 import { supabase } from '@/lib/supabase';
+import { useRouter } from 'next/navigation';
+import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function SettingsPage() {
+  const router = useRouter();
+  const [isLoading, setIsLoading] = useState(true);
   const [contactSupportLink, setContactSupportLink] = useState('');
   const [contactSupportText, setContactSupportText] = useState('');
   const [userPhone, setUserPhone] = useState<string | null>(null);
@@ -14,6 +18,7 @@ export default function SettingsPage() {
   useEffect(() => {
     const fetchSettings = async () => {
       try {
+        setIsLoading(true);
         const { data: { user } } = await supabase.auth.getUser();
         if (user) {
           setUserPhone(user.phone || null);
@@ -38,11 +43,17 @@ export default function SettingsPage() {
         }
       } catch (err) {
         console.error('Error fetching settings:', err);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     fetchSettings();
   }, []);
+
+  if (isLoading) {
+    return <PageSkeleton type="settings" />;
+  }
 
   return (
     <div className="space-y-8 font-sans max-w-3xl mx-auto">
@@ -97,6 +108,24 @@ export default function SettingsPage() {
                   </div>
                 </div>
               </div>
+            </div>
+
+            {/* Session Management */}
+            <div className="pt-6 border-t border-slate-200">
+              <label className="block text-sm font-medium text-slate-700 mb-1 font-semibold">Account Session</label>
+              <p className="text-xs text-slate-500 mb-4">
+                Since this device retains your session, you only need to sign out if you are on a shared or public computer.
+              </p>
+              <button
+                onClick={async () => {
+                  await supabase.auth.signOut();
+                  router.push('/login');
+                }}
+                className="inline-flex items-center justify-center px-4 py-2 bg-red-50 text-red-600 hover:bg-red-100 text-xs font-bold rounded-xl transition-all border border-red-100 hover:border-red-200 cursor-pointer shadow-sm active:scale-95"
+              >
+                <LogOut className="w-3.5 h-3.5 mr-2" />
+                Sign Out / Log Out
+              </button>
             </div>
           </div>
         </div>

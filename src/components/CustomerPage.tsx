@@ -3,6 +3,7 @@
 import React, { useState, useEffect, Suspense } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
+import { useToast } from '@/components/ui/ToastContext';
 
 type QueueStatus = {
   id: string;
@@ -14,6 +15,7 @@ type QueueStatus = {
 function CustomerStatus({ queueId: propQueueId }: { queueId?: string | null }) {
   const searchParams = useSearchParams();
   const queueId = propQueueId || searchParams.get('queue_id');
+  const { success: showSuccess } = useToast();
 
   const [queueInfo, setQueueInfo] = useState<(QueueStatus & { event_id?: number }) | null>(null);
   const [error, setError] = useState('');
@@ -95,7 +97,7 @@ function CustomerStatus({ queueId: propQueueId }: { queueId?: string | null }) {
   const handleCopy = () => {
     if (queueUrl) {
       navigator.clipboard.writeText(queueUrl);
-      alert('Link antrean berhasil disalin!');
+      showSuccess('Link antrean berhasil disalin!');
     }
   };
 

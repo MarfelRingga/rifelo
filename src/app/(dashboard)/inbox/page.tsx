@@ -92,7 +92,7 @@ export default function InboxPage() {
   };
 
   if (isLoading) {
-    return <PageSkeleton />;
+    return <PageSkeleton type="inbox" />;
   }
 
   return (

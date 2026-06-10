@@ -19,13 +19,13 @@ const CircleNameDisplay = ({ name, isVisible }: { name: string, isVisible: boole
   
   // Calculate length to determine font size dynamically
   const maxLineLength = Math.max(...lines.map(l => l.length));
-  let textSizeClass = 'text-xl';
-  if (maxLineLength > 10 || lines.length === 3) textSizeClass = 'text-base';
-  if (maxLineLength > 15) textSizeClass = 'text-sm';
-  if (maxLineLength > 20) textSizeClass = 'text-xs';
+  let textSizeClass = 'text-2xl';
+  if (maxLineLength > 8 || lines.length > 1) textSizeClass = 'text-xl';
+  if (maxLineLength > 12 || lines.length === 3) textSizeClass = 'text-base';
+  if (maxLineLength > 18) textSizeClass = 'text-sm';
 
   return (
-    <div className={`font-black ${textSizeClass} tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] relative z-20 transition-opacity duration-500 delay-300 px-2 text-center flex flex-col items-center justify-center leading-tight w-full h-full ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`font-black ${textSizeClass} tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] relative z-20 transition-opacity duration-500 delay-300 px-3 text-center flex flex-col items-center justify-center leading-tight w-full h-full ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       {lines.map((line, idx) => (
         <span key={idx} className="block w-full break-words">
           {line}
@@ -468,7 +468,7 @@ export default function UnifiedCirclePage({
           >
             {members.map((member, i) => {
               const angle = (i / members.length) * Math.PI * 2;
-              const radius = 80;
+              const radius = 110;
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
               const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
@@ -503,7 +503,7 @@ export default function UnifiedCirclePage({
 
           {/* The Giant Merged Circle */}
           <div
-            className={`absolute w-28 h-28 rounded-full z-10 flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
+            className={`absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full z-10 flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
               phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`}
             style={{
