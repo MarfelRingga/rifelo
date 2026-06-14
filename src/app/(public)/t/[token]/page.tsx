@@ -1,24 +1,27 @@
 import { redirect, notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
+import { unstable_cache } from 'next/cache';
 
 // Removed edge runtime due to connection drop on initial load.
 export const dynamic = 'force-dynamic';
 
-export async function fetchTokenDestination(token: string) {
-  try {
-    // 1. Find the tag and related data in ONE query (except profiles)
-    const { data: tag, error: tagError } = await supabaseAdmin
-      .from('nfc_tags')
-      .select(`
-        user_id, 
-        status, 
-        interaction_mode, 
-        redirect_url, 
-        circle_id,
-        circles (slug, invite_code)
-      `)
-      .eq('token', token.trim())
-      .maybeSingle();
+export const fetchTokenDestination = unstable_cache(
+  async (token: string) => {
+    try {
+      // 1. Find the tag and related data in ONE query
+      const { data: tag, error: tagError } = await supabaseAdmin
+        .from('nfc_tags')
+        .select(`
+          user_id, 
+          status, 
+          interaction_mode, 
+          redirect_url, 
+          circle_id,
+          circles (slug, invite_code),
+          profiles:user_id (username)
+        `)
+        .eq('token', token.trim())
+        .maybeSingle();
 
     if (tagError || !tag || tag.status !== 'active') {
       return { isValid: false, destination: null };
@@ -57,13 +60,9 @@ export async function fetchTokenDestination(token: string) {
 
     // 4. Handle profile mode (default)
     if (tag.user_id) {
-      // Manually fetch the username from profiles
-      const { data: profileData } = await supabaseAdmin
-        .from('profiles')
-        .select('username')
-        .eq('id', tag.user_id)
-        .maybeSingle();
-        
+      // Use the pre-fetched profile username from the join
+      const profileData = tag.profiles as any;
+      
       if (profileData?.username) {
         return { isValid: true, destination: `/u/${profileData.username}`, isExternal: false };
       }
@@ -76,8 +75,10 @@ export async function fetchTokenDestination(token: string) {
     console.error('Error fetching token destination:', error);
     return { isValid: false, destination: null };
   }
-}
-
+}, ['nfc-token-redirect'], {
+  revalidate: 60, // Cache for 60 seconds
+  tags: ['nfc-tag-redirect']
+});
 
 export default async function NFCTagRedirectPage({ 
   params 

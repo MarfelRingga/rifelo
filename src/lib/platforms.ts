@@ -86,6 +86,14 @@ export const getPlatformInfo = (title: string, url: string) => {
       color: 'text-slate-900', 
       baseUrl: 'https://tiktok.com/@',
       clean: (u: string) => u.replace(/^https?:\/\/(www\.)?tiktok\.com\/(@)?/, '').replace(/\/$/, '')
+    },
+    {
+      id: 'spotify',
+      match: ['spotify'],
+      icon: MusicIcon,
+      color: 'text-green-500',
+      baseUrl: 'https://open.spotify.com/',
+      clean: (u: string) => u.replace(/^https?:\/\/(www\.)?open\.spotify\.com\//, '').replace(/\/$/, '')
     }
   ];
 

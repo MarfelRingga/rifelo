@@ -162,7 +162,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
       }}
     >
       <div 
-        className="w-full max-w-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm p-8 space-y-8 transition-all duration-500"
+        className="w-full max-w-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm p-4 sm:p-8 space-y-8 transition-all duration-500 mx-4 sm:mx-0"
         style={{
           background: appliedColors.cardBg,
           borderRadius: theme.borderRadius,
@@ -321,6 +321,88 @@ export default async function PublicProfilePage({ params, searchParams }: { para
                   borderWidth: '1px',
                   borderRadius: linkRadius
                 };
+
+                // Gen-Z Media Platforms Embed Support
+                let embedDetails: { url: string; height: string; className: string } | null = null;
+                try {
+                  const urlObj = new URL(link.url);
+                  
+                  // 1. Spotify
+                  if (urlObj.hostname.includes('spotify.com')) {
+                    if (!urlObj.pathname.startsWith('/embed')) {
+                      urlObj.pathname = '/embed' + urlObj.pathname;
+                    }
+                    urlObj.searchParams.set('utm_source', 'generator');
+                    let height = "152";
+                    if (urlObj.pathname.includes('/playlist/') || urlObj.pathname.includes('/album/') || urlObj.pathname.includes('/artist/') || urlObj.pathname.includes('/show/')) {
+                      height = "352";
+                    } else if (urlObj.pathname.includes('/track/') || urlObj.pathname.includes('/episode/')) {
+                      height = "80"; // Spotify official compact
+                    }
+                    embedDetails = { url: urlObj.toString(), height, className: "w-full" };
+                  }
+                  // 2. YouTube & YouTube Shorts
+                  else if (urlObj.hostname.includes('youtube.com') || urlObj.hostname.includes('youtu.be')) {
+                    let videoId = urlObj.searchParams.get('v');
+                    if (urlObj.hostname.includes('youtu.be')) {
+                      videoId = urlObj.pathname.slice(1);
+                    } else if (urlObj.pathname.startsWith('/shorts/')) {
+                      videoId = urlObj.pathname.split('/')[2];
+                    }
+                    if (videoId) {
+                      embedDetails = { 
+                        url: `https://www.youtube.com/embed/${videoId}`, 
+                        height: "250", // Standard mobile-friendly video format
+                        className: "w-full aspect-video sm:h-[300px]" 
+                      };
+                    }
+                  }
+                  // 3. TikTok
+                  else if (urlObj.hostname.includes('tiktok.com')) {
+                    const match = urlObj.pathname.match(/\/video\/(\d+)/);
+                    if (match && match[1]) {
+                      embedDetails = { 
+                        url: `https://www.tiktok.com/embed/v2/${match[1]}`, 
+                        height: "600", // TikTok native vertical format
+                        className: "w-full max-w-[325px] mx-auto bg-black" 
+                      };
+                    }
+                  }
+                  // 4. Apple Music
+                  else if (urlObj.hostname.includes('music.apple.com')) {
+                    const amUrl = link.url.replace('music.apple.com', 'embed.music.apple.com');
+                    const height = (urlObj.pathname.includes('/album/') || urlObj.pathname.includes('/playlist/')) && !urlObj.searchParams.has('i') ? "450" : "150";
+                    embedDetails = { url: amUrl, height, className: "w-full" };
+                  }
+                  // 5. SoundCloud
+                  else if (urlObj.hostname.includes('soundcloud.com')) {
+                    const scUrl = `https://w.soundcloud.com/player/?url=${encodeURIComponent(link.url)}&color=%23ff5500&auto_play=false&hide_related=false&show_comments=true&show_user=true&show_reposts=false&show_teaser=true`;
+                    embedDetails = { url: scUrl, height: "166", className: "w-full" };
+                  }
+                } catch (e) {
+                  // Fallback for invalid URLs handled by standard button
+                }
+
+                if (embedDetails) {
+                  return (
+                    <div key={link.id} className="w-full my-4 flex justify-center">
+                      <iframe 
+                         style={{ 
+                           borderRadius: linkRadius === '0px' ? '0px' : '16px',
+                           backgroundColor: 'transparent'
+                         }}
+                         src={embedDetails.url} 
+                         width="100%" 
+                         height={embedDetails.height}
+                         className={`${embedDetails.className} transition-all duration-300 shadow-sm`}
+                         frameBorder="0" 
+                         allowFullScreen 
+                         allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share" 
+                         loading="lazy"
+                       />
+                    </div>
+                  );
+                }
                 
                 if (platformInfo) {
                   const Icon = platformInfo.icon;
