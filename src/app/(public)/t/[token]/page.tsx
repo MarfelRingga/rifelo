@@ -17,8 +17,7 @@ export const fetchTokenDestination = unstable_cache(
           interaction_mode, 
           redirect_url, 
           circle_id,
-          circles (slug, invite_code),
-          profiles:user_id (username)
+          circles (slug, invite_code)
         `)
         .eq('token', token.trim())
         .maybeSingle();
@@ -60,8 +59,12 @@ export const fetchTokenDestination = unstable_cache(
 
     // 4. Handle profile mode (default)
     if (tag.user_id) {
-      // Use the pre-fetched profile username from the join
-      const profileData = tag.profiles as any;
+      // Manually fetch the username from profiles
+      const { data: profileData } = await supabaseAdmin
+        .from('profiles')
+        .select('username')
+        .eq('id', tag.user_id)
+        .maybeSingle();
       
       if (profileData?.username) {
         return { isValid: true, destination: `/u/${profileData.username}`, isExternal: false };
