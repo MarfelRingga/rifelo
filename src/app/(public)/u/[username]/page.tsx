@@ -27,6 +27,8 @@ import Link from 'next/link';
 import { decodeMessageSettings } from '@/lib/messageSettings';
 import { themePresets, getTheme } from '@/lib/themePresets';
 import { ProfileMode } from '@/lib/types/profile';
+import HeroBrutalism from '@/components/HeroBrutalism';
+import Y2KTicketProfile from '@/components/Y2KTicketProfile';
 
 export const revalidate = 60; // Cache for 60 seconds (ISR)
 
@@ -135,13 +137,19 @@ export default async function PublicProfilePage({ params, searchParams }: { para
   const theme = getTheme(profile.themePreset) || themePresets.minimal;
   
   // Custom theme overrides if any
-  const appliedColors = {
-    ...theme.colors,
-    ...(profile.customTheme?.colors || {})
-  };
+  const appliedColors = profile.themePreset === 'brutalism' 
+    ? { ...theme.colors } // Enforce brutalism colors to ignore bad custom colors
+    : {
+        ...theme.colors,
+        ...(profile.customTheme?.colors || {})
+      };
 
   const isGradientBg = appliedColors.background.includes('gradient');
   const isGradientCardBg = appliedColors.cardBg.includes('gradient');
+
+  if (profile.themePreset === 'y2k-ticket') {
+    return <Y2KTicketProfile profile={profile} />;
+  }
 
   const getLinkRadius = (r: string | undefined): string => {
     if (r === 'sharp') return '0px';
@@ -154,15 +162,19 @@ export default async function PublicProfilePage({ params, searchParams }: { para
   // Normal Profile View
   return (
     <div 
-      className="min-h-screen py-12 px-4 flex flex-col items-center transition-colors duration-500"
+      className={`min-h-screen py-12 px-4 flex flex-col items-center transition-colors duration-500 relative`}
       style={{
         background: appliedColors.background,
-        color: appliedColors.text,
+        color: profile.themePreset === 'brutalism' ? '#ffffff' : appliedColors.text,
         fontFamily: theme.fonts.body
       }}
     >
+      {profile.themePreset === 'brutalism' && (
+        <HeroBrutalism mainText="" />
+      )}
+      
       <div 
-        className="w-full max-w-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] backdrop-blur-sm p-4 sm:p-8 space-y-8 transition-all duration-500 mx-4 sm:mx-0"
+        className={`relative z-10 w-full max-w-2xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] p-4 sm:p-8 space-y-8 transition-all duration-500 mx-4 sm:mx-0 ${profile.themePreset === 'brutalism' ? 'mt-8 sm:mt-12 backdrop-blur-2xl border border-white/10 shadow-[0_8px_32px_rgba(0,0,0,0.5)]' : 'backdrop-blur-sm'}`}
         style={{
           background: appliedColors.cardBg,
           borderRadius: theme.borderRadius,
@@ -174,7 +186,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
         <div className="flex flex-col space-y-2">
           <div className="flex">
             <h1 
-              className={`text-3xl sm:text-4xl font-bold tracking-tight ${profile.themePreset === 'gradient' ? 'px-4 py-1.5 -ml-2 rounded-xl backdrop-blur-md shadow-sm' : ''}`}
+              className={`text-3xl sm:text-4xl font-bold tracking-tight ${profile.themePreset === 'gradient' ? 'px-4 py-1.5 -ml-2 rounded-xl backdrop-blur-md shadow-sm' : ''} ${profile.themePreset === 'brutalism' ? 'text-white' : ''}`}
               style={{ 
                 fontFamily: theme.fonts.heading,
                 ...(profile.themePreset === 'gradient'
@@ -192,7 +204,7 @@ export default async function PublicProfilePage({ params, searchParams }: { para
           </div>
           
           {profile.jobTitle && (
-            <div className="flex items-center text-lg mt-1 opacity-80" style={{ color: appliedColors.text }}>
+            <div className={`flex items-center text-lg mt-1 opacity-80 ${profile.themePreset === 'brutalism' ? 'text-white' : ''}`} style={profile.themePreset === 'brutalism' ? {} : { color: appliedColors.text }}>
               {profile.profileMode === 'casual' && <Smile className="w-5 h-5 mr-2 opacity-70" />}
               {profile.profileMode === 'creative' && <Palette className="w-5 h-5 mr-2 opacity-70" />}
               {profile.profileMode === 'professional' && <Briefcase className="w-5 h-5 mr-2 opacity-70" />}
@@ -207,14 +219,15 @@ export default async function PublicProfilePage({ params, searchParams }: { para
         {/* Bio */}
         {profile.bio && (
           <div className="space-y-3">
-            <h2 
-              className="text-sm font-bold uppercase tracking-widest opacity-60 flex items-center"
-              style={{ color: appliedColors.text }}
-            >
-              {profile.profileMode === 'casual' && <><Info className="w-4 h-4 mr-2" /> About Me</>}
-              {profile.profileMode === 'professional' && <><FileText className="w-4 h-4 mr-2" /> Summary</>}
-              {profile.profileMode === 'creative' && <><Feather className="w-4 h-4 mr-2" /> Vision</>}
-            </h2>
+            {profile.profileMode !== 'casual' && (
+              <h2 
+                className="text-sm font-bold uppercase tracking-widest opacity-60 flex items-center"
+                style={{ color: appliedColors.text }}
+              >
+                {profile.profileMode === 'professional' && <><FileText className="w-4 h-4 mr-2" /> Summary</>}
+                {profile.profileMode === 'creative' && <><Feather className="w-4 h-4 mr-2" /> Vision</>}
+              </h2>
+            )}
             <p className="leading-relaxed whitespace-pre-wrap opacity-90 text-[15px]">{profile.bio}</p>
           </div>
         )}
@@ -385,17 +398,20 @@ export default async function PublicProfilePage({ params, searchParams }: { para
 
                 if (embedDetails) {
                   return (
-                    <div key={link.id} className="w-full my-4 flex justify-center">
+                    <div key={link.id} className="w-full my-4 flex justify-center overflow-hidden">
                       <iframe 
                          style={{ 
                            borderRadius: linkRadius === '0px' ? '0px' : '16px',
-                           backgroundColor: 'transparent'
+                           backgroundColor: 'transparent',
+                           maxWidth: '100%',
+                           overflow: 'hidden'
                          }}
                          src={embedDetails.url} 
                          width="100%" 
                          height={embedDetails.height}
                          className={`${embedDetails.className} transition-all duration-300 shadow-sm`}
                          frameBorder="0" 
+                         scrolling="no"
                          allowFullScreen 
                          allow="autoplay; clipboard-write; encrypted-media; fullscreen; picture-in-picture; web-share" 
                          loading="lazy"

@@ -160,6 +160,52 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
       body: 'var(--font-body), system-ui, sans-serif'
     },
     borderRadius: '1.25rem'
+  },
+  brutalism: {
+    name: 'Brutalism',
+    description: 'Acid graphic dark brutalism theme. Raw, striking interface with noise texture.',
+    mode: ['creative', 'casual'],
+    colors: {
+      primary: '#ffffff',
+      secondary: '#1a1a1a',
+      accent: '#d1d5db',
+      background: '#000000',
+      text: '#ffffff',
+      cardBg: 'rgba(255, 255, 255, 0.05)',
+      cardBorder: 'rgba(255, 255, 255, 0.1)',
+      linkBg: 'rgba(255, 255, 255, 0.08)',
+      linkBorder: '#444444',
+      inputBg: '#0f0f0f',
+      inputBorder: '#333333'
+    },
+    fonts: {
+      heading: 'var(--font-anton), var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-body), system-ui, sans-serif'
+    },
+    borderRadius: '0px'
+  },
+  'y2k-ticket': {
+    name: 'Y2K Ticket',
+    description: 'Y2K Sports Ticket Retro-Futurism theme with bold contrast.',
+    mode: ['creative', 'casual'],
+    colors: {
+      primary: '#172554',
+      secondary: '#ffffff',
+      accent: '#ea580c',
+      background: 'linear-gradient(135deg, #a1a1aa 0%, #52525b 50%, #18181b 100%)',
+      text: '#172554',
+      cardBg: '#f97316',
+      cardBorder: '#172554',
+      linkBg: '#172554',
+      linkBorder: '#172554',
+      inputBg: '#ffffff',
+      inputBorder: '#172554'
+    },
+    fonts: {
+      heading: 'var(--font-heading), system-ui, sans-serif',
+      body: 'var(--font-mono), ui-monospace, monospace'
+    },
+    borderRadius: '0px'
   }
 } as const;
 
