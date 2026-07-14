@@ -89,7 +89,7 @@ function LoginForm() {
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-      <div className="bg-white py-8 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] border border-[#aaafbc]/30 rounded-3xl sm:px-10">
+      <div className="py-8 px-6 sm:px-10">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -99,9 +99,6 @@ function LoginForm() {
 
         <form className="space-y-6" onSubmit={handleLogin}>
           <div>
-            <label htmlFor="identifier" className="block text-sm font-medium text-[#0c0e0b]">
-              Email or Phone Number
-            </label>
             <div className="mt-2">
               <input
                 id="identifier"
@@ -111,16 +108,13 @@ function LoginForm() {
                 required
                 value={identifier}
                 onChange={(e) => setIdentifier(e.target.value)}
-                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
+                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                 placeholder="Email or phone"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#0c0e0b]">
-              Password
-            </label>
             <div className="mt-2 relative">
               <input
                 id="password"
@@ -130,7 +124,7 @@ function LoginForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4 pr-10"
+                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 pr-10 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                 placeholder="Password"
               />
               <button
@@ -174,13 +168,9 @@ function LoginForm() {
             <button 
               type="submit"
               disabled={isLoading}
-              className="flex w-full justify-center items-center rounded-xl bg-[#1A1A1A] px-3 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#0c0e0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              className={`flex w-full justify-center items-center text-[#090909] py-[0.7em] px-[1.7em] text-[18px] rounded-[0.5em] bg-[#e8e8e8] border border-[#e8e8e8] transition-all duration-300 shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff] hover:border-white active:shadow-[4px_4px_12px_#c5c5c5,-4px_-4px_12px_#ffffff] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed ${isLoading ? 'animate-pulse' : ''}`}
             >
-              {isLoading ? (
-                <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-              ) : (
-                'Sign in'
-              )}
+              {isLoading ? 'Signing in...' : 'Sign in'}
             </button>
           </div>
         </form>

@@ -98,7 +98,7 @@ export default function ForgotPasswordPage() {
       </div>
 
       <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md">
-        <div className="bg-white py-8 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] border border-[#aaafbc]/30 rounded-3xl sm:px-10">
+        <div className="py-8 px-6 sm:px-10">
           
           {success ? (
             <div className="text-center py-4">
@@ -124,10 +124,7 @@ export default function ForgotPasswordPage() {
               )}
 
               <div>
-                <label htmlFor="identifier" className="block text-sm font-medium text-[#0c0e0b]">
-                  Email or Phone Number
-                </label>
-                <div className="mt-2 flex rounded-xl shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#a299af] bg-[#F4F3EE]/50 overflow-hidden">
+                <div className="mt-2 flex rounded-xl bg-[#F4F3EE] overflow-hidden shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus-within:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300">
                   <input
                     id="identifier"
                     name="identifier"
@@ -135,17 +132,14 @@ export default function ForgotPasswordPage() {
                     required
                     value={identifier}
                     onChange={(e) => setIdentifier(e.target.value)}
-                    className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-4"
-                    placeholder="mail@example.com / 0812..."
+                    className="block w-full border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-4 outline-none"
+                    placeholder="Email or phone"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="code" className="block text-sm font-medium text-[#0c0e0b]">
-                  Reset Code from Admin
-                </label>
-                <div className="mt-1">
+                <div className="mt-2">
                   <input
                     id="code"
                     name="code"
@@ -154,16 +148,13 @@ export default function ForgotPasswordPage() {
                     placeholder="Enter 6-digit code"
                     value={code}
                     onChange={(e) => setCode(e.target.value)}
-                    className="block w-full appearance-none rounded-xl border border-[#aaafbc]/30 px-3 py-3 placeholder-[#aaafbc] shadow-sm focus:border-[#a299af] focus:outline-none focus:ring-[#a299af] sm:text-sm bg-white text-[#0c0e0b] transition-colors"
+                    className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                   />
                 </div>
               </div>
 
               <div>
-                <label htmlFor="newPassword" className="block text-sm font-medium text-[#0c0e0b]">
-                  New Password
-                </label>
-                <div className="mt-1 relative">
+                <div className="mt-2 relative">
                   <input
                     id="newPassword"
                     name="newPassword"
@@ -172,7 +163,7 @@ export default function ForgotPasswordPage() {
                     placeholder="Enter new password"
                     value={newPassword}
                     onChange={(e) => setNewPassword(e.target.value)}
-                    className="block w-full appearance-none rounded-xl border border-[#aaafbc]/30 px-3 py-3 placeholder-[#aaafbc] shadow-sm focus:border-[#a299af] focus:outline-none focus:ring-[#a299af] sm:text-sm bg-white text-[#0c0e0b] transition-colors pr-10"
+                    className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 pr-10 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                   />
                   <button
                     type="button"
@@ -193,11 +184,8 @@ export default function ForgotPasswordPage() {
                 <button 
                   type="submit"
                   disabled={isSubmitting}
-                  className="flex w-full justify-center items-center rounded-xl bg-[#1A1A1A] px-3 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#0c0e0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+                  className={`flex w-full justify-center items-center text-[#090909] py-[0.7em] px-[1.7em] text-[18px] rounded-[0.5em] bg-[#e8e8e8] border border-[#e8e8e8] transition-all duration-300 shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff] hover:border-white active:shadow-[4px_4px_12px_#c5c5c5,-4px_-4px_12px_#ffffff] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed ${isSubmitting ? 'animate-pulse' : ''}`}
                 >
-                  {isSubmitting ? (
-                    <RefreshCw className="w-4 h-4 animate-spin mr-2" />
-                  ) : null}
                   {isSubmitting ? 'Resetting...' : 'Reset Password'}
                 </button>
               </div>

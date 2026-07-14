@@ -344,7 +344,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isWorkspaceLoaded && activeWorkspaceId && pathname) {
       if (pathname === '/inbox') {
-        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
         setHasUnreadInbox(false);
       }
       // Don't save paths that are not part of the dashboard menu (like login)
@@ -710,7 +709,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         </div>
 
         {/* Mobile Bottom Navigation */}
-        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)] z-40">
+        <nav className="md:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 pb-[env(safe-area-inset-bottom)] z-[60]">
           <div className="flex items-center justify-around px-2 h-16">
             {menuItems.filter(item => item.show).map((item) => {
               const isActive = pathname === item.href || (item.href !== '/' && pathname.startsWith(item.href + '/'));
@@ -719,17 +718,18 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <Link
                   key={item.name}
                   href={item.href}
-                  className={`relative flex flex-col items-center justify-center w-full h-full space-y-1 ${
-                    isActive ? 'text-slate-900' : 'text-slate-400 hover:text-slate-600'
+                  className={`relative flex flex-col items-center justify-center flex-1 h-full space-y-1 touch-manipulation transition-colors ${
+                    isActive ? 'text-slate-900' : 'text-slate-400 active:text-slate-600'
                   }`}
+                  prefetch={true}
                 >
-                  <div className="relative">
-                    <Icon className={`w-5 h-5 ${isActive ? 'text-slate-900' : ''}`} />
+                  <div className="relative flex items-center justify-center p-1 rounded-full">
+                    <Icon className={`w-6 h-6 ${isActive ? 'text-slate-900' : ''}`} />
                     {item.name === 'Inbox' && hasUnreadInbox && (
-                      <div className="absolute -top-1 -right-1 w-2 h-2 rounded-full bg-red-500 border border-white"></div>
+                      <div className="absolute top-0 right-0 w-2.5 h-2.5 rounded-full bg-red-500 border-2 border-white"></div>
                     )}
                   </div>
-                  <span className="text-[10px] font-medium truncate max-w-full px-1">{item.name}</span>
+                  <span className={`text-[10px] font-medium truncate max-w-full px-1 ${isActive ? 'font-bold' : ''}`}>{item.name}</span>
                 </Link>
               );
             })}

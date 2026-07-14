@@ -61,7 +61,7 @@ export default function RootLayout({
 }>) {
   return (
     <html lang="en" className={`${headingFont.variable} ${bodyFont.variable} scroll-smooth`}>
-      <head>
+      <body className="font-body antialiased overflow-x-clip">
         {/* Google tag (gtag.js) */}
         <Script async src="https://www.googletagmanager.com/gtag/js?id=G-6835JNPG69" strategy="afterInteractive" />
         <Script id="google-analytics" strategy="afterInteractive">
@@ -69,12 +69,9 @@ export default function RootLayout({
             window.dataLayer = window.dataLayer || [];
             function gtag(){dataLayer.push(arguments);}
             gtag('js', new Date());
-
             gtag('config', 'G-6835JNPG69');
           `}
         </Script>
-      </head>
-      <body className="font-body antialiased overflow-x-clip">
         <ToastProvider>
           {children}
         </ToastProvider>

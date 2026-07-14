@@ -9,6 +9,7 @@ import { supabase } from '@/lib/supabase';
 import { useRouter } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { useToast } from '@/components/ui/ToastContext';
+import { updateCircleIdentity } from '@/app/actions/circle';
 
 export default function CircleSettingsPage() {
   const router = useRouter();
@@ -92,7 +93,7 @@ export default function CircleSettingsPage() {
   }, [activeWorkspaceId, router]);
 
   const handleSaveSettings = async () => {
-    if (!activeCircle || currentUserRole !== 'Admin') return;
+    if (!activeCircle || (currentUserRole !== 'Admin' && currentUserRole !== 'admin')) return;
     setIsSaving(true);
     setSaveSuccess(false);
     
@@ -102,14 +103,13 @@ export default function CircleSettingsPage() {
         whoCanEdit
       };
       
-      const { error } = await supabase
-        .from('circles')
-        .update({
-          description: JSON.stringify(updatedDescObj)
-        })
-        .eq('id', activeCircle.id);
+      const result = await updateCircleIdentity(
+        activeCircle.id,
+        activeCircle.name,
+        JSON.stringify(updatedDescObj)
+      );
         
-      if (error) throw error;
+      if (!result.success) throw new Error(result.error);
       
       setCircleDescriptionObj(updatedDescObj);
       setSaveSuccess(true);
@@ -123,7 +123,7 @@ export default function CircleSettingsPage() {
   };
 
   const handleDeleteCircle = async () => {
-    if (!activeCircle || currentUserRole !== 'Admin') return;
+    if (!activeCircle || (currentUserRole !== 'Admin' && currentUserRole !== 'admin')) return;
     if (deleteConfirmation !== activeCircle.name) {
       showError('Confirmation name does not match.');
       return;
@@ -162,7 +162,7 @@ export default function CircleSettingsPage() {
     );
   }
 
-  const isAdmin = currentUserRole === 'Admin';
+  const isAdmin = currentUserRole === 'Admin' || currentUserRole === 'admin';
 
   return (
     <div className="max-w-4xl space-y-8 pb-12">

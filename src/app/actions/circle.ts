@@ -5,6 +5,21 @@ import { supabase } from '@/lib/supabase'; // or import from server auth setup i
 import { isRateLimited } from '@/lib/rate-limit';
 import { headers } from 'next/headers';
 
+export async function updateCircleIdentity(circleId: string, name: string, description: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('circles')
+      .update({ name, description })
+      .eq('id', circleId);
+    
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in updateCircleIdentity:', err);
+    return { success: false, error: err.message || 'Failed to update circle.' };
+  }
+}
+
 export async function verifyAndJoinCircle(circleId: string, userId: string, inviteCode: string) {
   try {
     // 1. Rate Limiting Protection (Extract IP from headers in Next.js)

@@ -78,7 +78,7 @@ export function ThemeSelector({
               className={cn(
                 "flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all duration-200 font-semibold text-sm border-[1.5px]",
                 isSelected
-                  ? "bg-slate-100/80 border-slate-400 text-slate-900 shadow-inner backdrop-blur-sm font-extrabold"
+                  ? "bg-slate-100/80 border-slate-400 text-slate-900 shadow-inner backdrop-blur-sm font-medium"
                   : "bg-white/80 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50"
               )}
             >

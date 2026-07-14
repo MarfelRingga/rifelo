@@ -1,12 +1,15 @@
 'use client';
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
-import { Shield, ArrowLeft, RefreshCw, UserPlus, Globe, LogIn, Users, FileText, Zap, X } from 'lucide-react';
+import { Shield, ArrowLeft, RefreshCw, UserPlus, Globe, LogIn, Users, FileText, Zap, X, Video } from 'lucide-react';
 import { motion, AnimatePresence, useMotionValue, useAnimationFrame, animate } from 'motion/react';
 import { supabase } from '@/lib/supabase';
 import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { verifyAndJoinCircle } from '@/app/actions/circle';
+import { useResonanceRecord } from '@/hooks/useResonanceRecord';
+import { ResonanceCanvasRenderer } from '@/components/circle/ResonanceCanvasRenderer';
+import { ResonanceShareModal } from '@/components/circle/ResonanceShareModal';
 
 const MEMBER_COLORS = [
   '#FF3B30', '#FF9500', '#FFCC00', '#4CD964', 
@@ -25,7 +28,7 @@ const CircleNameDisplay = ({ name, isVisible }: { name: string, isVisible: boole
   if (maxLineLength > 18) textSizeClass = 'text-sm';
 
   return (
-    <div className={`font-black ${textSizeClass} tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] relative z-20 transition-opacity duration-500 delay-300 px-3 text-center flex flex-col items-center justify-center leading-tight w-full h-full ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+    <div className={`font-black ${textSizeClass} tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] relative z-20 transition-opacity duration-[2000ms] px-3 text-center flex flex-col items-center justify-center leading-tight w-full h-full ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
       {lines.map((line, idx) => (
         <span key={idx} className="block w-full break-words">
           {line}
@@ -62,8 +65,19 @@ export default function UnifiedCirclePage({
   const [joinError, setJoinError] = useState('');
   
   const [session, setSession] = useState<any>(initialSession);
-  const [isMember, setIsMember] = useState<boolean>(initialIsMember);
-  const [isLoadingAuth, setIsLoadingAuth] = useState(true);
+  const [isMember, setIsMember] = useState<boolean>(() => {
+    if (typeof window !== 'undefined') {
+      return localStorage.getItem(`is_member_${circle?.id}`) === 'true';
+    }
+    return initialIsMember;
+  });
+  const [isLoadingAuth, setIsLoadingAuth] = useState(() => {
+    if (typeof window !== 'undefined') {
+      const code = new URLSearchParams(window.location.search).get('code');
+      if (code) return true;
+    }
+    return false;
+  });
 
   // Visualization State
   const [members, setMembers] = useState<any[]>(initialMembers || []);
@@ -72,6 +86,51 @@ export default function UnifiedCirclePage({
   
   const rotation = useMotionValue(0);
   const speed = useMotionValue(36);
+
+  // Recording feature
+  const canvasRef = useRef<HTMLCanvasElement | null>(null);
+  const { isRecording, recordingBlobUrl, startRecording, clearRecording } = useResonanceRecord();
+  const [isShareModalOpen, setIsShareModalOpen] = useState(false);
+  const [recordRes, setRecordRes] = useState({ width: 720, height: 1280 });
+
+  useEffect(() => {
+    if (typeof window !== 'undefined') {
+      const dpr = window.devicePixelRatio || 1;
+      const screenW = window.screen.width * dpr;
+      const screenH = window.screen.height * dpr;
+      
+      const maxW = Math.max(screenW, screenH);
+      const minW = Math.min(screenW, screenH);
+      
+      let targetW = minW;
+      let targetH = maxW;
+
+      // Minimum 720p
+      if (targetW < 720) {
+        targetW = 720;
+        targetH = 1280;
+      }
+      // Maximum 1080p to prevent memory/performance issues
+      if (targetW > 1080) {
+        targetW = 1080;
+        targetH = 1920;
+      }
+
+      setRecordRes({ width: Math.round(targetW), height: Math.round(targetH) });
+    }
+  }, []);
+
+  const handleCaptureResonance = () => {
+    if (canvasRef.current && !isRecording) {
+      startRecording(canvasRef.current, 15000); // 15 seconds
+    }
+  };
+
+  useEffect(() => {
+    if (recordingBlobUrl) {
+      setIsShareModalOpen(true);
+    }
+  }, [recordingBlobUrl]);
 
   const activeCount = members.filter(m => activeProfileIds.includes(m.profile_id)).length;
 
@@ -87,6 +146,7 @@ export default function UnifiedCirclePage({
           }
           setSession(null);
           setIsMember(false);
+          localStorage.removeItem(`is_member_${circle.id}`);
           setIsLoadingAuth(false);
           return;
         }
@@ -103,10 +163,12 @@ export default function UnifiedCirclePage({
           
         if (membership) {
           setIsMember(true);
+          localStorage.setItem(`is_member_${circle.id}`, 'true');
           localStorage.setItem('activeWorkspaceId', circle.id);
           window.dispatchEvent(new Event('workspace-changed'));
         } else if (!memberError) {
           setIsMember(false);
+          localStorage.removeItem(`is_member_${circle.id}`);
           
           // Check for invite code in URL
           const codeFromUrl = searchParams.get('code');
@@ -116,6 +178,7 @@ export default function UnifiedCirclePage({
         }
       } else {
         setIsMember(false);
+        localStorage.removeItem(`is_member_${circle.id}`);
       }
       setIsLoadingAuth(false);
     } catch (err) {
@@ -123,6 +186,7 @@ export default function UnifiedCirclePage({
       await supabase.auth.signOut();
       setSession(null);
       setIsMember(false);
+      localStorage.removeItem(`is_member_${circle.id}`);
       setIsLoadingAuth(false);
     }
   };
@@ -326,14 +390,12 @@ export default function UnifiedCirclePage({
       const shouldMerge = activeCount === members.length && members.length > 1;
       
       if (shouldMerge) {
-        if (phase === 'rotating') {
+        if (phase === 'rotating' || phase === 'pulsing') {
           setPhase('accelerating');
         } else if (phase === 'accelerating') {
           timeout = setTimeout(() => {
             setPhase('merged');
-          }, 3000);
-        } else if (phase === 'pulsing') {
-          setPhase('merged');
+          }, 3000); // 3.0 seconds to allow multiple fast orbits first
         }
       } else {
         if (phase === 'accelerating' || phase === 'merged') {
@@ -350,9 +412,9 @@ export default function UnifiedCirclePage({
     if (phase === 'rotating') {
       animate(speed, 36, { duration: 1, ease: "easeOut" });
     } else if (phase === 'accelerating') {
-      animate(speed, 1164, { duration: 3, ease: "easeIn" });
+      animate(speed, 1080, { duration: 3.0, ease: "easeIn" });
     } else if (phase === 'merged') {
-      animate(speed, 18, { duration: 2, ease: "easeOut" });
+      animate(speed, 18, { duration: 3.0, ease: "easeOut" });
     }
   }, [phase, speed]);
 
@@ -394,7 +456,10 @@ export default function UnifiedCirclePage({
   if (isLoadingAuth) {
     return (
       <div className="min-h-screen bg-[#0c0e0b] flex items-center justify-center">
-        <RefreshCw className="w-8 h-8 text-white/20 animate-spin" />
+        <div className="flex flex-col items-center justify-center animate-pulse gap-1">
+          <span className="text-xl font-black uppercase tracking-[0.3em] text-white">Circle</span>
+          <span className="text-xl font-black uppercase tracking-[0.3em] text-white/50">Resonance</span>
+        </div>
       </div>
     );
   }
@@ -464,11 +529,15 @@ export default function UnifiedCirclePage({
             style={{ rotate: rotation }}
             animate={{ scale: phase === 'merged' ? 1.1 : 1 }}
             transition={{ scale: { duration: 1.5, ease: "easeInOut" } }}
-            className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
+            className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none"
           >
             {members.map((member, i) => {
               const angle = (i / members.length) * Math.PI * 2;
-              const radius = 110;
+              
+              // Dynamic radius: spiral in towards the center during accelerating and merged phases
+              const isResonating = phase === 'accelerating' || phase === 'merged';
+              const radius = isResonating ? 0 : 110;
+              
               const x = Math.cos(angle) * radius;
               const y = Math.sin(angle) * radius;
               const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
@@ -481,13 +550,14 @@ export default function UnifiedCirclePage({
               return (
                 <div
                   key={member.id}
-                  className={`absolute w-5 h-5 rounded-full shadow-lg group transition-all duration-300 border border-white/20 ${
-                    isMerged ? 'opacity-0' : (isActive ? 'opacity-100' : 'opacity-30')
-                  }`}
+                  className="absolute w-5 h-5 rounded-full shadow-lg group border border-white/20 transition-all"
                   style={{ 
+                    transitionDuration: phase === 'accelerating' ? '3000ms' : '700ms',
+                    transitionTimingFunction: phase === 'accelerating' ? 'cubic-bezier(0.85, 0, 1, 0.2)' : 'cubic-bezier(0.34, 1.56, 0.64, 1)',
                     backgroundColor: color,
                     boxShadow: isActive && !isMerged ? `0 0 20px ${color}80` : 'none',
-                    transform: `translate(${isMerged ? 0 : x}px, ${isMerged ? 0 : y}px) scale(${isActive && !isMerged ? 1.2 : 1})`
+                    transform: `translate(${x}px, ${y}px) scale(${isActive && !isMerged ? 1.2 : 1})`,
+                    opacity: isMerged ? 0 : (isActive ? 1 : 0.3)
                   }}
                 >
                   {/* Tooltip */}
@@ -503,11 +573,15 @@ export default function UnifiedCirclePage({
 
           {/* The Giant Merged Circle */}
           <div
-            className={`absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full z-10 flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
-              phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+            className={`absolute w-36 h-36 sm:w-40 sm:h-40 rounded-full z-40 flex items-center justify-center p-4 text-center transition-all border border-white/10 ${
+              phase === 'accelerating' || phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
             }`}
             style={{
-              background: `radial-gradient(circle, ${branding.resonanceColor} 0%, transparent 80%)`,
+              transitionDuration: phase === 'accelerating' || phase === 'merged' ? '2000ms' : '700ms',
+              transitionDelay: phase === 'accelerating' ? '1000ms' : '0ms',
+              transitionTimingFunction: 'cubic-bezier(0.34,1.56,0.64,1)',
+              backgroundColor: '#0c0e0b',
+              backgroundImage: `radial-gradient(circle, ${branding.resonanceColor} 0%, transparent 80%)`,
               boxShadow: `0 0 60px ${branding.resonanceColor}, inset 0 0 20px rgba(255,255,255,0.1)`
             }}
           >
@@ -518,34 +592,96 @@ export default function UnifiedCirclePage({
               }}
             />
             <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
-              <CircleNameDisplay name={circle.name} isVisible={phase === 'merged'} />
+              <CircleNameDisplay name={circle.name} isVisible={phase === 'accelerating' || phase === 'merged'} />
             </div>
           </div>
         </div>
 
+        {/* Capture Resonance Button */}
+        <div className="absolute top-[80%] left-1/2 -translate-x-1/2 flex items-center justify-center z-50">
+          <AnimatePresence>
+            {phase === 'merged' && (
+              <motion.div
+                initial={{ opacity: 0, scale: 0.9, y: 10 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.9, y: 10 }}
+                transition={{ duration: 0.4, ease: [0.34, 1.56, 0.64, 1] }}
+              >
+                <button
+                  onClick={handleCaptureResonance}
+                  disabled={isRecording}
+                  className="flex items-center gap-2 px-6 py-3 rounded-full bg-black/40 hover:bg-black/60 border border-white/20 text-white text-[11px] font-bold tracking-widest uppercase backdrop-blur-xl transition-all shadow-[0_0_30px_rgba(255,255,255,0.15)] active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+                >
+                  <Video className={`w-4 h-4 ${isRecording ? 'animate-pulse text-red-500' : ''}`} />
+                  {isRecording ? 'Recording...' : 'Capture Resonance'}
+                </button>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </div>
+
         {/* Minimal Member List */}
         <div className="w-full flex flex-col items-center gap-2 mb-10 shrink-0 z-20">
-          {members.map((member, i) => {
-            const isActive = activeProfileIds.includes(member.profile_id);
-            const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
-            const name = member.profiles?.full_name || member.profiles?.username || 'Unknown User';
-            
-            return (
-              <div key={member.id} className="flex items-center gap-2.5">
-                <div 
-                  className="w-1.5 h-1.5 rounded-full transition-all duration-500"
-                  style={{ 
-                    backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
-                    boxShadow: isActive ? `0 0 8px ${color}` : 'none'
-                  }}
-                />
-                <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
-                  {name}
-                </span>
-              </div>
-            );
-          })}
+          <AnimatePresence>
+            {phase !== 'merged' && (
+              <motion.div
+                initial={{ opacity: 0, height: 0 }}
+                animate={{ opacity: 1, height: 'auto' }}
+                exit={{ opacity: 0, height: 0 }}
+                transition={{ duration: 0.5, ease: "easeInOut" }}
+                className="w-full flex flex-col items-center gap-2 overflow-hidden"
+              >
+                {members.map((member, i) => {
+                  const isActive = activeProfileIds.includes(member.profile_id);
+                  const color = member.color || MEMBER_COLORS[i % MEMBER_COLORS.length];
+                  const name = member.profiles?.full_name || member.profiles?.username || 'Unknown User';
+                  
+                  return (
+                    <div key={member.id} className="flex items-center gap-2.5">
+                      <div 
+                        className="w-1.5 h-1.5 rounded-full transition-all duration-500"
+                        style={{ 
+                          backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
+                          boxShadow: isActive ? `0 0 8px ${color}` : 'none'
+                        }}
+                      />
+                      <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
+                        {name}
+                      </span>
+                    </div>
+                  );
+                })}
+              </motion.div>
+            )}
+          </AnimatePresence>
         </div>
+
+        {/* Hidden Canvas for Recording */}
+        {phase === 'merged' && (
+          <ResonanceCanvasRenderer
+            ref={canvasRef}
+            width={recordRes.width}
+            height={recordRes.height}
+            resonanceColor={branding.resonanceColor || '#a299af'}
+            circleName={circle.name}
+            members={members.map((m, i) => ({
+              id: m.profile_id,
+              color: m.color || MEMBER_COLORS[i % MEMBER_COLORS.length],
+              name: m.profiles?.full_name || m.profiles?.username || 'Unknown User'
+            }))}
+            activeProfileIds={activeProfileIds}
+          />
+        )}
+
+        {/* Share Modal */}
+        <ResonanceShareModal 
+          isOpen={isShareModalOpen} 
+          onClose={() => {
+            setIsShareModalOpen(false);
+            clearRecording();
+          }} 
+          videoUrl={recordingBlobUrl} 
+        />
       </div>
     );
   }

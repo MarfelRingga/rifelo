@@ -109,8 +109,6 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     }
   };
 
-  const isY2K = themePreset === 'y2k-ticket';
-  
   const inputStyles: React.CSSProperties = {
     background: themeColors?.inputBg || themeColors?.background || '#ffffff',
     color: themeColors?.text || '#111827',
@@ -122,19 +120,12 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     color: themeColors?.accent || '#ffffff',
   };
 
-  if (isY2K) {
-    inputStyles.borderRadius = '0px';
-    buttonStyle.borderRadius = '0px';
-  }
-
   return (
-    <div className={isY2K ? "" : "mt-8 pt-8"}>
-      {!isY2K && (
-        <div className="mb-6">
-          <h2 className="text-lg font-bold" style={{ color: themeColors?.text }}>Leave a Message</h2>
-          <p className="text-sm opacity-60 mt-1" style={{ color: themeColors?.text }}>Send a secret message or say hello.</p>
-        </div>
-      )}
+    <div>
+      <div className="mb-6">
+        <h2 className="text-lg font-bold" style={{ color: themeColors?.text }}>Leave a Message</h2>
+        <p className="text-sm opacity-60 mt-1" style={{ color: themeColors?.text }}>Send a secret message or say hello.</p>
+      </div>
 
       <div className="relative grid">
         <form 
@@ -168,7 +159,7 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               onChange={(e) => setName(e.target.value)}
               placeholder={placeholderName}
               style={inputStyles}
-              className={`w-full px-4 py-3 border ${isY2K ? 'rounded-none font-mono shadow-[4px_4px_0_0_rgba(23,37,84,1)] mb-2' : 'rounded-xl'} focus:outline-none transition-all text-sm`}
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm"
               maxLength={50}
             />
           </div>
@@ -181,7 +172,7 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               required
               rows={4}
               style={inputStyles}
-              className={`w-full px-4 py-3 border ${isY2K ? 'rounded-none font-mono shadow-[4px_4px_0_0_rgba(23,37,84,1)]' : 'rounded-xl'} focus:outline-none transition-all text-sm resize-none`}
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm resize-none"
               maxLength={1000}
             />
           </div>
@@ -190,7 +181,7 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
             type="submit"
             disabled={isSubmitting || !message.trim() || cooldownLeft > 0}
             style={buttonStyle}
-            className={`w-full flex items-center justify-center px-6 py-3 text-sm font-bold ${isY2K ? 'rounded-none uppercase font-mono mt-4 hover:bg-orange-500' : 'rounded-xl'} hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]`}
+            className="w-full flex items-center justify-center px-6 py-3 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
           >
             {isSubmitting ? (
               <Loader2 className="w-4 h-4 animate-spin" />
@@ -198,8 +189,8 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               <>Wait {cooldownLeft}s to send again</>
             ) : (
               <>
-                {!isY2K && <Send className="w-4 h-4 mr-2" />}
-                {isY2K ? '> SUBMIT_DATA' : 'Send Message'}
+                <Send className="w-4 h-4 mr-2" />
+                Send Message
               </>
             )}
           </button>

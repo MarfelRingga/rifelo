@@ -92,75 +92,6 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     },
     borderRadius: '0.375rem' // Standard rounded-md
   },
-  playful: {
-    name: 'Playful',
-    description: 'Bright, colorful, and heavily rounded for a friendly vibe.',
-    mode: ['casual'],
-    colors: {
-      primary: '#f59e0b', // Amber
-      secondary: '#fef3c7', // Light Amber
-      accent: '#10b981', // Emerald
-      background: '#fffbeb',
-      text: '#451a03',
-      cardBg: '#ffffff',
-      cardBorder: '#f59e0b20',
-      linkBg: '#fef3c7',
-      linkBorder: 'transparent',
-      inputBg: '#ffffff',
-      inputBorder: '#451a0320'
-    },
-    fonts: {
-      heading: 'var(--font-heading), system-ui, sans-serif',
-      body: 'var(--font-body), system-ui, sans-serif'
-    },
-    borderRadius: '1.5rem'
-  },
-  vibrant: {
-    name: 'Vibrant',
-    description: 'High energy, bold colors, and strong contrast.',
-    mode: ['casual', 'creative'],
-    colors: {
-      primary: '#7c3aed', // Purple
-      secondary: '#f3f4f6', // Light gray
-      accent: '#ec4899', // Pink
-      background: 'linear-gradient(135deg, #fdf4ff 0%, #e0e7ff 100%)', // Fuchsia 50 to Indigo 100
-      text: '#111827',
-      cardBg: 'rgba(255, 255, 255, 0.7)',
-      cardBorder: '#7c3aed20',
-      linkBg: 'rgba(255, 255, 255, 0.6)',
-      linkBorder: 'transparent',
-      inputBg: 'rgba(255, 255, 255, 0.8)',
-      inputBorder: '#11182720'
-    },
-    fonts: {
-      heading: 'var(--font-heading), system-ui, sans-serif',
-      body: 'var(--font-body), system-ui, sans-serif'
-    },
-    borderRadius: '1rem'
-  },
-  gradient: {
-    name: 'Gradient',
-    description: 'Modern, soft gradients with a premium feel.',
-    mode: ['creative'],
-    colors: {
-      primary: '#ffffff',
-      secondary: 'rgba(255, 255, 255, 0.1)',
-      accent: '#818cf8', // Indigo 400 (softer, doesn't clash)
-      background: 'linear-gradient(135deg, #0f172a 0%, #1e1b4b 100%)', // Slate 900 to Indigo 950
-      text: '#f8fafc',
-      cardBg: 'rgba(255, 255, 255, 0.08)',
-      cardBorder: 'rgba(255, 255, 255, 0.15)',
-      linkBg: 'rgba(255, 255, 255, 0.05)',
-      linkBorder: 'rgba(255, 255, 255, 0.1)',
-      inputBg: 'rgba(255, 255, 255, 0.05)',
-      inputBorder: 'rgba(255, 255, 255, 0.1)'
-    },
-    fonts: {
-      heading: 'var(--font-heading), system-ui, sans-serif',
-      body: 'var(--font-body), system-ui, sans-serif'
-    },
-    borderRadius: '1.25rem'
-  },
   brutalism: {
     name: 'Brutalism',
     description: 'Acid graphic dark brutalism theme. Raw, striking interface with noise texture.',
@@ -184,28 +115,28 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     },
     borderRadius: '0px'
   },
-  'y2k-ticket': {
-    name: 'Y2K Ticket',
-    description: 'Y2K Sports Ticket Retro-Futurism theme with bold contrast.',
+  'phantom-deck': {
+    name: 'Phantom Deck',
+    description: 'A mysterious theme inspired by vintage playing cards, floating particles, and deep gold details.',
     mode: ['creative', 'casual'],
     colors: {
-      primary: '#172554',
-      secondary: '#ffffff',
-      accent: '#ea580c',
-      background: 'linear-gradient(135deg, #a1a1aa 0%, #52525b 50%, #18181b 100%)',
-      text: '#172554',
-      cardBg: '#f97316',
-      cardBorder: '#172554',
-      linkBg: '#172554',
-      linkBorder: '#172554',
-      inputBg: '#ffffff',
-      inputBorder: '#172554'
+      primary: '#ca8a04', // Warm gold
+      secondary: '#2a1711', // Deep blackish brown
+      accent: '#991b1b', // Deep crimson
+      background: 'linear-gradient(to bottom, #110c0a 0%, #1c1410 50%, #0d0806 100%)',
+      text: '#f5ebd5', // Warm parchment text
+      cardBg: 'rgba(28, 20, 16, 0.8)', // Acrylic card game table background
+      cardBorder: 'rgba(202, 138, 4, 0.25)', // Subtle gold border
+      linkBg: 'rgba(42, 23, 17, 0.5)',
+      linkBorder: 'rgba(202, 138, 4, 0.15)',
+      inputBg: '#110c0a',
+      inputBorder: 'rgba(202, 138, 4, 0.3)'
     },
     fonts: {
-      heading: 'var(--font-heading), system-ui, sans-serif',
-      body: 'var(--font-mono), ui-monospace, monospace'
+      heading: 'var(--font-heading), system-ui, serif',
+      body: 'var(--font-sans), system-ui, sans-serif'
     },
-    borderRadius: '0px'
+    borderRadius: '1.25rem'
   }
 } as const;
 

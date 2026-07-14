@@ -28,7 +28,7 @@ import { decodeMessageSettings } from '@/lib/messageSettings';
 import { themePresets, getTheme } from '@/lib/themePresets';
 import { ProfileMode } from '@/lib/types/profile';
 import HeroBrutalism from '@/components/HeroBrutalism';
-import Y2KTicketProfile from '@/components/Y2KTicketProfile';
+import PhantomDeckProfile from '@/components/PhantomDeckProfile';
 
 export const revalidate = 60; // Cache for 60 seconds (ISR)
 
@@ -147,8 +147,8 @@ export default async function PublicProfilePage({ params, searchParams }: { para
   const isGradientBg = appliedColors.background.includes('gradient');
   const isGradientCardBg = appliedColors.cardBg.includes('gradient');
 
-  if (profile.themePreset === 'y2k-ticket') {
-    return <Y2KTicketProfile profile={profile} />;
+  if (profile.themePreset === 'phantom-deck') {
+    return <PhantomDeckProfile profile={profile} />;
   }
 
   const getLinkRadius = (r: string | undefined): string => {

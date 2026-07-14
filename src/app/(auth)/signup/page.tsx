@@ -92,7 +92,7 @@ function SignupForm() {
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-      <div className="bg-white py-8 px-6 shadow-[0_4px_20px_-4px_rgba(0,0,0,0.02)] border border-[#aaafbc]/30 rounded-3xl sm:px-10">
+      <div className="py-8 px-6 sm:px-10">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -112,9 +112,6 @@ function SignupForm() {
 
         <form className="space-y-6" onSubmit={handleSignup}>
           <div>
-            <label htmlFor="username" className="block text-sm font-medium text-[#0c0e0b]">
-              Username
-            </label>
             <div className="mt-2">
               <input
                 id="username"
@@ -124,7 +121,7 @@ function SignupForm() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z._]/g, ''))}
-                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
+                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                 placeholder="Username"
                 minLength={4}
               />
@@ -132,9 +129,6 @@ function SignupForm() {
           </div>
 
           <div>
-            <label htmlFor="email" className="block text-sm font-medium text-[#0c0e0b]">
-              Email Address
-            </label>
             <div className="mt-2">
               <input
                 id="email"
@@ -144,18 +138,15 @@ function SignupForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4"
+                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                 placeholder="Email address"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="phone" className="block text-sm font-medium text-[#0c0e0b]">
-              Phone Number
-            </label>
-            <div className="mt-2 flex rounded-xl shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 focus-within:ring-2 focus-within:ring-inset focus-within:ring-[#a299af] bg-[#F4F3EE]/50 overflow-hidden">
-              <span className="flex select-none items-center pl-4 pr-3 text-[#0c0e0b]/60 sm:text-sm border-r border-[#aaafbc]/20 font-medium">
+            <div className="mt-2 flex rounded-xl bg-[#F4F3EE] overflow-hidden shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus-within:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300">
+              <span className="flex select-none items-center pl-4 pr-1 text-[#0c0e0b]/60 sm:text-sm font-medium">
                 +62
               </span>
               <input
@@ -166,16 +157,13 @@ function SignupForm() {
                 required
                 value={phone}
                 onChange={(e) => setPhone(e.target.value)}
-                className="block w-full border-0 py-2.5 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent px-3"
+                className="block w-full border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 focus:ring-0 sm:text-sm sm:leading-6 bg-transparent pl-1 pr-4 outline-none"
                 placeholder="Phone number"
               />
             </div>
           </div>
 
           <div>
-            <label htmlFor="password" className="block text-sm font-medium text-[#0c0e0b]">
-              Password
-            </label>
             <div className="mt-2 relative">
               <input
                 id="password"
@@ -185,7 +173,7 @@ function SignupForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 bg-[#F4F3EE]/50 px-4 pr-10"
+                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 pr-10 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
                 placeholder="Password"
               />
               <button
@@ -204,9 +192,6 @@ function SignupForm() {
           </div>
 
           <div>
-            <label htmlFor="nfcTagCode" className="block text-sm font-medium text-[#0c0e0b]">
-              NFC Tag Code
-            </label>
             <div className="mt-2">
               <input
                 id="nfcTagCode"
@@ -216,7 +201,7 @@ function SignupForm() {
                 disabled={!!claimToken}
                 value={nfcTagCode}
                 onChange={(e) => setNfcTagCode(e.target.value)}
-                className={`block w-full rounded-xl border-0 py-2.5 text-[#0c0e0b] shadow-sm ring-1 ring-inset ring-[#aaafbc]/30 placeholder:text-[#0c0e0b]/40 focus:ring-2 focus:ring-inset focus:ring-[#a299af] sm:text-sm sm:leading-6 px-4 ${claimToken ? 'bg-[#aaafbc]/20 text-[#0c0e0b]/60 cursor-not-allowed' : 'bg-[#F4F3EE]/50'}`}
+                className={`block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300 ${claimToken ? 'bg-transparent text-[#0c0e0b]/60 cursor-not-allowed' : 'bg-[#F4F3EE]'}`}
                 placeholder="Enter your tag code"
               />
               {claimToken && (
@@ -229,13 +214,9 @@ function SignupForm() {
             <button 
               type="submit"
               disabled={isLoading || success}
-              className="flex w-full justify-center items-center rounded-xl bg-[#1A1A1A] px-3 py-3 text-sm font-medium text-white shadow-sm hover:bg-[#0c0e0b] focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#1A1A1A] transition-all active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed"
+              className={`flex w-full justify-center items-center text-[#090909] py-[0.7em] px-[1.7em] text-[18px] rounded-[0.5em] bg-[#e8e8e8] border border-[#e8e8e8] transition-all duration-300 shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff] hover:border-white active:shadow-[4px_4px_12px_#c5c5c5,-4px_-4px_12px_#ffffff] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed ${isLoading ? 'animate-pulse' : ''}`}
             >
-              {isLoading ? (
-                <RefreshCw className="w-5 h-5 animate-spin mx-auto" />
-              ) : (
-                'Create Account'
-              )}
+              {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
           </div>
         </form>

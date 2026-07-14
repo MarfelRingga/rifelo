@@ -8,10 +8,10 @@ interface ModePillSelectorProps {
   onModeSelect: (mode: ProfileMode) => void;
 }
 
-const MODES: { id: ProfileMode; label: string; icon: string }[] = [
-  { id: 'casual', label: 'Casual', icon: '🎉' },
-  { id: 'professional', label: 'Professional', icon: '💼' },
-  { id: 'creative', label: 'Creative', icon: '🎨' },
+const MODES: { id: ProfileMode; label: string }[] = [
+  { id: 'casual', label: 'Casual' },
+  { id: 'professional', label: 'Professional' },
+  { id: 'creative', label: 'Creative' },
 ];
 
 export function ModePillSelector({ currentMode, onModeSelect }: ModePillSelectorProps) {
@@ -34,7 +34,6 @@ export function ModePillSelector({ currentMode, onModeSelect }: ModePillSelector
                   : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
               )}
             >
-              <span>{m.icon}</span>
               <span>{m.label}</span>
             </button>
           );

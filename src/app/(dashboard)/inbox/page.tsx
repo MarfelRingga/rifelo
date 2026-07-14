@@ -52,7 +52,7 @@ export default function InboxPage() {
       if (fetched.length > 0) {
         localStorage.setItem('lastViewedInboxTime', fetched[0].created_at);
       } else {
-        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
+        localStorage.removeItem('lastViewedInboxTime');
       }
       window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {
@@ -80,7 +80,7 @@ export default function InboxPage() {
       if (remaining.length > 0) {
         localStorage.setItem('lastViewedInboxTime', remaining[0].created_at);
       } else {
-        localStorage.setItem('lastViewedInboxTime', new Date().toISOString());
+        localStorage.removeItem('lastViewedInboxTime');
       }
       window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {

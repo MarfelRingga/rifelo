@@ -12,6 +12,7 @@ import { motion, AnimatePresence } from 'motion/react';
 import { useRouter } from 'next/navigation';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { useToast } from '@/components/ui/ToastContext';
+import { updateCircleIdentity } from '@/app/actions/circle';
 
 const CircleNameDisplay = ({ name, isVisible }: { name: string, isVisible: boolean }) => {
   const lines = (name || 'Untitled').split('\n').slice(0, 3);
@@ -317,7 +318,7 @@ export default function CircleManagementPage() {
     setIsSaving(true);
     
     try {
-      const isAllowedToEditDetails = whoCanEdit === 'all' || currentUserRole === 'Admin';
+      const isAllowedToEditDetails = whoCanEdit === 'all' || currentUserRole === 'Admin' || currentUserRole === 'admin';
       if (isAllowedToEditDetails) {
         let existingData = {};
         try {
@@ -332,15 +333,13 @@ export default function CircleManagementPage() {
           resonanceColor
         };
         
-        const { error } = await supabase
-          .from('circles')
-          .update({
-            name: circleName,
-            description: JSON.stringify(brandingData)
-          })
-          .eq('id', activeCircle.id);
+        const result = await updateCircleIdentity(
+          activeCircle.id,
+          circleName,
+          JSON.stringify(brandingData)
+        );
           
-        if (error) throw error;
+        if (!result.success) throw new Error(result.error);
       }
       
       if (currentUser) {
@@ -553,7 +552,7 @@ if (!activeCircle) {
   );
 }
 
-const canEditDetails = whoCanEdit === 'all' || currentUserRole === 'Admin';
+const canEditDetails = whoCanEdit === 'all' || currentUserRole === 'Admin' || currentUserRole === 'admin';
 
 return (
   <div className="max-w-5xl space-y-8 pb-12">

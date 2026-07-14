@@ -8,7 +8,7 @@ export type ProfileMode = 'casual' | 'professional' | 'creative';
  * Defines the available theme presets.
  * Presets pre-configure colors, typography, and spacing.
  */
-export type ThemePreset = 'vibrant' | 'playful' | 'corporate' | 'minimal' | 'gradient' | 'brutalism' | 'y2k-ticket';
+export type ThemePreset = 'corporate' | 'minimal' | 'brutalism' | 'phantom-deck';
 
 /**
  * Represents the configuration for a single input field in the profile editor.
