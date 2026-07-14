@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { isRateLimited } from '@/lib/rate-limit';
+import { revalidatePath } from 'next/cache';
 
 export async function PUT(
   request: Request,
@@ -27,7 +28,7 @@ export async function PUT(
     // Verify ownership
     const { data: tag, error: findError } = await supabaseAdmin
       .from('nfc_tags')
-      .select('id, user_id')
+      .select('id, user_id, token')
       .eq('id', id)
       .single();
 
@@ -45,6 +46,11 @@ export async function PUT(
       .eq('id', id);
 
     if (updateError) throw updateError;
+
+    // Invalidate the redirect cache
+    if (tag?.token) {
+      revalidatePath(`/t/${tag.token}`);
+    }
 
     // Join circle automatically
     if (circleId) {
@@ -107,7 +113,7 @@ export async function DELETE(
     // Verify ownership
     const { data: tag, error: findError } = await supabaseAdmin
       .from('nfc_tags')
-      .select('id, user_id')
+      .select('id, user_id, token')
       .eq('id', id)
       .single();
 
@@ -128,6 +134,11 @@ export async function DELETE(
       .eq('id', id);
 
     if (updateError) throw updateError;
+
+    // Invalidate the redirect cache
+    if (tag?.token) {
+      revalidatePath(`/t/${tag.token}`);
+    }
 
     return NextResponse.json({ success: true });
   } catch (error: any) {

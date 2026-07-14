@@ -5,8 +5,8 @@ import { unstable_cache } from 'next/cache';
 // Removed edge runtime due to connection drop on initial load.
 export const dynamic = 'force-dynamic';
 
-export const fetchTokenDestination = unstable_cache(
-  async (token: string) => {
+export const fetchTokenDestination = (token: string) => unstable_cache(
+  async () => {
     try {
       // 1. Find the tag and related data in ONE query
       const { data: tag, error: tagError } = await supabaseAdmin
@@ -78,10 +78,10 @@ export const fetchTokenDestination = unstable_cache(
     console.error('Error fetching token destination:', error);
     return { isValid: false, destination: null };
   }
-}, ['nfc-token-redirect'], {
+}, ['nfc-token-redirect', token], {
   revalidate: 60, // Cache for 60 seconds
   tags: ['nfc-tag-redirect']
-});
+})();
 
 export default async function NFCTagRedirectPage({ 
   params 

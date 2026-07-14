@@ -1,6 +1,7 @@
 import { NextResponse } from 'next/server';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { isRateLimited } from '@/lib/rate-limit';
+import { revalidatePath } from 'next/cache';
 
 export async function POST(request: Request) {
   try {
@@ -70,6 +71,11 @@ export async function POST(request: Request) {
     if (updateError) {
       console.error('[Claim Tag] Update error:', updateError);
       return NextResponse.json({ error: 'Failed to claim tag' }, { status: 500 });
+    }
+
+    // Invalidate the redirect cache
+    if (cleanToken) {
+      revalidatePath(`/t/${cleanToken}`);
     }
 
     // If tag has a circle_id, join the user to that circle automatically
