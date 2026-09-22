@@ -46,12 +46,13 @@ export const fetchTokenDestination = (token: string) => unstable_cache(
 
     // 3. Handle circle mode
     if (tag.interaction_mode === 'circle') {
-      if (tag.redirect_url) {
-        return { isValid: true, destination: `/c/${tag.redirect_url}`, isExternal: false };
+      let circleData = tag.circles as any;
+      if (Array.isArray(circleData)) {
+        circleData = circleData[0];
       }
       
-      const circleData = tag.circles as any;
-      const target = circleData?.slug || circleData?.invite_code;
+      // Prefer the slug if available, then fallback to stored redirect_url or invite_code
+      const target = circleData?.slug || tag.redirect_url || circleData?.invite_code;
       if (target) {
         return { isValid: true, destination: `/c/${target}`, isExternal: false };
       }

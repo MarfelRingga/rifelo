@@ -58,3 +58,50 @@
     -webkit-text-fill-color: var(--color-ink) !important;
   }
 
+/* Glass Theme Floating Ambient Background Animations (GPU accelerated) */
+@keyframes glass-drift-1 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(50px, 70px, 0) scale(1.12); }
+  66% { transform: translate3d(-35px, 100px, 0) scale(0.96); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes glass-drift-2 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  33% { transform: translate3d(-60px, -50px, 0) scale(1.08); }
+  66% { transform: translate3d(40px, -80px, 0) scale(0.92); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes glass-drift-3 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(70px, -45px, 0) scale(1.18); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+@keyframes glass-drift-4 {
+  0% { transform: translate3d(0, 0, 0) scale(1); }
+  50% { transform: translate3d(-50px, 60px, 0) scale(0.88); }
+  100% { transform: translate3d(0, 0, 0) scale(1); }
+}
+
+.animate-glass-orb-1 {
+  animation: glass-drift-1 22s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-glass-orb-2 {
+  animation: glass-drift-2 26s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-glass-orb-3 {
+  animation: glass-drift-3 18s ease-in-out infinite;
+  will-change: transform;
+}
+
+.animate-glass-orb-4 {
+  animation: glass-drift-4 24s ease-in-out infinite;
+  will-change: transform;
+}
+

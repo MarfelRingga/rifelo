@@ -54,7 +54,7 @@ export function SortableLinkItem({
       <div 
         {...attributes}
         {...listeners}
-        className={`flex items-center justify-between p-4 cursor-grab hover:bg-slate-100 transition-colors ${!isExpanded ? 'select-none' : ''}`}
+        className={`flex items-center justify-between px-3 py-2.5 cursor-grab hover:bg-slate-100 transition-colors ${!isExpanded ? 'select-none' : ''}`}
         onClick={() => toggleLinkExpansion(link.id)}
       >
         <div className="flex items-center gap-3 flex-1 overflow-hidden">
@@ -70,18 +70,18 @@ export function SortableLinkItem({
             )}
           </div>
           <div className="flex-1 truncate">
-            <p className="text-sm font-medium text-slate-900 truncate">
+            <p className="text-sm font-semibold text-slate-900 truncate leading-tight">
               {link.title || 'New Link'}
             </p>
-            <p className="text-xs text-slate-500 truncate">
+            <p className="text-[11px] text-slate-500 truncate leading-tight mt-0.5">
               {link.url || 'No URL provided'}
             </p>
           </div>
         </div>
-        <div className="flex items-center gap-2 shrink-0 ml-4" onPointerDown={(e) => e.stopPropagation()}>
+        <div className="flex items-center gap-1 shrink-0 ml-3" onPointerDown={(e) => e.stopPropagation()}>
           <button 
             onClick={(e) => { e.stopPropagation(); handleToggleVisibility(link.id); }}
-            className={`p-2 rounded-lg transition-colors ${
+            className={`p-1.5 rounded-md transition-colors ${
               link.is_visible === false 
                 ? 'text-slate-400 hover:text-slate-600 hover:bg-slate-200' 
                 : 'text-emerald-500 hover:text-emerald-600 hover:bg-emerald-50'
@@ -91,38 +91,40 @@ export function SortableLinkItem({
           </button>
           <button 
             onClick={(e) => { e.stopPropagation(); handleRemoveLink(link.id); }}
-            className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+            className="p-1.5 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-md transition-colors"
           >
             <Trash2 className="w-4 h-4" />
           </button>
-          <button className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-lg transition-colors">
+          <button className="p-1.5 text-slate-400 hover:text-slate-600 hover:bg-slate-200 rounded-md transition-colors">
             {isExpanded ? <ChevronUp className="w-4 h-4" /> : <ChevronDown className="w-4 h-4" />}
           </button>
         </div>
       </div>
       
       {isExpanded && (
-        <div className="p-4 pt-0 border-t border-slate-100 mt-2 cursor-default" onClick={(e) => e.stopPropagation()}>
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mt-2">
+        <div className="px-4 pb-4 pt-3 border-t border-slate-200 cursor-default" onClick={(e) => e.stopPropagation()}>
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">Platform Name</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Platform</label>
               <input 
                 type="text" 
                 placeholder="Instagram, Portfolio..." 
                 value={link.title}
                 onChange={(e) => handleLinkChange(link.id, 'title', e.target.value)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
               />
             </div>
             <div>
-              <label className="block text-xs font-medium text-slate-700 mb-1.5">URL</label>
+              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+                {platformInfo ? 'Username' : 'URL'}
+              </label>
               <input 
                 type="text" 
-                placeholder="https://..." 
+                placeholder={platformInfo ? "@username" : "https://..."}
                 value={link.url}
                 onChange={(e) => handleLinkChange(link.id, 'url', e.target.value)}
                 onBlur={() => handleLinkBlur(link.id)}
-                className="w-full px-3 py-2 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
+                className="w-full px-3 py-1.5 bg-white border border-slate-200 rounded-lg focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all text-sm" 
               />
             </div>
           </div>

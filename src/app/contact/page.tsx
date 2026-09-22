@@ -75,7 +75,7 @@ export default async function ContactPage() {
           {/* Main Contact Primary */}
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-slate-900">Direct Support</h2>
-            <div className="bg-white rounded-[2rem] p-8 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden group hover:border-slate-300 transition-all h-full">
+            <div className="bg-white rounded-3xl p-8 border border-slate-100 shadow-sm flex flex-col relative overflow-hidden group hover:border-slate-300 transition-all h-full">
               <div className="absolute top-0 right-0 w-32 h-32 bg-slate-50 rounded-bl-[4rem] -z-10 transition-transform group-hover:scale-110" />
               
               <div className="w-12 h-12 rounded-xl bg-slate-900 text-white flex items-center justify-center mb-6">
@@ -102,7 +102,7 @@ export default async function ContactPage() {
           <div className="space-y-6">
             <h2 className="text-2xl font-bold text-slate-900">Our Platforms</h2>
             
-            <div className="bg-white rounded-[2rem] p-6 sm:p-8 border border-slate-100 shadow-sm">
+            <div className="bg-white rounded-3xl p-6 sm:p-8 border border-slate-100 shadow-sm">
               {visiblePlatforms.length > 0 ? (
                 <div className="space-y-3">
                   {visiblePlatforms.map((platform) => {

@@ -92,7 +92,7 @@ function SignupForm() {
 
   return (
     <div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md px-4 sm:px-0">
-      <div className="py-8 px-6 sm:px-10">
+      <div className="py-8 px-6 sm:px-10 bg-white border border-[#0c0e0b]/10 rounded-3xl shadow-[0_4px_24px_rgba(12,14,11,0.04)]">
         {error && (
           <div className="mb-6 p-4 bg-red-50 border border-red-100 rounded-2xl flex items-start gap-3 text-red-600 text-sm animate-in fade-in slide-in-from-top-2">
             <AlertCircle className="w-5 h-5 shrink-0" />
@@ -121,7 +121,7 @@ function SignupForm() {
                 required
                 value={username}
                 onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z._]/g, ''))}
-                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
+                className="block w-full rounded-xl py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none sm:text-sm sm:leading-6 bg-[#FAF9F5] px-4 border border-[#0c0e0b]/10 focus-within:border-[#0c0e0b] focus-within:ring-1 focus-within:ring-[#0c0e0b] transition-all duration-300"
                 placeholder="Username"
                 minLength={4}
               />
@@ -138,15 +138,15 @@ function SignupForm() {
                 required
                 value={email}
                 onChange={(e) => setEmail(e.target.value)}
-                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
+                className="block w-full rounded-xl py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none sm:text-sm sm:leading-6 bg-[#FAF9F5] px-4 border border-[#0c0e0b]/10 focus-within:border-[#0c0e0b] focus-within:ring-1 focus-within:ring-[#0c0e0b] transition-all duration-300"
                 placeholder="Email address"
               />
             </div>
           </div>
 
           <div>
-            <div className="mt-2 flex rounded-xl bg-[#F4F3EE] overflow-hidden shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus-within:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300">
-              <span className="flex select-none items-center pl-4 pr-1 text-[#0c0e0b]/60 sm:text-sm font-medium">
+            <div className="mt-2 flex rounded-xl bg-[#FAF9F5] overflow-hidden border border-[#0c0e0b]/10 focus-within:border-[#0c0e0b] focus-within:ring-1 focus-within:ring-[#0c0e0b] transition-all duration-300">
+              <span className="flex select-none items-center pl-4 pr-1 text-[#0c0e0b]/50 sm:text-sm font-medium">
                 +62
               </span>
               <input
@@ -173,7 +173,7 @@ function SignupForm() {
                 required
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
-                className="block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 bg-[#F4F3EE] px-4 pr-10 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300"
+                className="block w-full rounded-xl py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none sm:text-sm sm:leading-6 bg-[#FAF9F5] px-4 pr-10 border border-[#0c0e0b]/10 focus-within:border-[#0c0e0b] focus-within:ring-1 focus-within:ring-[#0c0e0b] transition-all duration-300"
                 placeholder="Password"
               />
               <button
@@ -201,7 +201,7 @@ function SignupForm() {
                 disabled={!!claimToken}
                 value={nfcTagCode}
                 onChange={(e) => setNfcTagCode(e.target.value)}
-                className={`block w-full rounded-xl border-0 py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 px-4 shadow-[inset_4px_4px_8px_#d1d0cc,inset_-4px_-4px_8px_#ffffff] focus:shadow-[inset_6px_6px_10px_#d1d0cc,inset_-6px_-6px_10px_#ffffff] transition-shadow duration-300 ${claimToken ? 'bg-transparent text-[#0c0e0b]/60 cursor-not-allowed' : 'bg-[#F4F3EE]'}`}
+                className={`block w-full rounded-xl py-3 text-[#0c0e0b] placeholder:text-[#0c0e0b]/40 outline-none focus:ring-0 sm:text-sm sm:leading-6 px-4 border border-[#0c0e0b]/10 focus-within:border-[#0c0e0b] focus-within:ring-1 focus-within:ring-[#0c0e0b] transition-all duration-300 ${claimToken ? 'bg-transparent text-[#0c0e0b]/40 cursor-not-allowed' : 'bg-[#FAF9F5]'}`}
                 placeholder="Enter your tag code"
               />
               {claimToken && (
@@ -214,7 +214,7 @@ function SignupForm() {
             <button 
               type="submit"
               disabled={isLoading || success}
-              className={`flex w-full justify-center items-center text-[#090909] py-[0.7em] px-[1.7em] text-[18px] rounded-[0.5em] bg-[#e8e8e8] border border-[#e8e8e8] transition-all duration-300 shadow-[6px_6px_12px_#c5c5c5,-6px_-6px_12px_#ffffff] hover:border-white active:shadow-[4px_4px_12px_#c5c5c5,-4px_-4px_12px_#ffffff] active:scale-[0.98] disabled:opacity-70 disabled:cursor-not-allowed ${isLoading ? 'animate-pulse' : ''}`}
+              className={`flex w-full justify-center items-center py-3 px-4 text-sm font-semibold rounded-xl bg-[#1A1A1A] text-white hover:bg-[#0c0e0b] transition-all active:scale-95 disabled:opacity-70 disabled:cursor-not-allowed shadow-sm ${isLoading ? 'animate-pulse' : ''}`}
             >
               {isLoading ? 'Creating Account...' : 'Create Account'}
             </button>
@@ -227,28 +227,35 @@ function SignupForm() {
 
 export default function SignupPage() {
   return (
-    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col justify-center py-12 sm:px-6 lg:px-8">
-      <div className="sm:mx-auto sm:w-full sm:max-w-md">
-        <h2 className="mt-6 text-center text-3xl font-semibold tracking-tight text-[#0c0e0b] flex items-center justify-center gap-3">
-          <Link href="/" className="hover:opacity-80 transition-opacity" title="Back to Home">
+    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col justify-center py-12 sm:px-6 lg:px-8 relative">
+      {/* Top Corner Logo like Homepage */}
+      <div className="absolute top-0 left-0 w-full p-4 sm:p-6 flex items-center justify-between pointer-events-none">
+        <Link href="/" className="pointer-events-auto flex items-center gap-2 group">
+          <div className="relative w-7 h-7 transition-transform group-hover:scale-105">
             <img 
-              src="https://i.ibb.co.com/B5m6T7RZ/rifelo-logo.png" 
+              src="https://i.ibb.co.com/20WNbGMp/favicon-192x192.png" 
               alt="Rifelo Logo" 
-              className="w-9 h-9 object-contain"
+              className="w-full h-full object-contain"
               referrerPolicy="no-referrer" 
             />
-          </Link>
+          </div>
+          <span className="font-semibold text-base tracking-tight text-[#0c0e0b]">Rifelo</span>
+        </Link>
+      </div>
+
+      <div className="sm:mx-auto sm:w-full sm:max-w-md">
+        <h2 className="mt-6 text-center text-3xl font-semibold tracking-tight text-[#0c0e0b]">
           Sign up
         </h2>
-        <p className="mt-2 text-center text-sm text-[#0c0e0b]/70">
+        <p className="mt-2 text-center text-sm text-[#0c0e0b]/60">
           Already have an account?{' '}
-          <Link href="/login" className="font-medium text-[#0c0e0b] hover:text-[#a299af] transition-colors">
+          <Link href="/login" className="font-medium text-[#0c0e0b] underline underline-offset-4 hover:text-[#0c0e0b]/70 transition-colors">
             Sign in instead
           </Link>
         </p>
       </div>
 
-      <Suspense fallback={<div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md flex justify-center"><RefreshCw className="w-6 h-6 animate-spin text-[#a299af]" /></div>}>
+      <Suspense fallback={<div className="mt-8 sm:mx-auto sm:w-full sm:max-w-md flex justify-center"><RefreshCw className="w-6 h-6 animate-spin text-[#0c0e0b]/40" /></div>}>
         <SignupForm />
       </Suspense>
     </div>

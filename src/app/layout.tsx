@@ -1,3 +1,4 @@
+
 import type { Metadata } from "next";
 import { Plus_Jakarta_Sans, Inter } from "next/font/google";
 import Script from "next/script";

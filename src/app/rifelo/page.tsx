@@ -27,7 +27,7 @@ export default function RifeloEntityPage() {
       </nav>
       
       <main className="flex-1 flex flex-col items-center px-6 pb-16 md:px-12">
-        <article className="max-w-3xl w-full bg-white p-8 md:p-14 rounded-[2rem] md:rounded-[2.5rem] border border-[#aaafbc]/20 shadow-sm">
+        <article className="max-w-3xl w-full bg-white p-8 md:p-14 rounded-3xl md:rounded-3xl border border-[#aaafbc]/20 shadow-sm">
           <h1 className="text-4xl md:text-5xl font-bold tracking-tight mb-8 text-[#0c0e0b]">
             Rifelo
           </h1>

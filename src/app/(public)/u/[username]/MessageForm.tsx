@@ -22,6 +22,43 @@ interface MessageFormProps {
 
 const COOLDOWN_SECONDS = 60;
 
+/**
+ * Calculates a high-contrast text color (dark or light) based on background luminance (YIQ).
+ * Ensures WCAG AA/AAA compliance for buttons across all color presets and themes.
+ */
+function getContrastColor(bgHexOrRgb?: string, themePreset?: string): string {
+  if (themePreset === 'brutalism') {
+    return '#000000'; // Pure stark black on white button
+  }
+  if (themePreset === 'phantom-deck') {
+    return '#120b08'; // Rich deep obsidian on gold button
+  }
+  if (!bgHexOrRgb) return '#ffffff';
+
+  let hex = bgHexOrRgb.replace('#', '').trim();
+  if (bgHexOrRgb.startsWith('rgb')) {
+    const match = bgHexOrRgb.match(/\d+/g);
+    if (match && match.length >= 3) {
+      const r = parseInt(match[0], 10);
+      const g = parseInt(match[1], 10);
+      const b = parseInt(match[2], 10);
+      const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+      return yiq >= 145 ? '#0f172a' : '#ffffff';
+    }
+  }
+  if (hex.length === 3) {
+    hex = hex.split('').map(c => c + c).join('');
+  }
+  if (hex.length === 6) {
+    const r = parseInt(hex.substring(0, 2), 16);
+    const g = parseInt(hex.substring(2, 4), 16);
+    const b = parseInt(hex.substring(4, 6), 16);
+    const yiq = (r * 299 + g * 587 + b * 114) / 1000;
+    return yiq >= 145 ? '#0f172a' : '#ffffff';
+  }
+  return '#ffffff';
+}
+
 export default function MessageForm({ profileId, placeholderName, placeholderContent, themeColors, themePreset = 'minimal' }: MessageFormProps) {
   const [name, setName] = useState('');
   const [message, setMessage] = useState('');
@@ -34,6 +71,7 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
 
   // Cek localStorage saat komponen dimuat untuk melihat apakah user masih dalam masa cooldown
   useEffect(() => {
+    if (profileId === 'preview-id') return;
     const lastSent = localStorage.getItem(`last_message_sent_${profileId}`);
     if (lastSent) {
       const timePassed = Math.floor((Date.now() - parseInt(lastSent)) / 1000);
@@ -58,8 +96,6 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     
     // 1. PENGECEKAN HONEYPOT (Jebakan Bot)
     if (honeypot) {
-      // Jika honeypot terisi, kita pura-pura berhasil agar bot mengira spam-nya masuk.
-      // Padahal kita tidak mengirim apa-apa ke database.
       setIsSuccess(true);
       setName('');
       setMessage('');
@@ -69,12 +105,25 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     }
 
     // 2. PENGECEKAN COOLDOWN
-    if (cooldownLeft > 0) {
+    if (cooldownLeft > 0 && profileId !== 'preview-id') {
       setError(`Please wait ${cooldownLeft} seconds before sending another message.`);
       return;
     }
 
     if (!message.trim()) return;
+
+    // Simulation for Preview Mode in Dashboard
+    if (profileId === 'preview-id') {
+      setIsSubmitting(true);
+      setTimeout(() => {
+        setIsSubmitting(false);
+        setIsSuccess(true);
+        setName('');
+        setMessage('');
+        setTimeout(() => setIsSuccess(false), 4000);
+      }, 400);
+      return;
+    }
 
     setIsSubmitting(true);
     setError(null);
@@ -109,22 +158,28 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
     }
   };
 
+  const isGlass = themePreset === 'glassmorphism';
+
   const inputStyles: React.CSSProperties = {
     background: themeColors?.inputBg || themeColors?.background || '#ffffff',
-    color: themeColors?.text || '#111827',
-    borderColor: themeColors?.inputBorder || `${themeColors?.text}20`,
+    color: isGlass ? '#090d16' : (themeColors?.text || '#111827'),
+    borderColor: isGlass ? 'rgba(0, 0, 0, 0.12)' : (themeColors?.inputBorder || `${themeColors?.text}25`),
+    fontWeight: isGlass ? 500 : undefined
   };
 
+  const buttonBg = themeColors?.primary || '#111827';
+  const buttonTextColor = getContrastColor(buttonBg, themePreset);
+
   const buttonStyle: React.CSSProperties = {
-    background: themeColors?.primary || '#111827',
-    color: themeColors?.accent || '#ffffff',
+    background: buttonBg,
+    color: buttonTextColor,
   };
 
   return (
     <div>
       <div className="mb-6">
-        <h2 className="text-lg font-bold" style={{ color: themeColors?.text }}>Leave a Message</h2>
-        <p className="text-sm opacity-60 mt-1" style={{ color: themeColors?.text }}>Send a secret message or say hello.</p>
+        <h2 className="text-lg font-extrabold tracking-tight" style={{ color: isGlass ? '#090d16' : themeColors?.text }}>Leave a Message</h2>
+        <p className="text-sm mt-1 leading-relaxed font-medium" style={{ color: isGlass ? '#334155' : themeColors?.text, opacity: isGlass ? 1 : 0.7 }}>Send a secret message or say hello.</p>
       </div>
 
       <div className="relative grid">
@@ -159,7 +214,7 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               onChange={(e) => setName(e.target.value)}
               placeholder={placeholderName}
               style={inputStyles}
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm placeholder:opacity-60 placeholder:text-slate-500 focus:ring-1 focus:ring-slate-400"
               maxLength={50}
             />
           </div>
@@ -172,24 +227,24 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
               required
               rows={4}
               style={inputStyles}
-              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm resize-none"
+              className="w-full px-4 py-3 border rounded-xl focus:outline-none transition-all text-sm resize-none placeholder:opacity-60 placeholder:text-slate-500 focus:ring-1 focus:ring-slate-400"
               maxLength={1000}
             />
           </div>
 
           <button
             type="submit"
-            disabled={isSubmitting || !message.trim() || cooldownLeft > 0}
+            disabled={isSubmitting || !message.trim() || (cooldownLeft > 0 && profileId !== 'preview-id')}
             style={buttonStyle}
-            className="w-full flex items-center justify-center px-6 py-3 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98]"
+            className="w-full flex items-center justify-center px-6 py-3.5 text-sm font-bold rounded-xl hover:opacity-90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.98] shadow-sm"
           >
             {isSubmitting ? (
-              <Loader2 className="w-4 h-4 animate-spin" />
-            ) : cooldownLeft > 0 ? (
+              <Loader2 className="w-4 h-4 animate-spin" style={{ color: buttonTextColor }} />
+            ) : cooldownLeft > 0 && profileId !== 'preview-id' ? (
               <>Wait {cooldownLeft}s to send again</>
             ) : (
               <>
-                <Send className="w-4 h-4 mr-2" />
+                <Send className="w-4 h-4 mr-2" style={{ color: buttonTextColor }} />
                 Send Message
               </>
             )}
@@ -200,22 +255,29 @@ export default function MessageForm({ profileId, placeholderName, placeholderCon
           <div 
             className="col-start-1 row-start-1 h-full w-full rounded-2xl p-6 flex flex-col items-center justify-center text-center animate-in fade-in zoom-in duration-300 z-10"
             style={{
-              background: themeColors?.inputBg || `${themeColors?.primary}10`,
-              border: `1px solid ${themeColors?.inputBorder || `${themeColors?.primary}20`}`
+              background: themeColors?.inputBg || (themePreset === 'brutalism' ? '#111' : '#ffffff'),
+              border: `1px solid ${themeColors?.inputBorder || (themePreset === 'brutalism' ? '#333' : '#e2e8f0')}`
             }}
           >
             <div 
               className="w-12 h-12 rounded-full flex items-center justify-center mb-3"
-              style={{ background: `${themeColors?.primary}20` }}
+              style={{ 
+                background: themePreset === 'brutalism' 
+                  ? 'rgba(255, 255, 255, 0.15)' 
+                  : `${themeColors?.primary}20` 
+              }}
             >
-              <CheckCircle2 className="w-6 h-6" style={{ color: themeColors?.primary }} />
+              <CheckCircle2 
+                className="w-6 h-6" 
+                style={{ color: themePreset === 'brutalism' ? '#ffffff' : themeColors?.primary }} 
+              />
             </div>
-            <h3 className="font-semibold" style={{ color: themeColors?.text }}>Message Sent!</h3>
-            <p className="text-sm mt-1 opacity-70" style={{ color: themeColors?.text }}>Your message has been securely delivered.</p>
+            <h3 className="font-semibold text-base" style={{ color: themeColors?.text }}>Message Sent!</h3>
+            <p className="text-sm mt-1 opacity-75" style={{ color: themeColors?.text }}>Your message has been securely delivered.</p>
             <button 
               onClick={() => setIsSuccess(false)}
-              className="mt-6 text-sm font-medium hover:opacity-80 transition-opacity"
-              style={{ color: themeColors?.primary }}
+              className="mt-6 text-sm font-semibold hover:opacity-80 transition-opacity underline underline-offset-4"
+              style={{ color: themePreset === 'brutalism' ? '#ffffff' : themeColors?.primary }}
             >
               Send another message
             </button>

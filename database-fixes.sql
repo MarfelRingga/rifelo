@@ -147,3 +147,18 @@ $$ LANGUAGE plpgsql;
 CREATE INDEX IF NOT EXISTS idx_queues_event_status ON queues(event_id, status);
 CREATE INDEX IF NOT EXISTS idx_queues_event_queue_number ON queues(event_id, queue_number);
 CREATE INDEX IF NOT EXISTS idx_tokens_event_code ON tokens(event_id, code);
+
+-- ==========================================
+-- 🛠️ 5. NOTIFIKASI INBOX READ/UNREAD
+-- ==========================================
+ALTER TABLE public.profile_messages ADD COLUMN IF NOT EXISTS is_read BOOLEAN DEFAULT false;
+
+-- ==========================================
+-- 🛠️ 6. UPDATE POLICY FOR PROFILE MESSAGES
+-- ==========================================
+-- Allow users to update their own profile_messages (e.g. to mark as read)
+DROP POLICY IF EXISTS "Users can update their own profile messages" ON profile_messages;
+CREATE POLICY "Users can update their own profile messages" 
+  ON profile_messages 
+  FOR UPDATE 
+  USING (profile_id = auth.uid());

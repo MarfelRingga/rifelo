@@ -388,8 +388,12 @@ export default function CircleManagementPage() {
       
     } catch (error: any) {
       console.error('Error saving identity:', error);
-      setErrorMsg(error.message || 'Failed to save changes.');
-      showErrorToast(error.message || 'Failed to save changes.');
+      let friendlyError = error.message || 'Failed to save changes.';
+      if (friendlyError.includes('Lock broken') || friendlyError.includes('steal')) {
+        friendlyError = 'Sesi terganggu oleh aktivitas di tab lain. Silakan coba klik Save sekali lagi.';
+      }
+      setErrorMsg(friendlyError);
+      showErrorToast(friendlyError);
     } finally {
       setIsSaving(false);
     }

@@ -1,60 +1,173 @@
 'use client';
 
-import { motion } from 'motion/react';
+import { useState, useEffect } from 'react';
+import { motion, AnimatePresence } from 'motion/react';
+import Image from 'next/image';
 import Link from 'next/link';
-import { Instagram } from 'lucide-react';
 
-export default function NfcWristbandComingSoon() {
+const IMAGES = [
+  "https://i.ibb.co.com/j9NqDvHM/rifelo-full-body.png",
+  "https://i.ibb.co.com/p6d0rswp/rifelo-surface.png",
+  "https://i.ibb.co.com/SX27Bqvj/rifelo-adjustable.png"
+];
+
+export default function NfcWristbandPage() {
+  const [currentIndex, setCurrentIndex] = useState(0);
+  const [direction, setDirection] = useState(1);
+
+  const nextSlide = () => {
+    setDirection(1);
+    setCurrentIndex((prev) => (prev + 1) % IMAGES.length);
+  };
+
+  const prevSlide = () => {
+    setDirection(-1);
+    setCurrentIndex((prev) => (prev - 1 + IMAGES.length) % IMAGES.length);
+  };
+
+  // Auto-advance carousel
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setDirection(1);
+      setCurrentIndex((prev) => (prev + 1) % IMAGES.length);
+    }, 4500);
+    return () => clearInterval(timer);
+  }, [currentIndex]);
+
+  const slideVariants = {
+    enter: (dir: number) => ({
+      x: dir > 0 ? 120 : -120,
+      opacity: 0,
+      scale: 0.94,
+    }),
+    center: {
+      x: 0,
+      opacity: 1,
+      scale: 1,
+      transition: {
+        duration: 0.45,
+        ease: [0.25, 1, 0.5, 1] as const,
+      },
+    },
+    exit: (dir: number) => ({
+      x: dir > 0 ? -120 : 120,
+      opacity: 0,
+      scale: 0.94,
+      transition: {
+        duration: 0.35,
+        ease: [0.25, 1, 0.5, 1] as const,
+      },
+    }),
+  };
+
   return (
-    <div className="min-h-screen bg-[#F9F8F6] flex flex-col items-center justify-center p-6 sm:p-12 relative overflow-hidden">
-      {/* Background Elements */}
-      <div className="absolute inset-0 bg-[radial-gradient(#e5e5e5_1px,transparent_1px)] [background-size:16px_16px] opacity-60 pointer-events-none"></div>
+    <div className="min-h-screen bg-[#EAE6CB] text-[#1A1A1A] selection:bg-[#1A1A1A] selection:text-[#EAE6CB] flex flex-col items-center justify-center relative overflow-x-hidden font-sans select-none">
       
-      {/* Background Glow */}
-      <motion.div 
-        animate={{ 
-          scale: [1, 1.2, 1],
-          opacity: [0.3, 0.5, 0.3],
-        }}
-        transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
-        className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[600px] h-[600px] bg-[#a299af]/20 blur-[100px] rounded-full pointer-events-none"
-      />
-
-      <div className="relative z-10 w-full max-w-2xl mx-auto flex flex-col items-center text-center">
+      {/* Minimal Top Logo */}
+      <div className="absolute top-8 left-0 w-full flex justify-center z-50">
+        <Link href="/" className="text-xs font-bold tracking-[0.2em] uppercase text-[#1A1A1A] hover:scale-105 transition-transform">
+          Rifelo<span className="text-[#9E7D2B]">.</span>
+        </Link>
+      </div>
+      
+      {/* Main Hero Container */}
+      <main className="w-full max-w-5xl px-6 py-20 sm:py-28 flex flex-col items-center text-center z-10 flex-1 justify-center">
+        
+        {/* Tagline */}
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
+          transition={{ type: 'spring', stiffness: 200, damping: 15 }}
+          className="space-y-4 mb-8 sm:mb-12"
+        >
+          <motion.p 
+            whileHover={{ scale: 1.05 }}
+            className="inline-block text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#9E7D2B] bg-[#1A1A1A]/5 px-4 py-1.5 rounded-full"
+          >
+            Tap. Wear. Share.
+          </motion.p>
+          <h1 className="text-4xl sm:text-6xl md:text-7xl font-extrabold tracking-tight text-[#1A1A1A] leading-tight">
+            The Future of <br className="hidden sm:block" /> Physical Networking.
+          </h1>
+        </motion.div>
+        
+        {/* Image Carousel with Playful Spring Physics & Interactive Floating */}
+        <div className="relative w-full max-w-lg aspect-[4/3] sm:aspect-[16/11] mb-14 flex items-center justify-center">
+          
+          <AnimatePresence initial={false} custom={direction} mode="wait">
+            <motion.div
+              key={currentIndex}
+              custom={direction}
+              variants={slideVariants}
+              initial="enter"
+              animate="center"
+              exit="exit"
+              drag="x"
+              dragConstraints={{ left: 0, right: 0 }}
+              dragElastic={0.4}
+              onDragEnd={(_, info) => {
+                if (info.offset.x < -40) {
+                  nextSlide();
+                } else if (info.offset.x > 40) {
+                  prevSlide();
+                }
+              }}
+              whileHover={{ scale: 1.02 }}
+              whileTap={{ scale: 0.98 }}
+              className="absolute inset-0 cursor-grab active:cursor-grabbing flex items-center justify-center"
+            >
+              <div className="w-full h-full relative">
+                <Image
+                  src={IMAGES[currentIndex]}
+                  alt={`Rifelo NFC Wristband Showcase ${currentIndex + 1}`}
+                  fill
+                  className="object-contain drop-shadow-[0_20px_35px_rgba(0,0,0,0.12)] pointer-events-none"
+                  referrerPolicy="no-referrer"
+                  priority
+                />
+              </div>
+            </motion.div>
+          </AnimatePresence>
+          
+          {/* Playful Interactive Dots */}
+          <div className="absolute -bottom-8 left-1/2 -translate-x-1/2 flex items-center gap-2.5 z-20">
+            {IMAGES.map((_, idx) => (
+              <motion.button
+                key={idx}
+                onClick={() => {
+                  setDirection(idx > currentIndex ? 1 : -1);
+                  setCurrentIndex(idx);
+                }}
+                whileHover={{ scale: 1.25 }}
+                whileTap={{ scale: 0.8 }}
+                className={`h-2.5 rounded-full transition-all duration-300 ${
+                  idx === currentIndex 
+                    ? 'w-9 bg-[#1A1A1A]' 
+                    : 'w-2.5 bg-[#1A1A1A]/20 hover:bg-[#1A1A1A]/50'
+                }`}
+                aria-label={`View image ${idx + 1}`}
+              />
+            ))}
+          </div>
+        </div>
+        
+        {/* CTA */}
+        <motion.div
+          initial={{ opacity: 0, y: 15 }}
+          animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.6, delay: 0.2 }}
         >
-          <h1 className="text-4xl sm:text-5xl md:text-7xl font-bold tracking-tight text-[#0c0e0b] mb-6">
-            COMING SOON
-          </h1>
-          <p className="text-base sm:text-lg text-[#0c0e0b]/60 leading-relaxed max-w-lg mx-auto mb-10 font-medium">
-            We're building the future of physical networking. The Rifelo NFC Wristband will seamlessly connect your digital identity with the real world.
-          </p>
-
-          <Link 
-            href="https://instagram.com/rifelo.id"
+          <Link
+            href="https://wa.me/6281234567890"
             target="_blank"
-            rel="noopener noreferrer"
-            className="inline-flex items-center justify-center gap-3 px-8 py-4 bg-[#1A1A1A] text-white rounded-full text-[11px] sm:text-xs font-bold tracking-widest uppercase hover:bg-[#0c0e0b] transition-all shadow-xl hover:shadow-2xl active:scale-95 group border border-[#1A1A1A]"
+            className="inline-flex items-center justify-center px-12 py-4 sm:py-5 bg-[#1A1A1A] text-[#EAE6CB] text-xs font-bold uppercase tracking-widest active:scale-95 transition-all duration-200 rounded-full shadow-[0_4px_20px_rgba(26,26,26,0.12)] hover:bg-[#2e2e2e]"
           >
-            <Instagram className="w-4 h-4" />
-            Stay updated on Instagram
+            Pre-Order Now
           </Link>
         </motion.div>
-      </div>
-
-      <motion.div 
-        initial={{ opacity: 0 }}
-        animate={{ opacity: 1 }}
-        transition={{ delay: 1, duration: 1 }}
-        className="absolute bottom-8 left-0 w-full text-center"
-      >
-        <p className="text-[10px] text-[#0c0e0b]/30 uppercase tracking-widest font-bold">
-          © {new Date().getFullYear()} Rifelo Inc. All rights reserved.
-        </p>
-      </motion.div>
+        
+      </main>
+      
     </div>
   );
 }

@@ -39,7 +39,7 @@ function ClaimContent() {
 
   return (
     <div className="min-h-screen bg-[#F4F3EE] flex flex-col items-center justify-center p-4 font-sans">
-      <div className="max-w-md w-full bg-white rounded-[2rem] p-8 shadow-xl text-center space-y-6 border border-[#aaafbc]/20">
+      <div className="max-w-md w-full bg-white rounded-3xl p-8 shadow-xl text-center space-y-6 border border-[#aaafbc]/20">
         <div className="w-20 h-20 bg-[#0c0e0b] rounded-3xl flex items-center justify-center mx-auto shadow-lg">
           <ScanLine className="w-10 h-10 text-white" />
         </div>

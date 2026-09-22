@@ -22,6 +22,8 @@ import { ProfileMode } from '@/lib/types/profile';
 import { migrateFieldData } from '@/lib/profileMigration';
 import { getValidationErrors } from '@/lib/validation/profileValidation';
 import { getThemesByMode, getTheme } from '@/lib/themePresets';
+import { cn } from '@/lib/utils';
+import PublicProfileView from '@/components/profile/PublicProfileView';
 
 interface CustomLink {
   id: string;
@@ -40,6 +42,7 @@ export default function ProfilePage() {
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
 
   const [username, setUsername] = useState('');
+  const [isUsernameFocused, setIsUsernameFocused] = useState(false);
   const [isPublic, setIsPublic] = useState(true);
   const [links, setLinks] = useState<CustomLink[]>([]);
   const [expandedLinks, setExpandedLinks] = useState<Record<string, boolean>>({});
@@ -85,7 +88,22 @@ export default function ProfilePage() {
   const [showModeSwitchConfirm, setShowModeSwitchConfirm] = useState(false);
   const [pendingMode, setPendingMode] = useState<ProfileMode | null>(null);
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
-  const [activeAppearanceTab, setActiveAppearanceTab] = useState<'mode' | 'theme'>('mode');
+  const [activeAppearanceTab, setActiveAppearanceTab] = useState<'mode' | 'theme' | 'shape' | 'font'>('mode');
+
+  const ACCENT_COLORS = [
+    { id: 'gold', name: 'Rifelo Gold', value: '#d4af37', bg: 'bg-[#d4af37]' },
+    { id: 'blue', name: 'Executive Blue', value: '#2563eb', bg: 'bg-blue-600' },
+    { id: 'emerald', name: 'Emerald Forest', value: '#059669', bg: 'bg-emerald-600' },
+    { id: 'rose', name: 'Crimson Rose', value: '#e11d48', bg: 'bg-rose-600' },
+    { id: 'obsidian', name: 'Obsidian Black', value: '#0f172a', bg: 'bg-slate-900' },
+    { id: 'slate', name: 'Titanium Slate', value: '#64748b', bg: 'bg-slate-500' }
+  ];
+
+  const FONTS = [
+    { id: 'sans', name: 'Modern Sans', class: 'font-sans', value: 'var(--font-body), system-ui, sans-serif' },
+    { id: 'serif', name: 'Luxury Serif', class: 'font-serif', value: 'var(--font-heading), system-ui, serif' },
+    { id: 'mono', name: 'Tech Mono', class: 'font-mono', value: 'ui-monospace, SFMono-Regular, monospace' }
+  ];
   const [customTheme, setCustomTheme] = useState<any>({});
 
   const [dynamicValues, setDynamicValues] = useState<Record<string, string>>({
@@ -512,7 +530,11 @@ export default function ProfilePage() {
 
     } catch (error: any) {
       console.error('Save failed:', error);
-      setErrorMsg(error.message || 'An unexpected error occurred while saving.');
+      let friendlyError = error.message || 'An unexpected error occurred while saving.';
+      if (friendlyError.includes('Lock broken') || friendlyError.includes('steal')) {
+        friendlyError = 'Sesi terganggu oleh aktivitas di tab lain. Silakan coba klik Save sekali lagi.';
+      }
+      setErrorMsg(friendlyError);
     } finally {
       setIsSaving(false);
     }
@@ -521,8 +543,29 @@ export default function ProfilePage() {
   // --- RENDER ---
   if (isLoading) return <ProfileSkeleton />;
 
+  // --- PREVIEW PROFILE ---
+  const previewProfile = {
+    id: 'preview-id',
+    username: username,
+    fullName: dynamicValues.full_name || 'Your Name',
+    bio: dynamicValues.bio || 'Your bio goes here',
+    company: dynamicValues.company || '',
+    email: dynamicValues.email || '',
+    phone: dynamicValues.phone || '',
+    website: dynamicValues.website || '',
+    jobTitle: dynamicValues.job_title || '',
+    links: links.filter(l => l.is_visible !== false),
+    isPublic: isPublic,
+    allowMessages: allowMessages,
+    messagePlaceholderName: messagePlaceholderName,
+    messagePlaceholderContent: messagePlaceholderContent,
+    profileMode: profileMode,
+    themePreset: themePreset,
+    customTheme: customTheme
+  };
+
   return (
-    <div className="space-y-8 font-sans max-w-4xl mx-auto pb-20">
+    <div className="space-y-8 font-sans max-w-6xl mx-auto pb-20">
       
       <div className="flex flex-col sm:flex-row justify-between items-start sm:items-end gap-4">
         <div>
@@ -537,257 +580,426 @@ export default function ProfilePage() {
             className="flex items-center px-4 py-2 bg-white border border-slate-200 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-50 transition-colors shadow-sm"
           >
             <ExternalLink className="w-4 h-4 mr-2 text-slate-400" />
-            Preview Profile
+            Live Page
           </Link>
         </div>
       </div>
 
-      <div className="space-y-6">
-        {/* Section 3: Dynamic Fields */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
-          
-          <div className="pb-6 border-b border-slate-100">
-            <div className="flex items-center justify-between mb-4">
-              <label className="block text-sm font-medium text-slate-900">Public Profile Visibility</label>
-              <button
-                onClick={() => setIsPublic(!isPublic)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
-                  isPublic 
-                    ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
-                    : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
-                }`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
-                  isPublic ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
-                }`} />
-              </button>
-            </div>
+      <div className="flex flex-col gap-8 items-start">
+        {/* Main Content Column */}
+        <div className="w-full space-y-6">
 
-            <label className="block text-sm font-medium text-slate-900 mb-2">URL/Username</label>
-            <div className="flex items-stretch">
-              <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 font-medium whitespace-nowrap">
-                rifelo.id/u/
-              </span>
-              <input 
-                type="text" 
-                placeholder="Username" 
-                value={username}
-                onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''))}
-                className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium" 
-              />
-            </div>
-            <p className="text-xs text-slate-500 mt-2">Only lowercase letters, numbers, dot (.), and underscore (_).</p>
-          </div>
+          {/* Section: Rifelo Appearance Studio */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+             {/* Studio Header (Compact) */}
+             <div className="px-4 py-3 sm:px-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+               <div className="flex items-center gap-2.5">
+                 <div className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
+                   <Palette className="w-4 h-4" />
+                 </div>
+                 <h2 className="text-base sm:text-lg font-bold text-slate-900">Appearance</h2>
+               </div>
+             </div>
 
-          <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Information</h2>
-          <DynamicProfileForm
-            mode={profileMode}
-            initialValues={dynamicValues}
-            onChange={handleFieldChange}
-          />
-        </div>
-
-        {/* Section 4: Links & Platforms */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Platforms & Links</h3>
-              <p className="text-sm text-slate-500 mt-1">Add your social media, portfolio, or contact links.</p>
-            </div>
-            <button 
-              type="button"
-              onClick={handleAddLink}
-              className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Add Link
-            </button>
-          </div>
-
-          <div className="space-y-4">
-            <DndContext 
-              sensors={sensors}
-              collisionDetection={closestCenter}
-              onDragEnd={handleDragEnd}
-            >
-              <SortableContext 
-                items={links.map(l => l.id)}
-                strategy={verticalListSortingStrategy}
-              >
-                {links.map((link) => (
-                  <SortableLinkItem
-                    key={link.id}
-                    link={link}
-                    isExpanded={!!expandedLinks[link.id]}
-                    toggleLinkExpansion={toggleLinkExpansion}
-                    handleToggleVisibility={handleToggleVisibility}
-                    handleRemoveLink={handleRemoveLink}
-                    handleLinkChange={handleLinkChange}
-                    handleLinkBlur={handleLinkBlur}
-                  />
-                ))}
-              </SortableContext>
-            </DndContext>
-            
-            {links.length === 0 && (
-              <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
-                <p className="text-sm text-slate-500">No links added yet.<br/>Click "Add Link" to get started.</p>
-              </div>
-            )}
-          </div>
-        </div>
-
-        {/* Section 5: Message Box Settings */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-          <div className="mb-6 flex flex-col sm:flex-row justify-between sm:items-center">
-            <div>
-              <h3 className="text-lg font-bold text-slate-900">Message Box Settings</h3>
-              <p className="text-sm text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
-            </div>
-            <div className="mt-4 sm:mt-0 flex items-center shrink-0">
-              <span className="mr-3 text-sm font-medium text-slate-900">Enable Message Box</span>
-              <button
-                type="button"
-                onClick={() => setAllowMessages(!allowMessages)}
-                className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
-                  allowMessages 
-                    ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
-                    : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
-                }`}
-              >
-                <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
-                  allowMessages ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
-                }`} />
-              </button>
-            </div>
-          </div>
-          
-          <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${allowMessages ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Name Input Placeholder</label>
-              <input 
-                type="text" 
-                value={messagePlaceholderName}
-                onChange={(e) => setMessagePlaceholderName(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-              />
-            </div>
-            <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Message Input Placeholder</label>
-              <input 
-                type="text" 
-                value={messagePlaceholderContent}
-                onChange={(e) => setMessagePlaceholderContent(e.target.value)}
-                className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Section 6: Appearance Settings */}
-        <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 overflow-hidden">
-          <div 
-            className="flex items-center justify-between cursor-pointer group hover:opacity-90 transition-opacity"
-            onClick={() => setIsAppearanceOpen(!isAppearanceOpen)}
-          >
-            <div>
-              <h3 className="text-lg font-bold text-slate-900 flex items-center gap-2">
-                Appearance Settings
-              </h3>
-            </div>
-            <button 
-              type="button"
-              className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-xl transition-colors shrink-0"
-            >
-              {isAppearanceOpen ? <ChevronUp className="w-5 h-5 animate-in fade-in" /> : <ChevronDown className="w-5 h-5 animate-in fade-in" />}
-            </button>
-          </div>
-
-          {isAppearanceOpen && (
-            <div className="mt-6 space-y-6 pt-6 border-t border-slate-100 animate-in fade-in slide-in-from-top-2 duration-300">
-              {/* Mode */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0">Mode</div>
-                <div className="flex-1">
-                  <ModeSelector 
-                    currentMode={profileMode}
-                    onModeSelect={handleModeChange}
-                  />
-                </div>
-              </div>
-              
-              <div className="h-px bg-slate-100"></div>
-              
-              {/* Theme */}
-              <div className="flex flex-col sm:flex-row sm:items-center gap-3 sm:gap-6">
-                <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0">Theme Preset</div>
-                <div className="flex-1">
-                  <ThemeSelector
-                    currentMode={profileMode}
-                    currentTheme={themePreset}
-                    onThemeSelect={handleThemeChange}
-                  />
-                </div>
+              <div className="p-4 sm:p-5">
+                {/* Segmented Control: Persona | Theme | Shape | Font */}
+                <div className="flex bg-slate-100/90 p-1.5 rounded-xl mb-4 overflow-x-auto hide-scrollbar gap-1">
+                <button 
+                  onClick={() => setActiveAppearanceTab('mode')} 
+                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'mode' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                >
+                  Persona
+                </button>
+                <button 
+                  onClick={() => setActiveAppearanceTab('theme')} 
+                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'theme' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                >
+                  Theme
+                </button>
+                <button 
+                  onClick={() => setActiveAppearanceTab('shape')} 
+                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'shape' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                >
+                  Shape
+                </button>
+                <button 
+                  onClick={() => setActiveAppearanceTab('font')} 
+                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'font' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                >
+                  Font
+                </button>
               </div>
 
-              <div className="h-px bg-slate-100"></div>
+              {/* Tab Content (Flexible height, no wasted space) */}
+              <div>
+                {activeAppearanceTab === 'mode' && (
+                  <div className="animate-in fade-in duration-200">
+                    <ModeSelector 
+                      currentMode={profileMode}
+                      onModeSelect={handleModeChange}
+                    />
+                  </div>
+                )}
+                
+                {activeAppearanceTab === 'theme' && (
+                  <div className="animate-in fade-in duration-200 space-y-4">
+                    <ThemeSelector
+                      currentMode={profileMode}
+                      currentTheme={themePreset}
+                      onThemeSelect={handleThemeChange}
+                    />
 
-              {/* Custom Theme Features */}
-              <div className="space-y-6">
-                {/* Link Style */}
-                <div className="flex flex-col sm:flex-row items-start gap-3 sm:gap-6">
-                  <div className="text-[10px] font-bold text-slate-400 uppercase tracking-widest sm:w-36 shrink-0 sm:mt-5">Link Style</div>
-                  <div className="grid grid-cols-1 sm:grid-cols-3 gap-3 flex-1 w-full max-w-xl">
-                    {/* Sharp */}
-                    <button 
-                      type="button"
-                      onClick={() => updateCustomTheme({ borderRadius: 'sharp' })}
-                      className={`flex items-center justify-center px-5 py-3.5 border-[1.5px] rounded-none transition-all duration-200 text-center w-full
-                        ${(customTheme?.borderRadius) === 'sharp' 
-                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-medium' 
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                        }`}
-                    >
-                      <span className="text-sm">Sharp</span>
-                    </button>
+                    {/* Accent Color: Available for Minimal & Glassmorphism Themes */}
+                    {(themePreset === 'minimal' || themePreset === 'glassmorphism') && (
+                      <div className="pt-3 border-t border-slate-100 animate-in fade-in duration-200">
+                        <div className="flex items-center justify-between mb-2.5">
+                          <span className="text-xs sm:text-sm font-semibold text-slate-700">
+                            {themePreset === 'glassmorphism' ? 'Glass Accent Color' : 'Minimal Accent Color'}
+                          </span>
+                          {customTheme?.accent?.name ? (
+                            <div className="flex items-center gap-2">
+                              <span className="text-xs text-slate-600 font-medium">{customTheme.accent.name}</span>
+                              <button
+                                type="button"
+                                onClick={() => updateCustomTheme({ accent: null })}
+                                className="text-[11px] text-slate-400 hover:text-rose-600 underline transition-colors"
+                              >
+                                Reset
+                              </button>
+                            </div>
+                          ) : (
+                            <span className="text-xs text-slate-400 font-medium">
+                              {themePreset === 'glassmorphism' ? 'Frosted Crystal' : 'Default Monochrome'}
+                            </span>
+                          )}
+                        </div>
+                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                          {ACCENT_COLORS.map(color => {
+                            const isSelected = customTheme?.accent?.value === color.value;
+                            return (
+                              <button
+                                key={color.id}
+                                type="button"
+                                onClick={() => {
+                                  if (isSelected) {
+                                    updateCustomTheme({ accent: null });
+                                  } else {
+                                    updateCustomTheme({ accent: { value: color.value, name: color.name } });
+                                  }
+                                }}
+                                className={cn(
+                                  "w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all hover:scale-105 shrink-0 flex items-center justify-center",
+                                  isSelected ? "border-slate-900 scale-105 shadow-md ring-2 ring-slate-900/20" : "border-white shadow-sm",
+                                  color.bg
+                                )}
+                                title={isSelected ? `${color.name} (Klik untuk lepas)` : color.name}
+                              >
+                                {isSelected && (
+                                  <div className="w-2 h-2 rounded-full bg-white shadow-xs" />
+                                )}
+                              </button>
+                            );
+                          })}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                )}
 
-                    {/* Rounded */}
-                    <button 
-                      type="button"
-                      onClick={() => updateCustomTheme({ borderRadius: 'rounded' })}
-                      className={`flex items-center justify-center px-5 py-3.5 border-[1.5px] rounded-2xl transition-all duration-200 text-center w-full
-                        ${(customTheme?.borderRadius || 'rounded') === 'rounded' 
-                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-medium' 
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                        }`}
-                    >
-                      <span className="text-sm">Rounded</span>
-                    </button>
+                {activeAppearanceTab === 'shape' && (
+                  <div className="animate-in fade-in duration-200 py-1">
+                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                      {/* Sharp */}
+                      <button 
+                        type="button"
+                        onClick={() => updateCustomTheme({ borderRadius: 'sharp' })}
+                        className={cn(
+                          "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-none",
+                          (customTheme?.borderRadius) === 'sharp' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                        )}
+                      >
+                        <span className="w-3.5 h-3.5 border-2 border-current rounded-none shrink-0" />
+                        <span className="text-xs sm:text-sm">Sharp</span>
+                      </button>
 
-                    {/* Pill */}
-                    <button 
-                      type="button"
-                      onClick={() => updateCustomTheme({ borderRadius: 'pill' })}
-                      className={`flex items-center justify-center px-5 py-3.5 border-[1.5px] rounded-full transition-all duration-200 text-center w-full
-                        ${(customTheme?.borderRadius) === 'pill' 
-                          ? 'border-slate-400 bg-slate-100/80 text-slate-900 shadow-inner backdrop-blur-sm font-medium' 
-                          : 'border-slate-200 bg-white text-slate-600 hover:border-slate-300 hover:bg-slate-50'
-                        }`}
-                    >
-                      <span className="text-sm">Pill</span>
-                    </button>
+                      {/* Rounded */}
+                      <button 
+                        type="button"
+                        onClick={() => updateCustomTheme({ borderRadius: 'rounded' })}
+                        className={cn(
+                          "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-xl",
+                          (customTheme?.borderRadius || 'rounded') === 'rounded' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                        )}
+                      >
+                        <span className="w-3.5 h-3.5 border-2 border-current rounded-md shrink-0" />
+                        <span className="text-xs sm:text-sm">Standard</span>
+                      </button>
+
+                      {/* Pill */}
+                      <button 
+                        type="button"
+                        onClick={() => updateCustomTheme({ borderRadius: 'pill' })}
+                        className={cn(
+                          "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-full",
+                          (customTheme?.borderRadius) === 'pill' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                        )}
+                      >
+                        <span className="w-3.5 h-3.5 border-2 border-current rounded-full shrink-0" />
+                        <span className="text-xs sm:text-sm">Pill</span>
+                      </button>
+                    </div>
+                  </div>
+                )}
+
+                {activeAppearanceTab === 'font' && (
+                  <div className="animate-in fade-in duration-200 py-1">
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                      {FONTS.map(font => (
+                        <button
+                          key={font.id}
+                          type="button"
+                          onClick={() => updateCustomTheme({ fontFamily: font.value })}
+                          className={cn(
+                            "flex items-center justify-between sm:justify-center gap-2 px-3 py-2 sm:py-2.5 border-2 transition-all rounded-xl",
+                            (customTheme?.fontFamily || FONTS[0].value) === font.value ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                          )}
+                        >
+                          <span className={cn("text-xs sm:text-sm", font.class, (customTheme?.fontFamily || FONTS[0].value) === font.value ? "font-bold text-white" : "font-medium text-slate-700")}>{font.name}</span>
+                          <span className={cn("text-sm opacity-70", font.class)}>Aa</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Live Preview directly integrated inside Appearance card */}
+            <div className="border-t border-slate-100 py-6 sm:py-8 flex justify-center items-center overflow-hidden">
+              {/* Scaled Device Wrapper with exact layout dimensions to fit 100% cleanly on mobile screen without clipping */}
+              <div className="w-[270px] sm:w-[312px] h-[567px] sm:h-[654px] relative shrink-0 flex justify-center">
+                  <div className="w-[416px] h-[872px] origin-top scale-[0.65] sm:scale-[0.75] shrink-0">
+                    {/* Physical Smartphone Chassis (Exact 390x844 px screen ratio) */}
+                    <div className="w-[416px] h-[872px] bg-[#0c0d12] rounded-[3.4rem] p-[13px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] border-[3.5px] border-slate-700/80 flex flex-col relative shrink-0 select-none">
+                      
+                      {/* Realistic Physical Buttons on Edge */}
+                      <div className="absolute -left-[5.5px] top-28 w-[3.5px] h-7 bg-slate-700 rounded-l-sm" />
+                      <div className="absolute -left-[5.5px] top-40 w-[3.5px] h-12 bg-slate-700 rounded-l-sm" />
+                      <div className="absolute -left-[5.5px] top-56 w-[3.5px] h-12 bg-slate-700 rounded-l-sm" />
+                      <div className="absolute -right-[5.5px] top-44 w-[3.5px] h-16 bg-slate-700 rounded-r-sm" />
+
+                      {/* Top Speaker Ear-piece */}
+                      <div className="w-16 h-1 bg-slate-800 rounded-full mx-auto mb-1.5 opacity-80" />
+
+                      {/* Phone Screen Viewport (Exact 390px x 844px) */}
+                      <div 
+                        className="w-[390px] h-[844px] rounded-[2.5rem] overflow-hidden flex flex-col relative shadow-inner [transform:translateZ(0)]"
+                        style={{ 
+                          background: previewProfile.customTheme?.colors?.background || getTheme(themePreset)?.colors?.background || '#ffffff' 
+                        }}
+                      >
+                        {/* Realistic Native Status Bar */}
+                        <div className={cn(
+                          "h-10 px-6 flex items-center justify-between text-xs font-semibold select-none shrink-0 z-30 relative",
+                          (themePreset === 'brutalism' || themePreset === 'phantom-deck') ? "text-white" : "text-slate-900"
+                        )}>
+                          <span className="tracking-tight font-medium">9:41</span>
+
+                          {/* Status Icons */}
+                          <div className="flex items-center gap-1.5 opacity-90 text-[10px]">
+                            <div className="flex items-end gap-[1.5px] h-2.5">
+                              <div className="w-[2px] h-1 bg-current rounded-2xs" />
+                              <div className="w-[2px] h-1.5 bg-current rounded-2xs" />
+                              <div className="w-[2px] h-2 bg-current rounded-2xs" />
+                              <div className="w-[2px] h-2.5 bg-current rounded-2xs" />
+                            </div>
+                            <span className="text-[9px] font-bold">5G</span>
+                            <div className="w-4 h-2.5 border border-current rounded-xs p-[1px] flex items-center">
+                              <div className="w-full h-full bg-current rounded-2xs" />
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Scrollable Viewport with interactive events enabled */}
+                        <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scroll-smooth overscroll-contain touch-pan-y">
+                          <PublicProfileView profile={previewProfile} />
+                        </div>
+
+                        {/* Bottom iOS Home Indicator Bar */}
+                        <div className="h-5 w-full shrink-0 flex items-center justify-center relative z-20 pointer-events-none">
+                          <div className={cn(
+                            "w-36 h-1 rounded-full",
+                            (themePreset === 'brutalism' || themePreset === 'phantom-deck') ? "bg-white/30" : "bg-black/30"
+                          )} />
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          )}
-        </div>
 
-        {/* Floating Action Button (Unsaved Changes) */}
-        <div 
-          className={`fixed bottom-24 md:bottom-24 right-6 md:right-8 z-50 pointer-events-none transition-all duration-500 ease-out flex justify-end
-            ${(hasUnsavedChanges || isSaving || showSuccess || errorMsg) ? 'translate-y-0 opacity-100' : 'translate-y-[150%] opacity-0'}`}
-        >
+          {/* Section 3: Dynamic Fields */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
+            
+            <div className="pb-6 border-b border-slate-100">
+              {/* Top row: URL/Username label and Public Profile Visibility toggle */}
+              <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-2 mb-3 sm:mb-2">
+                <label className="block text-sm font-medium text-slate-900 order-2 sm:order-1">URL/Username</label>
+                
+                <div className="flex items-center justify-between sm:justify-end shrink-0 order-1 sm:order-2">
+                  <span className="mr-3 text-sm font-medium text-slate-900 whitespace-nowrap">Public Profile Visibility</span>
+                  <button
+                    type="button"
+                    onClick={() => setIsPublic(!isPublic)}
+                    className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
+                      isPublic 
+                        ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
+                        : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
+                    }`}
+                  >
+                    <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
+                      isPublic ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
+                    }`} />
+                  </button>
+                </div>
+              </div>
+
+              {/* Input Box */}
+              <div className="max-w-xl">
+                <div className="flex items-stretch">
+                  <span className="flex items-center px-4 bg-slate-100 border border-r-0 border-slate-200 rounded-l-xl text-slate-500 font-medium whitespace-nowrap text-sm sm:text-base">
+                    rifelo.id/u/
+                  </span>
+                  <input 
+                    type="text" 
+                    value={username}
+                    onFocus={() => setIsUsernameFocused(true)}
+                    onBlur={() => setIsUsernameFocused(false)}
+                    onChange={(e) => setUsername(e.target.value.toLowerCase().replace(/[^a-z0-9._]/g, ''))}
+                    className="w-full px-3 sm:px-4 py-2.5 sm:py-3 bg-slate-50 border border-slate-200 rounded-r-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all font-medium text-sm sm:text-base" 
+                  />
+                </div>
+                {isUsernameFocused && (
+                  <p className="text-xs text-slate-500 mt-1.5 animate-in fade-in slide-in-from-top-1 duration-200">
+                    Only lowercase letters, numbers, dot (.), and underscore (_).
+                  </p>
+                )}
+              </div>
+            </div>
+
+            <h2 className="text-lg font-bold text-slate-900 mb-4">Profile Information</h2>
+            <DynamicProfileForm
+              mode={profileMode}
+              initialValues={dynamicValues}
+              onChange={handleFieldChange}
+            />
+          </div>
+
+          {/* Section 4: Links & Platforms */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+            <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 mb-6">
+              <div>
+                <h3 className="text-lg font-bold text-slate-900">Platforms & Links</h3>
+                <p className="text-sm text-slate-500 mt-1">Add your social media, portfolio, or contact links.</p>
+              </div>
+              <button 
+                type="button"
+                onClick={handleAddLink}
+                className="flex items-center justify-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 transition-colors shadow-sm"
+              >
+                <Plus className="w-4 h-4 mr-2" />
+                Add Link
+              </button>
+            </div>
+
+            <div className="space-y-4">
+              <DndContext 
+                sensors={sensors}
+                collisionDetection={closestCenter}
+                onDragEnd={handleDragEnd}
+              >
+                <SortableContext 
+                  items={links.map(l => l.id)}
+                  strategy={verticalListSortingStrategy}
+                >
+                  {links.map((link) => (
+                    <SortableLinkItem
+                      key={link.id}
+                      link={link}
+                      isExpanded={!!expandedLinks[link.id]}
+                      toggleLinkExpansion={toggleLinkExpansion}
+                      handleToggleVisibility={handleToggleVisibility}
+                      handleRemoveLink={handleRemoveLink}
+                      handleLinkChange={handleLinkChange}
+                      handleLinkBlur={handleLinkBlur}
+                    />
+                  ))}
+                </SortableContext>
+              </DndContext>
+              
+              {links.length === 0 && (
+                <div className="text-center py-10 bg-slate-50 rounded-xl border border-slate-200 border-dashed">
+                  <p className="text-sm text-slate-500">No links added yet.<br/>Click "Add Link" to get started.</p>
+                </div>
+              )}
+            </div>
+          </div>
+
+          {/* Section 5: Message Box Settings */}
+          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
+            <div className="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-0">
+              <div className="order-2 sm:order-1">
+                <h3 className="text-lg font-bold text-slate-900">Message Box Settings</h3>
+                <p className="text-sm text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
+              </div>
+              <div className="flex items-center justify-between sm:justify-end shrink-0 order-1 sm:order-2">
+                <span className="mr-3 text-sm font-medium text-slate-900">Enable Message Box</span>
+                <button
+                  type="button"
+                  onClick={() => setAllowMessages(!allowMessages)}
+                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
+                    allowMessages 
+                      ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
+                      : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
+                  }`}
+                >
+                  <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
+                    allowMessages ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
+                  }`} />
+                </button>
+              </div>
+            </div>
+            
+            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${allowMessages ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Name Input Placeholder</label>
+                <input 
+                  type="text" 
+                  value={messagePlaceholderName}
+                  onChange={(e) => setMessagePlaceholderName(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-medium text-slate-700 mb-2">Message Input Placeholder</label>
+                <input 
+                  type="text" 
+                  value={messagePlaceholderContent}
+                  onChange={(e) => setMessagePlaceholderContent(e.target.value)}
+                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
+                />
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Floating Action Button (Unsaved Changes) */}
+      <div 
+        className={`fixed bottom-24 md:bottom-24 right-6 md:right-8 z-50 pointer-events-none transition-all duration-500 ease-out flex justify-end
+          ${(hasUnsavedChanges || isSaving || showSuccess || errorMsg) ? 'translate-y-0 opacity-100' : 'translate-y-[150%] opacity-0'}`}
+      >
           <div className="pointer-events-auto flex items-center">
             <div className={`backdrop-blur-xl border shadow-lg rounded-xl p-2 flex items-center gap-3 transition-colors duration-300
               ${showSuccess ? 'bg-emerald-50/90 border-emerald-200' : 'bg-white/90 border-slate-200'}
@@ -826,7 +1038,6 @@ export default function ProfilePage() {
             </div>
           </div>
         </div>
-      </div>
 
       {/* Confirmation Modal */}
       {pendingMode && (

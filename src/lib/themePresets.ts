@@ -53,13 +53,13 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     colors: {
       primary: '#0f172a',
       secondary: '#f8fafc',
-      accent: '#64748b',
+      accent: '#ffffff',
       background: '#f8fafc',
       text: '#0f172a',
       cardBg: '#ffffff',
-      cardBorder: '#f1f5f9',
+      cardBorder: '#e2e8f0',
       linkBg: '#f8fafc',
-      linkBorder: '#f1f5f9',
+      linkBorder: '#e2e8f0',
       inputBg: '#ffffff',
       inputBorder: '#e2e8f0'
     },
@@ -69,28 +69,28 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     },
     borderRadius: '1.25rem' // clean modern rounded corners matching the high-quality layout
   },
-  corporate: {
-    name: 'Corporate',
-    description: 'Clean, professional, and trustworthy blue tones.',
-    mode: ['professional'],
+  glassmorphism: {
+    name: 'Glass',
+    description: 'Frosted glass panels, translucent layers, and smooth floating refraction.',
+    mode: ['professional', 'creative', 'casual'],
     colors: {
-      primary: '#1d4ed8', // Blue 700
-      secondary: '#e0e7ff', // Indigo 100
-      accent: '#2563eb', // Blue 600
-      background: '#f8fafc', // Slate 50
-      text: '#0f172a', // Slate 900
-      cardBg: '#ffffff',
-      cardBorder: '#1d4ed820',
-      linkBg: '#e0e7ff',
-      linkBorder: 'transparent',
-      inputBg: '#ffffff',
-      inputBorder: '#0f172a20'
+      primary: '#090d16',
+      secondary: 'rgba(255, 255, 255, 0.85)',
+      accent: '#2563eb',
+      background: 'linear-gradient(135deg, #eef2f6 0%, #f8fafc 50%, #e2e8f0 100%)',
+      text: '#090d16',
+      cardBg: 'rgba(255, 255, 255, 0.75)',
+      cardBorder: 'rgba(255, 255, 255, 0.9)',
+      linkBg: 'rgba(255, 255, 255, 0.82)',
+      linkBorder: 'rgba(0, 0, 0, 0.08)',
+      inputBg: 'rgba(255, 255, 255, 0.85)',
+      inputBorder: 'rgba(0, 0, 0, 0.12)'
     },
     fonts: {
-      heading: 'var(--font-heading), system-ui, sans-serif', // Inter or standard sans
+      heading: 'var(--font-heading), system-ui, sans-serif',
       body: 'var(--font-body), system-ui, sans-serif'
     },
-    borderRadius: '0.375rem' // Standard rounded-md
+    borderRadius: '1.25rem'
   },
   brutalism: {
     name: 'Brutalism',
@@ -99,11 +99,11 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
     colors: {
       primary: '#ffffff',
       secondary: '#1a1a1a',
-      accent: '#d1d5db',
+      accent: '#000000', // Crisp stark black on white primary button
       background: '#000000',
       text: '#ffffff',
       cardBg: 'rgba(255, 255, 255, 0.05)',
-      cardBorder: 'rgba(255, 255, 255, 0.1)',
+      cardBorder: 'rgba(255, 255, 255, 0.15)',
       linkBg: 'rgba(255, 255, 255, 0.08)',
       linkBorder: '#444444',
       inputBg: '#0f0f0f',
@@ -117,24 +117,24 @@ export const themePresets: Record<ThemePreset, ThemeConfig> = {
   },
   'phantom-deck': {
     name: 'Phantom Deck',
-    description: 'A mysterious theme inspired by vintage playing cards, floating particles, and deep gold details.',
+    description: 'A luxurious theme inspired by arcane playing cards, intricate gilded borders, and deep obsidian hues.',
     mode: ['creative', 'casual'],
     colors: {
-      primary: '#ca8a04', // Warm gold
-      secondary: '#2a1711', // Deep blackish brown
-      accent: '#991b1b', // Deep crimson
-      background: 'linear-gradient(to bottom, #110c0a 0%, #1c1410 50%, #0d0806 100%)',
-      text: '#f5ebd5', // Warm parchment text
-      cardBg: 'rgba(28, 20, 16, 0.8)', // Acrylic card game table background
-      cardBorder: 'rgba(202, 138, 4, 0.25)', // Subtle gold border
-      linkBg: 'rgba(42, 23, 17, 0.5)',
-      linkBorder: 'rgba(202, 138, 4, 0.15)',
-      inputBg: '#110c0a',
-      inputBorder: 'rgba(202, 138, 4, 0.3)'
+      primary: '#d4af37', // Refined Antique Gold
+      secondary: '#1c1310', // Deep obsidian wood
+      accent: '#120b08', // Contrast dark obsidian on gold
+      background: 'linear-gradient(to bottom, #0b0807 0%, #150e0b 50%, #080605 100%)',
+      text: '#f7eedb', // Warm parchment text
+      cardBg: 'rgba(22, 15, 12, 0.9)', // Smoked glass obsidian card
+      cardBorder: 'rgba(212, 175, 55, 0.28)', // Antique gold hairline border
+      linkBg: 'rgba(35, 23, 18, 0.65)',
+      linkBorder: 'rgba(212, 175, 55, 0.2)',
+      inputBg: '#130c09',
+      inputBorder: 'rgba(212, 175, 55, 0.3)'
     },
     fonts: {
       heading: 'var(--font-heading), system-ui, serif',
-      body: 'var(--font-sans), system-ui, sans-serif'
+      body: 'var(--font-body), system-ui, sans-serif'
     },
     borderRadius: '1.25rem'
   }
@@ -158,8 +158,11 @@ export function getThemesByMode(mode: ProfileMode): (ThemeConfig & { id: ThemePr
  * @returns The theme configuration or a fallback (minimal) if not found
  */
 export function getTheme(preset: string): ThemeConfig | null {
+  if (preset === 'corporate') {
+    return themePresets.glassmorphism;
+  }
   if (preset in themePresets) {
-    return themePresets[preset as ThemePreset];
+    return themePresets[preset as keyof typeof themePresets];
   }
   return null;
 }

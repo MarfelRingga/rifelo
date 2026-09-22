@@ -8,11 +8,28 @@ export default async function CircleRouterPage({ params }: { params: Promise<{ s
   const { slug } = await params;
 
   // 1. Fetch circle by slug
-  const { data: circle, error: circleError } = await supabaseAdmin
+  let { data: circle, error: circleError } = await supabaseAdmin
     .from('circles')
     .select('id, name, slug, description')
     .eq('slug', slug)
     .maybeSingle();
+
+  // 1b. If not found by slug, try to resolve via invite code
+  if (!circle) {
+    const { data: circleByInvite } = await supabaseAdmin
+      .from('circles')
+      .select('id, name, slug, description')
+      .eq('invite_code', slug.toUpperCase())
+      .maybeSingle();
+      
+    if (circleByInvite) {
+      if (circleByInvite.slug) {
+        redirect(`/c/${circleByInvite.slug}`);
+      } else {
+        circle = circleByInvite;
+      }
+    }
+  }
 
   if (!circle) {
     redirect('/');

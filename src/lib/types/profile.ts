@@ -8,7 +8,7 @@ export type ProfileMode = 'casual' | 'professional' | 'creative';
  * Defines the available theme presets.
  * Presets pre-configure colors, typography, and spacing.
  */
-export type ThemePreset = 'corporate' | 'minimal' | 'brutalism' | 'phantom-deck';
+export type ThemePreset = 'minimal' | 'glassmorphism' | 'brutalism' | 'phantom-deck';
 
 /**
  * Represents the configuration for a single input field in the profile editor.
@@ -78,6 +78,8 @@ export interface CustomTheme {
   fontFamily?: string;
   /** Border radius scaling factor or specific value */
   borderRadius?: string;
+  /** Custom coordinates and sizes for Canvas theme */
+  layoutSettings?: Record<string, any>;
 }
 
 /**

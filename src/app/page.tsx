@@ -219,9 +219,9 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
           setActiveCarouselSlide(index);
         }
       }}
-      className={`absolute inset-0 bg-white rounded-[2.5rem] p-5 shadow-[0_8px_25px_rgba(0,0,0,0.06)] border border-[#0c0e0b]/5 flex flex-col items-center group ${isFront ? 'cursor-grab active:cursor-grabbing hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)]' : 'cursor-pointer'}`}
+      className={`absolute inset-0 bg-white rounded-3xl p-5 shadow-[0_8px_25px_rgba(0,0,0,0.06)] border border-[#0c0e0b]/5 flex flex-col items-center group ${isFront ? 'cursor-grab active:cursor-grabbing hover:shadow-[0_12px_35px_rgba(0,0,0,0.08)]' : 'cursor-pointer'}`}
     >
-      <div className="w-full aspect-square relative rounded-[1.75rem] overflow-hidden bg-[#F4F3EE]/40 mb-4 flex items-center justify-center border border-black/5 shadow-inner select-none pointer-events-none">
+      <div className="w-full aspect-square relative rounded-2xl overflow-hidden bg-[#F4F3EE]/40 mb-4 flex items-center justify-center border border-black/5 shadow-inner select-none pointer-events-none">
          <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-2' : 'object-cover'} select-none pointer-events-none`} referrerPolicy="no-referrer" />
       </div>
       
@@ -625,9 +625,9 @@ export default function LandingPage() {
           {/* Interactive Mockup */}
           <div className="relative flex items-center justify-center w-full max-w-[320px] shrink-0">
             <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#a299af]/20 rounded-full blur-[80px]" />
-            <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-[2.5rem] p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
+            <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-3xl p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
               
-              <div className="w-full h-full bg-[#0c0e0b] rounded-[2rem] overflow-hidden flex flex-col relative border border-[#aaafbc]/10 hide-scrollbar">
+              <div className="w-full h-full bg-[#0c0e0b] rounded-3xl overflow-hidden flex flex-col relative border border-[#aaafbc]/10 hide-scrollbar">
                <AnimatePresence mode="wait">
                  {circleView === 'public' ? (
                    <motion.div
@@ -649,7 +649,7 @@ export default function LandingPage() {
                      
                      {/* Public Profile Lookalike */}
                      <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-3 font-sans hide-scrollbar w-full relative z-10">
-                       <div className="w-full bg-white rounded-[1.5rem] shadow-sm border border-slate-100 p-5 space-y-6">
+                       <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-6">
                          {/* Header */}
                          <div className="flex items-center justify-between">
                            <div>
@@ -1069,9 +1069,9 @@ export default function LandingPage() {
                 whileInView={{ opacity: 1, y: 0 }}
                 viewport={{ once: true }}
                 transition={{ delay: i * 0.1, duration: 0.6 }}
-                className="bg-white/60 backdrop-blur-md rounded-[2.25rem] p-5 xl:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col items-center group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center"
+                className="bg-white/60 backdrop-blur-md rounded-3xl p-5 xl:p-6 shadow-[0_8px_30px_rgba(0,0,0,0.04)] border border-[#0c0e0b]/5 hover:border-[#0c0e0b]/10 hover:shadow-[0_20px_50px_rgba(0,0,0,0.1)] hover:-translate-y-2 flex flex-col items-center group transition-all duration-500 ease-[cubic-bezier(0.16,1,0.3,1)] origin-center"
               >
-                <div className="w-full aspect-[1.1/1] relative rounded-[1.5rem] overflow-hidden bg-[#F4F3EE]/40 mb-5 flex items-center justify-center border border-black/5 shadow-inner">
+                <div className="w-full aspect-[1.1/1] relative rounded-2xl overflow-hidden bg-[#F4F3EE]/40 mb-5 flex items-center justify-center border border-black/5 shadow-inner">
                    <Image src={item.img} alt={item.title} fill className={`${item.title === 'Versatile Style' ? 'object-contain p-2 xl:p-3 group-hover:scale-[1.08]' : 'object-cover group-hover:scale-105'} transition-transform duration-1000 ease-[cubic-bezier(0.16,1,0.3,1)]`} referrerPolicy="no-referrer" />
                 </div>
                 <div className="text-left w-full px-3 xl:px-4 pb-1 flex-grow flex flex-col justify-between">
@@ -1179,7 +1179,7 @@ export default function LandingPage() {
             <div className="flex md:grid md:grid-cols-2 lg:grid-cols-12 gap-5 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
               
               {/* Feature 1: NFC Wristband */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5 relative z-10 text-center">
@@ -1203,7 +1203,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 2: Digital Identity */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-8 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col md:flex-row gap-5 sm:gap-6 md:gap-8 justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-8 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col md:flex-row gap-5 sm:gap-6 md:gap-8 justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:scale-110 transition-transform duration-700"></div>
                  
                  <div className="flex-1 flex flex-col justify-between py-1 relative z-10">
@@ -1255,12 +1255,12 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 3: Privacy First Control */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/15 transition-all duration-700"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Privacy Shield/Toggle */}
-                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-[1.5rem] overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/50 transition-colors duration-500">
+                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/50 transition-colors duration-500">
                      <div className="flex flex-col items-center gap-3 w-full px-4">
                        <div className="w-full bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
                          <div className="flex items-center gap-2">
@@ -1312,7 +1312,7 @@ export default function LandingPage() {
               </div>
               
               {/* Feature 4: Custom Direct */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-[#0c0e0b] border border-transparent rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group shadow-[0_12px_32px_-4px_rgba(0,0,0,0.2)]">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-[#0c0e0b] border border-transparent rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group shadow-[0_12px_32px_-4px_rgba(0,0,0,0.2)]">
                  <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:bg-amber-500/20 transition-all duration-700"></div>
                  
                  <div className="relative z-10 mb-4 md:mb-5">
@@ -1324,7 +1324,7 @@ export default function LandingPage() {
 
                  <div className="flex justify-center items-start mt-1 md:mt-2">
                    {/* Image Area - Custom Direct Mockup from /tags */}
-                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-[1.5rem] overflow-hidden bg-white/5 border border-white/10 flex flex-col justify-center p-3">
+                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex flex-col justify-center p-3">
                       
                       {/* Mockup of Edit Tag Form */} <SpecialCustomDirectMockup /> <div className="hidden pb-0 select-none pointer-events-none"> {/* */}
                       <div className="w-full max-w-[200px] mx-auto bg-white rounded-xl shadow-lg border border-slate-100 p-3 relative z-10">
@@ -1373,12 +1373,12 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 5: Inbox */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
                  <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/15 group-hover:scale-110 transition-all duration-700"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Inbox Mockup */}
-                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-[1.5rem] overflow-hidden bg-slate-100/50 border border-black/5 flex items-center justify-center flex-col perspective-1000">
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-100/50 border border-black/5 flex items-center justify-center flex-col perspective-1000">
                      
                       {/* Custom Inbox Animation */}
                       <div className="relative w-full h-full">
@@ -1482,7 +1482,7 @@ export default function LandingPage() {
               </div>
 
               {/* Feature 6: Circle Management */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-12 bg-white border border-[#0c0e0b]/10 rounded-[2rem] p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 md:gap-8 relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-12 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 md:gap-8 relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
                  <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-all duration-700"></div>
                  <div className="flex-1 relative z-10 max-w-2xl">
                    <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Circle Management</h3>
@@ -1594,7 +1594,7 @@ export default function LandingPage() {
         </div>
 
         <div className="max-w-7xl mx-auto relative z-10">
-          <div className="bg-white rounded-[2rem] sm:rounded-[2.5rem] border border-[#0c0e0b]/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] p-6 sm:p-10 md:p-16">
+          <div className="bg-white rounded-3xl sm:rounded-3xl border border-[#0c0e0b]/5 shadow-[0_32px_64px_-16px_rgba(0,0,0,0.05)] p-6 sm:p-10 md:p-16">
             <div className="flex flex-col lg:flex-row justify-between gap-12 lg:gap-24 mb-16">
               {/* Brand Section */}
               <div className="max-w-xs w-full">

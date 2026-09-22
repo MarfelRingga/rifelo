@@ -114,9 +114,13 @@ export default function CircleSettingsPage() {
       setCircleDescriptionObj(updatedDescObj);
       setSaveSuccess(true);
       setTimeout(() => setSaveSuccess(false), 3000);
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error saving settings:', error);
-      showError('Failed to save settings.');
+      let friendlyError = error.message || 'Failed to save settings.';
+      if (friendlyError.includes('Lock broken') || friendlyError.includes('steal')) {
+        friendlyError = 'Sesi terganggu oleh aktivitas di tab lain. Silakan coba klik Save sekali lagi.';
+      }
+      showError(friendlyError);
     } finally {
       setIsSaving(false);
     }

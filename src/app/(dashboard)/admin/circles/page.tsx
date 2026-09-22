@@ -1,9 +1,10 @@
+
 'use client';
 
 import React, { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { supabase } from '@/lib/supabase';
-import { CircleDot, Plus, Trash2, Loader2, Save, RefreshCw } from 'lucide-react';
+
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function AdminCirclesPage() {
@@ -159,7 +160,7 @@ export default function AdminCirclesPage() {
           }}
           className="flex items-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-xl hover:bg-slate-800 transition-colors"
         >
-          <Plus className="w-4 h-4 mr-2" />
+          <div className="w-4 h-4 mr-2" />
           Create Circle
         </button>
       </div>
@@ -206,7 +207,7 @@ export default function AdminCirclesPage() {
                       className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
                       title="Delete Circle"
                     >
-                      <Trash2 className="w-4 h-4" />
+                      <div className="w-4 h-4" />
                     </button>
                   </td>
                 </tr>
@@ -283,7 +284,7 @@ export default function AdminCirclesPage() {
                     onClick={generateRandomCode}
                     className="px-3 py-2 bg-slate-100 text-slate-700 text-sm font-medium rounded-lg hover:bg-slate-200 transition-colors border border-slate-200"
                   >
-                    <RefreshCw className="w-4 h-4" />
+                    <div className="w-4 h-4" />
                   </button>
                 </div>
                 <p className="text-xs text-slate-500 mt-1">Users will enter this secret code to join the circle.</p>
@@ -307,7 +308,7 @@ export default function AdminCirclesPage() {
                     disabled={isSaving || !newCircle.name || !newCircle.invite_code}
                     className="flex items-center px-4 py-2 bg-slate-900 text-white text-sm font-medium rounded-lg hover:bg-slate-800 disabled:opacity-50"
                   >
-                    {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Save className="w-4 h-4 mr-2" />}
+                    {isSaving ? <div className="w-4 h-4 animate-spin mr-2" /> : <div className="w-4 h-4 mr-2" />}
                     Create Circle
                   </button>
                 </div>
@@ -336,7 +337,7 @@ export default function AdminCirclesPage() {
                 disabled={isSaving}
                 className="flex items-center px-4 py-2 bg-red-600 text-white text-sm font-medium rounded-lg hover:bg-red-700 disabled:opacity-50"
               >
-                {isSaving ? <Loader2 className="w-4 h-4 animate-spin mr-2" /> : <Trash2 className="w-4 h-4 mr-2" />}
+                {isSaving ? <div className="w-4 h-4 animate-spin mr-2" /> : <div className="w-4 h-4 mr-2" />}
                 Delete Permanently
               </button>
             </div>

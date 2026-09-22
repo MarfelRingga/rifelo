@@ -254,7 +254,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
       <div className="min-h-screen bg-[#F4F3EE] font-sans py-12 px-4 flex flex-col items-center">
         <div className="w-full max-w-3xl space-y-8">
           {/* Skeleton Header */}
-          <div className="bg-[#0c0e0b] rounded-[2rem] p-8 shadow-xl relative overflow-hidden">
+          <div className="bg-[#0c0e0b] rounded-3xl p-8 shadow-xl relative overflow-hidden">
             <div className="animate-pulse flex items-center justify-between mb-4">
               <div className="h-5 w-24 bg-white/20 rounded-md"></div>
               <div className="h-8 w-24 bg-white/20 rounded-xl"></div>
@@ -265,7 +265,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
 
           <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
             {/* Skeleton Vault */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#aaafbc]/20">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#aaafbc]/20">
               <div className="animate-pulse h-5 w-32 bg-slate-200 rounded-md mb-6"></div>
               <div className="space-y-4">
                 {[1, 2, 3].map((i) => (
@@ -278,7 +278,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
             </div>
 
             {/* Skeleton Roster */}
-            <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#aaafbc]/20">
+            <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#aaafbc]/20">
               <div className="animate-pulse h-5 w-32 bg-slate-200 rounded-md mb-6"></div>
               <div className="space-y-3">
                 {[1, 2, 3, 4].map((i) => (
@@ -327,7 +327,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
     <div className="min-h-screen bg-[#F4F3EE] font-sans py-12 px-4 flex flex-col items-center">
       <div className="w-full max-w-3xl space-y-8">
         {/* Hub Header */}
-        <div className="bg-[#0c0e0b] rounded-[2rem] p-8 text-white shadow-xl relative overflow-hidden">
+        <div className="bg-[#0c0e0b] rounded-3xl p-8 text-white shadow-xl relative overflow-hidden">
           <div className="absolute top-0 right-0 w-64 h-64 bg-white/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3" />
           <div className="relative z-10">
             <div className="flex items-center justify-between mb-4">
@@ -357,7 +357,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
 
         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
           {/* The Vault */}
-          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#aaafbc]/20">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#aaafbc]/20">
             <h2 className="text-sm font-bold uppercase tracking-widest text-[#0c0e0b] mb-6 flex items-center gap-2">
               <Briefcase className="w-4 h-4" />
               The Vault
@@ -371,7 +371,7 @@ export default function CircleRealtimeView({ inviteCode, slug, profileId, profil
           </div>
 
           {/* The Roster */}
-          <div className="bg-white rounded-[2rem] p-6 shadow-sm border border-[#aaafbc]/20">
+          <div className="bg-white rounded-3xl p-6 shadow-sm border border-[#aaafbc]/20">
             <h2 className="text-sm font-bold uppercase tracking-widest text-[#0c0e0b] mb-6 flex items-center gap-2">
               <CheckCircle2 className="w-4 h-4" />
               The Roster

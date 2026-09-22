@@ -12,6 +12,7 @@ type ProfileMessage = {
   sender_name: string | null;
   message_content: string;
   created_at: string;
+  is_read?: boolean;
 };
 
 export default function InboxPage() {
@@ -47,18 +48,44 @@ export default function InboxPage() {
       if (error) throw error;
       const fetched = data || [];
       setMessages(fetched);
-
-      // Update lastViewedInboxTime to the newest message's timestamp to prevent clock-skew problems
-      if (fetched.length > 0) {
-        localStorage.setItem('lastViewedInboxTime', fetched[0].created_at);
-      } else {
-        localStorage.removeItem('lastViewedInboxTime');
-      }
+      
       window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {
       console.error('Error fetching messages:', error);
     } finally {
       setIsLoading(false);
+    }
+  };
+
+  const markAsRead = async (id: string, currentIsRead?: boolean) => {
+    if (currentIsRead !== false) return; // Only update if it's currently unread
+
+    // Optimistic update
+    setMessages(prev => 
+      prev.map(msg => msg.id === id ? { ...msg, is_read: true } : msg)
+    );
+
+    try {
+      const { error } = await supabase
+        .from('profile_messages')
+        .update({ is_read: true })
+        .eq('id', id);
+        
+      if (!error) {
+        window.dispatchEvent(new Event('inbox-updated'));
+      } else {
+        console.error('Update failed:', error);
+        // Revert optimistic update
+        setMessages(prev => 
+          prev.map(msg => msg.id === id ? { ...msg, is_read: false } : msg)
+        );
+      }
+    } catch (error) {
+      console.error('Error marking as read:', error);
+      // Revert optimistic update
+      setMessages(prev => 
+        prev.map(msg => msg.id === id ? { ...msg, is_read: false } : msg)
+      );
     }
   };
 
@@ -76,12 +103,6 @@ export default function InboxPage() {
       const remaining = messages.filter(msg => msg.id !== id);
       setMessages(remaining);
 
-      // Update lastViewedInboxTime to the remaining newest message's timestamp
-      if (remaining.length > 0) {
-        localStorage.setItem('lastViewedInboxTime', remaining[0].created_at);
-      } else {
-        localStorage.removeItem('lastViewedInboxTime');
-      }
       window.dispatchEvent(new Event('inbox-updated'));
     } catch (error) {
       console.error('Error deleting message:', error);
@@ -117,10 +138,17 @@ export default function InboxPage() {
           {messages.map((msg) => (
             <div 
               key={msg.id} 
-              className="bg-white p-5 rounded-2xl border border-slate-200 shadow-sm relative group hover:border-slate-300 transition-colors"
+              onClick={() => markAsRead(msg.id, msg.is_read)}
+              className={`${msg.is_read === false ? 'bg-slate-100 border-slate-300 shadow-md' : 'bg-white border-slate-200 shadow-sm'} cursor-pointer p-5 rounded-2xl border relative group hover:border-slate-300 transition-colors`}
             >
+              {msg.is_read === false && (
+                <div className="absolute -top-1.5 -right-1.5 w-3 h-3 bg-red-500 rounded-full shadow-sm ring-2 ring-white"></div>
+              )}
               <button
-                onClick={() => setDeleteId(msg.id)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  setDeleteId(msg.id);
+                }}
                 disabled={isDeleting === msg.id}
                 className="absolute top-4 right-4 p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-lg opacity-100 sm:opacity-0 sm:group-hover:opacity-100 transition-all disabled:opacity-50"
                 title="Delete message"

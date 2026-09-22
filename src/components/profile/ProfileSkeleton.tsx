@@ -20,25 +20,23 @@ export function ProfileSkeleton() {
       <div className="space-y-6">
         {/* Card 1 Skeleton: Public Profile Visibility & URL */}
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 space-y-6 shadow-sm">
-          <div className="pb-6 border-b border-slate-100 space-y-4">
-            <div className="flex items-center justify-between">
-              {/* Visibility label */}
-              <div className="h-5 w-40 bg-slate-200 rounded-md" />
-              {/* Toggle switch placeholder */}
-              <div className="h-6 w-11 bg-slate-200 rounded-full" />
+          <div className="pb-6 border-b border-slate-100 space-y-2">
+            {/* Top row: URL label + Visibility toggle */}
+            <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-2">
+              <div className="h-4 w-28 bg-slate-200 rounded-md order-2 sm:order-1" />
+              <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 order-1 sm:order-2">
+                <div className="h-5 w-40 bg-slate-200 rounded-md" />
+                <div className="h-6 w-11 bg-slate-200 rounded-full" />
+              </div>
             </div>
 
-            <div className="space-y-2">
-              {/* URL Label */}
-              <div className="h-4 w-28 bg-slate-200 rounded-md" />
-              {/* Prefix + input placeholder */}
+            {/* Input row */}
+            <div className="max-w-xl">
               <div className="flex items-stretch h-12 rounded-xl overflow-hidden border border-slate-200/80">
                 <div className="w-28 bg-slate-100 border-r border-slate-200/80" />
                 <div className="flex-1 bg-white" />
               </div>
             </div>
-            {/* Small description text block */}
-            <div className="h-3.5 w-96 bg-slate-100 rounded-md" />
           </div>
 
           {/* Card 2 Skeleton: Profile Information */}
@@ -113,12 +111,15 @@ export function ProfileSkeleton() {
 
         {/* Card 4 Skeleton: Direct Anonymous Inbox */}
         <div className="bg-white border border-slate-200/60 rounded-2xl p-6 space-y-6 shadow-sm">
-          <div className="flex items-center justify-between">
-            <div className="space-y-2">
+          <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-0">
+            <div className="space-y-2 order-2 sm:order-1">
               <div className="h-6 w-56 bg-slate-200 rounded-lg" />
               <div className="h-4 w-72 bg-slate-100 rounded-md" />
             </div>
-            <div className="h-6 w-11 bg-slate-200 rounded-full" />
+            <div className="flex items-center justify-between sm:justify-end gap-3 shrink-0 order-1 sm:order-2">
+              <div className="h-5 w-36 bg-slate-200 rounded-md" />
+              <div className="h-6 w-11 bg-slate-200 rounded-full" />
+            </div>
           </div>
         </div>
       </div>

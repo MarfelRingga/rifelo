@@ -13,7 +13,6 @@ import {
   CalendarDays,
   LogOut,
   ChevronDown,
-  Building2,
   User,
   Ticket,
   Plus,
@@ -26,7 +25,7 @@ import {
   Smartphone,
   AlertCircle
 } from 'lucide-react';
-import { motion, AnimatePresence } from 'motion/react';
+
 
 import { supabase } from '@/lib/supabase';
 import { useToast } from '@/components/ui/ToastContext';
@@ -68,13 +67,13 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       return;
     }
 
-    const lastViewed = localStorage.getItem('lastViewedInboxTime');
-    let query = supabase.from('profile_messages').select('*', { count: 'exact', head: true }).eq('profile_id', targetUserId);
-    if (lastViewed) {
-      query = query.gt('created_at', lastViewed);
-    }
-    const { count } = await query;
-    if (count !== null && count > 0) {
+    const { count, error } = await supabase
+      .from('profile_messages')
+      .select('*', { count: 'exact', head: true })
+      .eq('profile_id', targetUserId)
+      .eq('is_read', false);
+
+    if (!error && count !== null && count > 0) {
       setHasUnreadInbox(true);
     } else {
       setHasUnreadInbox(false);
@@ -519,7 +518,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {activeWorkspace.type === 'personal' ? <User className="w-4 h-4" /> : 
                  activeWorkspace.type === 'admin' ? <ShieldAlert className="w-4 h-4" /> : 
                  activeWorkspace.type === 'photobooth' ? <Camera className="w-4 h-4" /> :
-                 <Building2 className="w-4 h-4" />}
+                 <CircleDot className="w-4 h-4" />}
               </div>
               <div className="text-left truncate">
                 <p className="text-sm font-semibold text-slate-900 truncate">
@@ -541,10 +540,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               <div className="absolute top-full left-4 right-4 mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-2 overflow-hidden">
                 <input type="hidden" name="activeWorkspaceId" value={activeWorkspaceId} />
                 <ul className="flex flex-col">
-                  <li className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                    Your Modes
-                  </li>
-                
                     {workspaces.map((ws) => (
                       <li 
                         key={ws.id}
@@ -554,14 +549,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         {ws.type === 'personal' ? <User className="w-4 h-4 mr-3 text-slate-400" /> : 
                          ws.type === 'admin' ? <ShieldAlert className="w-4 h-4 mr-3 text-slate-400" /> : 
                          ws.type === 'photobooth' ? <Camera className="w-4 h-4 mr-3 text-slate-400" /> :
-                         <Building2 className="w-4 h-4 mr-3 text-slate-400" />}
+                         <CircleDot className="w-4 h-4 mr-3 text-slate-400" />}
                         <div className="text-left truncate">
                           <span className="block truncate">{ws.name}</span>
                         </div>
                       </li>
                     ))}
 
-                <li className="h-px bg-slate-100 my-2" />
+                <li className="border-t border-slate-200 my-1" />
                 
                 <li 
                   onClick={() => { setIsJoinModalOpen(true); setIsWorkspaceMenuOpen(false); }}
@@ -641,7 +636,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 {activeWorkspace.type === 'personal' ? <User className="w-3 h-3" /> : 
                  activeWorkspace.type === 'admin' ? <ShieldAlert className="w-3 h-3" /> : 
                  activeWorkspace.type === 'photobooth' ? <Camera className="w-3 h-3" /> :
-                 <Building2 className="w-3 h-3" />}
+                 <CircleDot className="w-3 h-3" />}
               </div>
               <span className="text-sm font-semibold text-slate-900 max-w-[100px] truncate">
                 {activeWorkspace.name}
@@ -650,25 +645,21 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             </button>
 
             {/* Mobile Dropdown Menu */}
-            <AnimatePresence>
+            <>
               {isWorkspaceMenuOpen && (
                 <>
                   <div 
                     className="fixed inset-0 z-40" 
                     onClick={() => setIsWorkspaceMenuOpen(false)}
                   />
-                  <motion.div 
-                    initial={{ opacity: 0, y: -10 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    exit={{ opacity: 0, y: -10 }}
+                  <div 
+                    
+                    
+                    
                     className="absolute top-full right-0 mt-2 w-64 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-2 overflow-hidden"
                   >
                     <input type="hidden" name="activeWorkspaceIdMobile" value={activeWorkspaceId} />
                     <ul className="flex flex-col">
-                      <li className="px-3 py-2 text-xs font-semibold text-slate-500 uppercase tracking-wider">
-                        Your Modes
-                      </li>
-                    
                     {workspaces.map((ws) => (
                       <li 
                         key={ws.id}
@@ -678,14 +669,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                         {ws.type === 'personal' ? <User className="w-4 h-4 mr-3 text-slate-400" /> : 
                          ws.type === 'admin' ? <ShieldAlert className="w-4 h-4 mr-3 text-slate-400" /> : 
                          ws.type === 'photobooth' ? <Camera className="w-4 h-4 mr-3 text-slate-400" /> :
-                         <Building2 className="w-4 h-4 mr-3 text-slate-400" />}
+                         <CircleDot className="w-4 h-4 mr-3 text-slate-400" />}
                         <div className="text-left truncate">
                           <span className="block truncate">{ws.name}</span>
                         </div>
                       </li>
                     ))}
 
-                    <li className="h-px bg-slate-100 my-2" />
+                    <li className="border-t border-slate-200 my-1" />
                     
                     <li 
                       onClick={() => { setIsJoinModalOpen(true); setIsWorkspaceMenuOpen(false); }}
@@ -695,10 +686,10 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                       Join with Code
                     </li>
                     </ul>
-                  </motion.div>
+                  </div>
                 </>
               )}
-            </AnimatePresence>
+            </>
           </div>
         </header>
         
@@ -741,9 +732,9 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
       {isJoinModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
           <div className="bg-white rounded-2xl shadow-xl w-full max-w-[320px] sm:max-w-sm overflow-hidden animate-in fade-in zoom-in-95 duration-200">
-            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
-              <h3 className="text-lg font-semibold text-slate-900">Join Mode</h3>
-              <button onClick={() => setIsJoinModalOpen(false)} className="text-slate-400 hover:text-slate-600 transition-colors">
+            <div className="px-5 py-4 border-b border-slate-100 flex items-center justify-center relative">
+              <h3 className="text-xs font-semibold text-slate-500 uppercase tracking-wider text-center">Join Mode</h3>
+              <button onClick={() => setIsJoinModalOpen(false)} className="absolute right-5 text-slate-400 hover:text-slate-600 transition-colors">
                 <X className="w-5 h-5" />
               </button>
             </div>

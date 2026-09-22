@@ -1,7 +1,7 @@
 import React from 'react';
 import { ProfileMode } from '@/lib/types/profile';
 import { cn } from '@/lib/utils';
-import { motion } from 'motion/react';
+import { Smile, Briefcase, Palette } from 'lucide-react';
 
 interface ModeSelectorProps {
   currentMode: ProfileMode;
@@ -9,10 +9,10 @@ interface ModeSelectorProps {
   readOnly?: boolean;
 }
 
-const MODES: { id: ProfileMode; name: string }[] = [
-  { id: 'casual', name: 'Casual' },
-  { id: 'professional', name: 'Professional' },
-  { id: 'creative', name: 'Creative' },
+const MODES: { id: ProfileMode; name: string; icon: React.FC<any> }[] = [
+  { id: 'casual', name: 'Casual', icon: Smile },
+  { id: 'professional', name: 'Professional', icon: Briefcase },
+  { id: 'creative', name: 'Creative', icon: Palette },
 ];
 
 export function ModeSelector({
@@ -21,27 +21,28 @@ export function ModeSelector({
   readOnly = false,
 }: ModeSelectorProps) {
   return (
-    <div className="flex flex-wrap gap-3">
+    <div className="flex overflow-x-auto gap-3 py-3 snap-x hide-scrollbar -mx-4 px-4">
       {MODES.map((mode) => {
         const isSelected = currentMode === mode.id;
+        const Icon = mode.icon;
 
         return (
-          <motion.button
+          <button
             key={mode.id}
-            whileHover={!readOnly ? { scale: 1.05 } : {}}
-            whileTap={!readOnly ? { scale: 0.95 } : {}}
+            type="button"
             onClick={() => !readOnly && onModeSelect(mode.id)}
             disabled={readOnly}
             className={cn(
-              "flex items-center gap-2 px-5 py-2.5 rounded-2xl transition-all duration-200 font-semibold text-sm border-[1.5px]",
+              "snap-center shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-300 font-semibold text-sm border-2",
               isSelected
-                ? "bg-slate-100/80 border-slate-400 text-slate-900 shadow-inner backdrop-blur-sm font-medium"
-                : "bg-white/80 border-slate-200 text-slate-600 hover:border-slate-300 hover:bg-slate-50",
-              readOnly && "cursor-default opacity-80"
+                ? "bg-slate-900 border-slate-900 text-white shadow-md scale-[1.02]"
+                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-slate-50",
+              readOnly && "cursor-default opacity-70"
             )}
           >
+            <Icon className={cn("w-4 h-4", isSelected ? "text-white" : "text-slate-400")} />
             <span className="leading-none">{mode.name}</span>
-          </motion.button>
+          </button>
         );
       })}
     </div>

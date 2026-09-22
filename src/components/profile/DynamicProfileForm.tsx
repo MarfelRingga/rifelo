@@ -79,7 +79,7 @@ export function DynamicProfileForm({
 
   return (
     <form onSubmit={handleSubmit} className="w-full space-y-6">
-      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-6">
+      <div className="grid grid-cols-1 md:grid-cols-2 gap-x-6 gap-y-4">
         {Object.entries(fields).map(([key, config]) => {
           const value = values[key] || '';
           const isTouched = touched[key];
@@ -89,29 +89,21 @@ export function DynamicProfileForm({
           // Determine if field should span full width
           const isTextarea = config.type === 'textarea';
           const spanClass = isTextarea ? "md:col-span-2" : "col-span-1";
+          
+          const isNearMax = config.maxLength && value.length >= (config.maxLength * 0.8);
 
           return (
-            <div key={key} className={cn("flex flex-col space-y-1.5", spanClass)}>
-              <div className="flex items-center justify-between">
-                <label 
-                  htmlFor={`field-${key}`}
-                  className="text-sm font-semibold text-slate-800 flex items-center gap-1.5"
-                >
-                  {config.label}
-                  {config.required && <span className="text-red-500">*</span>}
-                </label>
-                
-                {/* Character counter for fields with maxLength */}
-                {config.maxLength && (
-                  <span className={cn(
-                    "text-xs font-medium",
-                    value.length >= config.maxLength ? "text-amber-500" : "text-slate-400"
-                  )}>
-                    {value.length}/{config.maxLength}
-                  </span>
-                )}
-              </div>
-
+            <div key={key} className={cn("relative flex flex-col", spanClass)}>
+              {/* Character counter for fields with maxLength - positioned absolutely to avoid layout shift */}
+              {isNearMax && (
+                <span className={cn(
+                  "text-[10px] font-medium absolute -top-4 right-1 z-10 bg-white px-1",
+                  value.length >= config.maxLength! ? "text-red-500 font-bold" : "text-amber-500"
+                )}>
+                  {value.length}/{config.maxLength}
+                </span>
+              )}
+              
               <div className="relative">
                 {IconComponent && (
                   <div className="absolute left-3 top-3 text-slate-400 pointer-events-none">
@@ -134,7 +126,7 @@ export function DynamicProfileForm({
                       value={value}
                       onChange={(e) => handleChange(key, e.target.value)}
                       onBlur={() => handleBlur(key)}
-                      placeholder={config.placeholder}
+                      placeholder={config.label}
                       maxLength={config.maxLength}
                       required={config.required}
                       disabled={isLoading}
@@ -207,7 +199,7 @@ export function DynamicProfileForm({
                     value={value}
                     onChange={(e) => handleChange(key, e.target.value)}
                     onBlur={() => handleBlur(key)}
-                    placeholder={config.placeholder}
+                    placeholder={config.label}
                     maxLength={config.maxLength}
                     required={config.required}
                     disabled={isLoading}

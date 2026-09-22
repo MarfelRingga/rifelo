@@ -185,7 +185,7 @@ function NFCTagsContent() {
         // Admins see all circles
         const { data: allCircles, error: circlesError } = await supabase
           .from('circles')
-          .select('id, name, invite_code')
+          .select('id, name, invite_code, slug')
           .order('name');
         
         if (!circlesError && allCircles) {
@@ -200,7 +200,8 @@ function NFCTagsContent() {
             circles (
               id,
               name,
-              invite_code
+              invite_code,
+              slug
             )
           `)
           .eq('profile_id', session.user.id);
@@ -311,7 +312,7 @@ function NFCTagsContent() {
       // Find circle_id if interaction mode is circle
       let targetCircleId = null;
       if (interactionMode === 'circle' && redirectUrl) {
-        const circle = userCircles.find(c => c.invite_code === redirectUrl);
+        const circle = userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl);
         if (circle) targetCircleId = circle.id;
       }
 
@@ -749,7 +750,7 @@ function NFCTagsContent() {
                               <li
                                 onClick={() => {
                                   setInteractionMode('circle');
-                                  setRedirectUrl(userCircles[0].invite_code);
+                                  setRedirectUrl(userCircles[0].slug || userCircles[0].invite_code);
                                   setIsInteractionModeOpen(false);
                                 }}
                                 className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'circle' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
@@ -791,7 +792,7 @@ function NFCTagsContent() {
                         className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
                       >
                         <span className="truncate">
-                          {redirectUrl ? userCircles.find(c => c.invite_code === redirectUrl)?.name || 'Choose a circle...' : 'Choose a circle...'}
+                          {redirectUrl ? userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl)?.name || 'Choose a circle...' : 'Choose a circle...'}
                         </span>
                         <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
                       </button>
@@ -814,10 +815,10 @@ function NFCTagsContent() {
                                 <li
                                   key={c.id}
                                   onClick={() => {
-                                    setRedirectUrl(c.invite_code);
+                                    setRedirectUrl(c.slug || c.invite_code);
                                     setIsSelectCircleOpen(false);
                                   }}
-                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${redirectUrl === c.invite_code ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
+                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${redirectUrl === c.invite_code || redirectUrl === c.slug ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
                                 >
                                   {c.name}
                                 </li>
