@@ -1,14 +1,10 @@
-
 'use client';
 
-import React, { useState, useEffect } from 'react';
-import { useRouter } from 'next/navigation';
+import { useState, useEffect } from 'react';
 import { supabase } from '@/lib/supabase';
-
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 
 export default function AdminCirclesPage() {
-  const router = useRouter();
   const [circles, setCircles] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
@@ -62,7 +58,7 @@ export default function AdminCirclesPage() {
       if (sessionError) {
         if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('Invalid Refresh Token')) {
           await supabase.auth.signOut();
-          router.push('/login');
+          if (typeof window !== 'undefined') window.location.href = '/login';
           return;
         }
       }

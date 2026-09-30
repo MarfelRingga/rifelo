@@ -16,6 +16,8 @@ import HeroBrutalism from '@/components/HeroBrutalism';
 import PhantomDeckProfile from '@/components/PhantomDeckProfile';
 import MinimalProfile from '@/components/MinimalProfile';
 import MessageForm from '@/app/(public)/u/[username]/MessageForm';
+import { cn } from '@/lib/utils';
+import { getWhatsAppUrl } from '@/lib/phone';
 
 export default function PublicProfileView({ profile }: { profile: any }) {
   // Apply Theme
@@ -83,7 +85,10 @@ export default function PublicProfileView({ profile }: { profile: any }) {
   // Normal Profile View
   return (
     <div 
-      className={`min-h-screen py-8 sm:py-10 px-4 flex flex-col items-center justify-start transition-colors duration-500 relative`}
+      className={cn(
+        "px-4 flex flex-col items-center justify-start transition-colors duration-500 relative",
+        profile?.isEmbeddedPreview ? "min-h-full py-4" : "min-h-screen py-8 sm:py-10"
+      )}
       style={{
         background: appliedColors.background,
         color: profile.themePreset === 'brutalism' ? '#ffffff' : appliedColors.text,
@@ -91,7 +96,7 @@ export default function PublicProfileView({ profile }: { profile: any }) {
       }}
     >
       {profile.themePreset === 'brutalism' && (
-        <HeroBrutalism mainText="" />
+        <HeroBrutalism mainText="" isEmbeddedPreview={profile?.isEmbeddedPreview} />
       )}
       
       <div 
@@ -231,7 +236,7 @@ export default function PublicProfileView({ profile }: { profile: any }) {
           {/* WhatsApp / Phone */}
           {(profile.profileMode === 'casual' || profile.profileMode === 'professional') && profile.phone && (
             <a 
-              href={`https://wa.me/${profile.phone.replace(/\D/g, '')}`} 
+              href={getWhatsAppUrl(profile.phone)} 
               target="_blank"
               rel="noopener noreferrer"
               className="flex items-center p-4 transition-all group hover:scale-[1.01]"

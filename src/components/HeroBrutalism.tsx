@@ -1,23 +1,21 @@
 'use client';
 
 import { motion } from 'motion/react';
-import { Anton } from 'next/font/google';
-
-const anton = Anton({
-  weight: '400',
-  subsets: ['latin'],
-  variable: '--font-anton',
-});
 
 interface HeroBrutalismProps {
   mainText?: string;
+  isEmbeddedPreview?: boolean;
 }
 
 export default function HeroBrutalism({
   mainText = "NIGHT",
+  isEmbeddedPreview = false,
 }: HeroBrutalismProps) {
   return (
-    <section className={`fixed inset-0 w-full h-screen bg-black text-white overflow-hidden flex flex-col justify-end p-4 sm:p-8 ${anton.variable} rounded-none z-0`}>
+    <section className={isEmbeddedPreview 
+      ? "absolute inset-0 w-full h-full bg-black text-white overflow-hidden flex flex-col justify-end p-4 sm:p-8 font-anton rounded-none z-0 pointer-events-none"
+      : "fixed inset-0 w-full h-screen bg-black text-white overflow-hidden flex flex-col justify-end p-4 sm:p-8 font-anton rounded-none z-0"
+    }>
       {/* Noise Texture Overlay using SVG filter for performance */}
       <div 
         className="absolute inset-0 pointer-events-none opacity-[0.15] z-0"
@@ -39,7 +37,7 @@ export default function HeroBrutalism({
               transition: { duration: 0.2 } 
             }}
             className="text-[18vw] font-normal uppercase tracking-tighter leading-[0.8] origin-bottom cursor-pointer select-none text-center lg:text-left w-full break-words"
-            style={{ fontFamily: 'var(--font-anton)' }}
+            style={{ fontFamily: "var(--font-anton), 'Anton', Impact, sans-serif" }}
           >
             {mainText}
           </motion.h1>

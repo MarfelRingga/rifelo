@@ -18,9 +18,9 @@ export function ModePillSelector({ currentMode, onModeSelect }: ModePillSelector
   return (
     <div>
       <label className="block text-xs font-medium text-slate-500 uppercase tracking-wide mb-2">
-        Mode
+        Persona Mode
       </label>
-      <div className="flex flex-wrap gap-2">
+      <div className="flex items-center gap-2 sm:gap-3 py-1 overflow-x-auto hide-scrollbar">
         {MODES.map((m) => {
           const isActive = currentMode === m.id;
           return (
@@ -28,13 +28,13 @@ export function ModePillSelector({ currentMode, onModeSelect }: ModePillSelector
               key={m.id}
               onClick={() => onModeSelect(m.id)}
               className={cn(
-                'px-4 py-1.5 text-sm rounded-full transition-colors font-medium border flex items-center gap-1.5',
+                'shrink-0 flex items-center justify-center gap-2 p-2.5 sm:p-3 px-4 sm:px-5 text-xs sm:text-sm rounded-full transition-colors font-semibold border-2 whitespace-nowrap',
                 isActive
-                  ? 'bg-slate-900 border-slate-900 text-white'
-                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-300'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-sm'
+                  : 'bg-slate-50 border-slate-200 text-slate-700 hover:bg-white hover:border-slate-300'
               )}
             >
-              <span>{m.label}</span>
+              <span className="leading-none whitespace-nowrap">{m.label}</span>
             </button>
           );
         })}

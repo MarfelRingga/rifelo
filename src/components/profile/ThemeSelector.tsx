@@ -8,51 +8,105 @@ interface ThemeSelectorProps {
   currentMode: ProfileMode;
   currentTheme: string;
   onThemeSelect: (theme: string) => void;
+  accentColor?: string;
 }
 
-const getPreviewColors = (themeId: string, colors: any) => {
+const getPreviewColors = (themeId: string, colors: any, accentColor?: string) => {
   switch (themeId) {
-    case 'vibrant':
-      return {
-        c1: 'linear-gradient(135deg, #fce7f3 0%, #dbeafe 100%)', // real pastel card gradient
-        c2: '#7c3aed', // vibrant Purple accent
-        bg: '#ffffff'
-      };
-    case 'playful':
-      return {
-        c1: '#fffbeb', // cream background
-        c2: '#f59e0b', // playful Amber
-        bg: '#ffffff'
-      };
     case 'minimal':
       return {
-        c1: '#f8fafc', // minimal slate theme background
-        c2: '#0f172a', // minimal deep slate/black focus
-        bg: '#ffffff'
-      };
-    case 'brutalism':
-      return {
-        c1: '#e5e7eb', // brutalism gray background
-        c2: '#000000', // stark black
-        bg: '#000000'
+        bg: '#f8fafc',
+        cardBg: '#ffffff',
+        cardBorder: '#e2e8f0',
+        text: '#0f172a',
+        subtext: '#64748b',
+        primary: accentColor || '#0f172a',
+        linkBg: '#f8fafc',
+        linkBorder: '#e2e8f0',
+        badgeBg: accentColor ? `${accentColor}15` : '#f1f5f9',
+        badgeBorder: accentColor ? `${accentColor}35` : '#e2e8f0',
+        badgeDot: accentColor || '#475569',
+        buttonBg: accentColor || '#0f172a',
+        buttonText: '#ffffff',
+        isDark: false,
+        radius: 'rounded-lg',
+        linkRadius: 'rounded-md',
       };
     case 'glassmorphism':
       return {
-        c1: 'linear-gradient(135deg, rgba(255,255,255,0.85), rgba(255,255,255,0.4))',
-        c2: '#090d16',
-        bg: 'linear-gradient(135deg, #eef2f6 0%, #dce4ee 100%)'
+        bg: 'linear-gradient(135deg, #eef2f6 0%, #f8fafc 50%, #e2e8f0 100%)',
+        cardBg: 'rgba(255, 255, 255, 0.76)',
+        cardBorder: 'rgba(255, 255, 255, 0.95)',
+        text: '#090d16',
+        subtext: '#475569',
+        primary: accentColor || '#2563eb',
+        linkBg: 'rgba(255, 255, 255, 0.88)',
+        linkBorder: 'rgba(0, 0, 0, 0.08)',
+        badgeBg: 'rgba(255, 255, 255, 0.9)',
+        badgeBorder: 'rgba(0, 0, 0, 0.1)',
+        badgeDot: accentColor || '#2563eb',
+        buttonBg: accentColor || '#2563eb',
+        buttonText: '#ffffff',
+        isDark: false,
+        radius: 'rounded-lg',
+        linkRadius: 'rounded-md',
+      };
+    case 'brutalism':
+      return {
+        bg: '#000000',
+        cardBg: 'rgba(255, 255, 255, 0.06)',
+        cardBorder: 'rgba(255, 255, 255, 0.22)',
+        text: '#ffffff',
+        subtext: 'rgba(255, 255, 255, 0.6)',
+        primary: '#ffffff',
+        linkBg: 'rgba(255, 255, 255, 0.1)',
+        linkBorder: 'rgba(255, 255, 255, 0.28)',
+        badgeBg: 'rgba(255, 255, 255, 0.12)',
+        badgeBorder: 'rgba(255, 255, 255, 0.3)',
+        badgeDot: '#ffffff',
+        buttonBg: '#ffffff',
+        buttonText: '#000000',
+        isDark: true,
+        radius: 'rounded-none',
+        linkRadius: 'rounded-none',
       };
     case 'phantom-deck':
       return {
-        c1: '#1c130f',
-        c2: '#d4af37',
-        bg: '#050505'
+        bg: 'linear-gradient(to bottom, #0b0807 0%, #150e0b 50%, #080605 100%)',
+        cardBg: 'rgba(22, 15, 12, 0.92)',
+        cardBorder: 'rgba(212, 175, 55, 0.32)',
+        text: '#f7eedb',
+        subtext: '#cbbda3',
+        primary: '#d4af37',
+        linkBg: 'rgba(35, 23, 18, 0.75)',
+        linkBorder: 'rgba(212, 175, 55, 0.22)',
+        badgeBg: '#271a14',
+        badgeBorder: 'rgba(212, 175, 55, 0.4)',
+        badgeDot: '#d4af37',
+        buttonBg: '#d4af37',
+        buttonText: '#120b08',
+        isDark: true,
+        radius: 'rounded-lg',
+        linkRadius: 'rounded-md',
       };
     default:
       return {
-        c1: colors.background || '#ffffff',
-        c2: colors.primary || '#000000',
-        bg: '#f8fafc'
+        bg: colors?.background || '#f8fafc',
+        cardBg: colors?.cardBg || '#ffffff',
+        cardBorder: colors?.cardBorder || '#e2e8f0',
+        text: colors?.text || '#0f172a',
+        subtext: colors?.text || '#64748b',
+        primary: colors?.primary || '#0f172a',
+        linkBg: colors?.linkBg || '#f8fafc',
+        linkBorder: colors?.linkBorder || '#e2e8f0',
+        badgeBg: '#f1f5f9',
+        badgeBorder: '#e2e8f0',
+        badgeDot: colors?.primary || '#475569',
+        buttonBg: colors?.primary || '#0f172a',
+        buttonText: '#ffffff',
+        isDark: false,
+        radius: 'rounded-lg',
+        linkRadius: 'rounded-md',
       };
   }
 };
@@ -61,6 +115,7 @@ export function ThemeSelector({
   currentMode,
   currentTheme,
   onThemeSelect,
+  accentColor,
 }: ThemeSelectorProps) {
   const availableThemes = useMemo(() => getThemesByMode(currentMode), [currentMode]);
   
@@ -76,10 +131,10 @@ export function ThemeSelector({
 
   return (
     <div className="w-full">
-      <div className="flex overflow-x-auto gap-4 py-4 snap-x hide-scrollbar -mx-4 px-4">
+      <div className="flex overflow-x-auto lg:overflow-visible lg:grid lg:grid-cols-4 gap-3 sm:gap-3.5 py-2 snap-x hide-scrollbar -mx-2 px-2 lg:mx-0 lg:px-0">
         {availableThemes.map((theme) => {
           const isSelected = theme.id === currentTheme;
-          const preview = getPreviewColors(theme.id, theme.colors);
+          const preview = getPreviewColors(theme.id, theme.colors, accentColor);
           
           return (
             <button
@@ -87,95 +142,131 @@ export function ThemeSelector({
               key={theme.id}
               onClick={() => onThemeSelect(theme.id)}
               className={cn(
-                "snap-center shrink-0 w-[100px] flex flex-col items-center gap-3 group transition-all duration-300",
-                isSelected ? "opacity-100" : "opacity-60 hover:opacity-100"
+                "snap-center shrink-0 w-[124px] sm:w-[138px] lg:w-full flex flex-col items-center gap-2 group transition-all duration-200",
+                isSelected ? "opacity-100" : "opacity-75 hover:opacity-100"
               )}
             >
+              {/* Web Profile Preview Card (Aspect 3/4 - Representing u/username Web Layout) */}
               <div 
                 className={cn(
-                  "w-full aspect-[2/3] rounded-2xl shadow-sm flex flex-col items-center p-3 gap-2 border-[2.5px] transition-all overflow-hidden relative",
-                  isSelected ? "border-slate-900 scale-105 shadow-md" : "border-slate-200 scale-100 hover:border-slate-300"
+                  "w-full aspect-[3/4] rounded-2xl p-2.5 sm:p-3 border-2 transition-all flex flex-col justify-center overflow-hidden relative shadow-2xs select-none",
+                  isSelected 
+                    ? "border-slate-900 ring-2 ring-slate-900/10 shadow-sm scale-102" 
+                    : "border-slate-200 hover:border-slate-300"
                 )}
                 style={{ background: preview.bg }}
               >
-                {/* Simulated Background Layer (for Glass/Gradient) */}
-                <div className="absolute inset-0 z-0" style={{ background: preview.c1, opacity: (theme.id as string) === 'glassmorphism' ? 1 : 0.2 }} />
-                {(theme.id as string) === 'glassmorphism' && (
-                  <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-sky-400/40 blur-md animate-glass-orb-1 pointer-events-none" />
+                {/* Theme Ambient FX (Subtle background lighting) */}
+                {theme.id === 'glassmorphism' && (
+                  <>
+                    <div className="absolute -top-4 -left-4 w-16 h-16 rounded-full bg-sky-400/35 blur-md pointer-events-none" />
+                    <div className="absolute -bottom-4 -right-4 w-16 h-16 rounded-full bg-indigo-400/30 blur-md pointer-events-none" />
+                  </>
                 )}
-                
-                {/* Simulated Content: Realistic text-first profile (No avatar circle) */}
-                <div className="relative z-10 w-full flex flex-col items-center gap-1.5 mt-1">
-                  {/* Full Name Title */}
-                  <div 
-                    className="w-4/5 h-2.5 rounded-full"
-                    style={{ background: preview.c2 }}
-                  />
-                  {/* Job Title / Subtitle Badge */}
-                  <div 
-                    className="w-1/2 h-1.5 rounded-full opacity-50 mb-1"
-                    style={{ background: preview.c2 }}
-                  />
-                  
-                  {/* Link Cards Stack */}
-                  <div className="w-full flex flex-col gap-1.5 mt-auto pt-1">
+                {theme.id === 'phantom-deck' && (
+                  <div className="absolute top-0 right-0 w-16 h-16 rounded-full bg-[#d4af37]/15 blur-lg pointer-events-none" />
+                )}
+
+                {/* Central Web Profile Container Card */}
+                <div 
+                  className={cn(
+                    "w-full p-2 border flex flex-col gap-1.5 transition-all relative z-10",
+                    theme.id === 'brutalism' ? "rounded-none shadow-[2px_2px_0px_rgba(255,255,255,0.15)]" : "rounded-xl",
+                    theme.id === 'glassmorphism' && "backdrop-blur-md shadow-xs",
+                    theme.id === 'phantom-deck' && "shadow-[0_4px_14px_rgba(0,0,0,0.5)]"
+                  )}
+                  style={{
+                    background: preview.cardBg,
+                    borderColor: preview.cardBorder
+                  }}
+                >
+                  {/* 1. Profile Header: Clean Badge Pill Box */}
+                  <div className="w-full flex flex-col items-center text-center py-0.5">
                     <div 
                       className={cn(
-                        "w-full h-4 rounded-md border flex items-center px-1.5",
-                        (theme.id as string) === 'glassmorphism' ? "border-black/10 shadow-xs" : "border-black/5"
+                        "h-3 w-10 sm:w-12 border shadow-2xs",
+                        theme.id === 'brutalism' ? "rounded-none" : "rounded-full"
                       )}
-                      style={{ 
-                        background: ((theme.id as string) === 'brutalism' || (theme.id as string) === 'phantom-deck') 
-                          ? preview.c2 
-                          : (theme.id as string) === 'glassmorphism' 
-                          ? 'rgba(255,255,255,0.85)' 
-                          : 'rgba(255,255,255,0.7)' 
+                      style={{
+                        background: preview.badgeBg,
+                        borderColor: preview.badgeBorder
                       }}
-                    >
-                      {(theme.id as string) === 'glassmorphism' && (
-                        <div className="w-8 h-1 rounded-full bg-slate-900/80" />
-                      )}
-                    </div>
+                    />
+                  </div>
+
+                  {/* 2. Link Items Stack (Clean Link Boxes) */}
+                  <div className="w-full flex flex-col gap-1.5 pt-0.5">
+                    {/* Link Box 1 */}
                     <div 
                       className={cn(
-                        "w-full h-4 rounded-md border flex items-center px-1.5",
-                        (theme.id as string) === 'glassmorphism' ? "border-black/10 shadow-xs" : "border-black/5"
+                        "w-full h-4 sm:h-4.5 border flex items-center px-1.5 shadow-2xs",
+                        theme.id === 'brutalism' ? "rounded-none" : "rounded-lg"
                       )}
-                      style={{ 
-                        background: ((theme.id as string) === 'brutalism' || (theme.id as string) === 'phantom-deck') 
-                          ? preview.c2 
-                          : (theme.id as string) === 'glassmorphism' 
-                          ? 'rgba(255,255,255,0.85)' 
-                          : 'rgba(255,255,255,0.7)' 
+                      style={{
+                        background: preview.linkBg,
+                        borderColor: preview.linkBorder
                       }}
                     >
-                      {(theme.id as string) === 'glassmorphism' && (
-                        <div className="w-6 h-1 rounded-full bg-slate-900/80" />
-                      )}
+                      <div 
+                        className={cn(
+                          "w-2 h-2 shrink-0",
+                          theme.id === 'brutalism' ? "rounded-none" : "rounded-xs"
+                        )}
+                        style={{ background: preview.primary }}
+                      />
                     </div>
+
+                    {/* Link Box 2 */}
                     <div 
                       className={cn(
-                        "w-full h-4 rounded-md border flex items-center px-1.5",
-                        (theme.id as string) === 'glassmorphism' ? "border-black/10 shadow-xs" : "border-black/5"
+                        "w-full h-4 sm:h-4.5 border flex items-center px-1.5 shadow-2xs",
+                        theme.id === 'brutalism' ? "rounded-none" : "rounded-lg"
                       )}
-                      style={{ 
-                        background: ((theme.id as string) === 'brutalism' || (theme.id as string) === 'phantom-deck') 
-                          ? preview.c2 
-                          : (theme.id as string) === 'glassmorphism' 
-                          ? 'rgba(255,255,255,0.85)' 
-                          : 'rgba(255,255,255,0.7)' 
+                      style={{
+                        background: preview.linkBg,
+                        borderColor: preview.linkBorder
                       }}
                     >
-                      {(theme.id as string) === 'glassmorphism' && (
-                        <div className="w-7 h-1 rounded-full bg-slate-900/80" />
-                      )}
+                      <div 
+                        className={cn(
+                          "w-2 h-2 shrink-0",
+                          theme.id === 'brutalism' ? "rounded-none" : "rounded-xs"
+                        )}
+                        style={{ background: preview.primary }}
+                      />
                     </div>
+                  </div>
+
+                  {/* 3. Message Box Form (Clean Input Box + Clean Action Button Box) */}
+                  <div className="w-full pt-1.5 border-t flex flex-col gap-1 mt-0.5" style={{ borderColor: preview.linkBorder }}>
+                    {/* Input Field Box */}
+                    <div 
+                      className={cn(
+                        "w-full h-3 sm:h-3.5 border",
+                        theme.id === 'brutalism' ? "rounded-none" : "rounded-md"
+                      )}
+                      style={{
+                        background: preview.isDark ? 'rgba(0,0,0,0.45)' : 'rgba(255,255,255,0.95)',
+                        borderColor: preview.linkBorder
+                      }}
+                    />
+
+                    {/* Send Button Box in Theme Accent */}
+                    <div 
+                      className={cn(
+                        "w-full h-3 sm:h-3.5 shadow-2xs",
+                        theme.id === 'brutalism' ? "rounded-none" : "rounded-md"
+                      )}
+                      style={{ background: preview.buttonBg }}
+                    />
                   </div>
                 </div>
               </div>
+
+              {/* Theme Name */}
               <span className={cn(
-                "text-xs font-semibold text-center w-full transition-colors",
-                isSelected ? "text-slate-900" : "text-slate-500"
+                "text-xs font-semibold text-center w-full transition-colors truncate px-1",
+                isSelected ? "text-slate-900 font-bold" : "text-slate-500"
               )}>
                 {theme.name}
               </span>

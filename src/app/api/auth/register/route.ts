@@ -3,6 +3,7 @@ import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { sendWelcomeEmail } from '@/lib/sendEmail';
 import { sendTelegramNotification } from '@/lib/sendTelegram';
 import { isRateLimited } from '@/lib/rate-limit';
+import { normalizePhoneNumber, isValidPhoneNumber } from '@/lib/phone';
 
 export async function POST(req: Request) {
   try {
@@ -28,6 +29,28 @@ export async function POST(req: Request) {
 
     if (password.length < 6) {
       return NextResponse.json({ error: 'Password minimal 6 karakter.' }, { status: 400 });
+    }
+
+    if (!isValidPhoneNumber(phone)) {
+      return NextResponse.json({ error: 'Nomor telepon tidak valid (harus 10-15 digit).' }, { status: 400 });
+    }
+
+    const cleanPhone = normalizePhoneNumber(phone);
+
+    // Check if phone number is already registered
+    const { data: existingPhone, error: phoneCheckError } = await supabaseAdmin
+      .from('profiles')
+      .select('id')
+      .eq('phone', cleanPhone)
+      .maybeSingle();
+
+    if (phoneCheckError) {
+      console.error('Phone check error:', phoneCheckError);
+      return NextResponse.json({ error: 'Gagal memvalidasi nomor telepon.' }, { status: 500 });
+    }
+
+    if (existingPhone) {
+      return NextResponse.json({ error: 'Nomor telepon ini sudah digunakan.' }, { status: 400 });
     }
 
     // 1. Check if username is taken (Case-insensitive)
@@ -68,8 +91,8 @@ export async function POST(req: Request) {
 
     // Use admin endpoint to create user with BOTH email and phone identities.
     const { data, error } = await supabaseAdmin.auth.admin.createUser({
-      email,
-      phone,
+      email: email.trim().toLowerCase(),
+      phone: cleanPhone,
       password,
       email_confirm: true,
       phone_confirm: true,
@@ -102,6 +125,15 @@ export async function POST(req: Request) {
       await supabaseAdmin.auth.admin.deleteUser(data.user!.id);
       return NextResponse.json({ error: 'Gagal menautkan tag NFC. Tag mungkin sudah digunakan. Silakan coba lagi dengan tag baru.' }, { status: 400 });
     }
+
+    // Sync registered email and phone to profiles table in canonical format
+    await supabaseAdmin
+      .from('profiles')
+      .update({
+        email: email.trim().toLowerCase(),
+        phone: cleanPhone,
+      })
+      .eq('id', data.user!.id);
 
     // Await the email sending so the server doesn't terminate before it completes.
     // Wrap in try-catch so registration still succeeds even if email fails.

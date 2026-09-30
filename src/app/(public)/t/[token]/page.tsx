@@ -1,6 +1,7 @@
 import { redirect, notFound } from 'next/navigation';
 import { supabaseAdmin } from '@/lib/supabaseAdmin';
 import { unstable_cache } from 'next/cache';
+import { Radio } from 'lucide-react';
 
 // Removed edge runtime due to connection drop on initial load.
 export const dynamic = 'force-dynamic';
@@ -22,8 +23,12 @@ export const fetchTokenDestination = (token: string) => unstable_cache(
         .eq('token', token.trim())
         .maybeSingle();
 
-    if (tagError || !tag || tag.status !== 'active') {
-      return { isValid: false, destination: null };
+    if (tagError || !tag) {
+      return { isValid: false, isInactive: false, destination: null };
+    }
+
+    if (tag.status === 'inactive') {
+      return { isValid: false, isInactive: true, destination: null };
     }
 
     // 2. Handle redirect mode
@@ -92,6 +97,34 @@ export default async function NFCTagRedirectPage({
   const { token } = await params;
   const destination = await fetchTokenDestination(token);
   
+  if (destination.isInactive) {
+    return (
+      <div className="min-h-screen bg-[#050505] text-white flex items-center justify-center p-6 select-none font-sans">
+        <div className="max-w-md w-full bg-[#0a0a0a] border border-white/10 rounded-3xl p-8 text-center shadow-2xl">
+          <div className="w-16 h-16 rounded-full bg-white/5 border border-white/10 flex items-center justify-center mx-auto mb-5 text-slate-400">
+            <Radio className="w-7 h-7" />
+          </div>
+          <div className="inline-flex items-center gap-1.5 px-3 py-1 rounded-full text-xs font-semibold bg-white/5 text-slate-300 border border-white/10 mb-3">
+            <span className="w-1.5 h-1.5 rounded-full bg-slate-500" />
+            <span>Tag Inactive</span>
+          </div>
+          <h1 className="text-xl font-bold tracking-tight text-white mb-2">
+            This tag is paused
+          </h1>
+          <p className="text-sm text-white/60 leading-relaxed mb-6">
+            The owner has temporarily deactivated redirection for this physical NFC device.
+          </p>
+          <a
+            href="/"
+            className="inline-flex items-center justify-center px-6 py-2.5 rounded-xl bg-white text-black font-semibold text-sm hover:bg-white/90 transition-colors shadow-sm"
+          >
+            Go to Rifelo
+          </a>
+        </div>
+      </div>
+    );
+  }
+
   if (destination.isValid && destination.destination) {
     redirect(destination.destination);
   } else {

@@ -3,27 +3,81 @@ import path from 'path';
 import { fileURLToPath } from 'url';
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const nextBin = path.join(__dirname, 'node_modules', '.bin', 'next');
+const nextCli = path.join(__dirname, 'node_modules', 'next', 'dist', 'bin', 'next');
 
-const args = process.argv.slice(2);
+const rawArgs = process.argv.slice(2);
 const filteredArgs = [];
-for (let i = 0; i < args.length; i++) {
-  if (args[i] === '--host') {
-    i++; // Skip the value
+let hasPort = false;
+let hasHost = false;
+
+for (let i = 0; i < rawArgs.length; i++) {
+  const arg = rawArgs[i];
+  if (arg === '--host') {
+    i++; // Skip the value that follows
     continue;
   }
-  if (args[i].startsWith('--host=')) {
+  if (arg.startsWith('--host=')) {
     continue;
   }
-  filteredArgs.push(args[i]);
+  if (arg === '-p' || arg === '--port') {
+    hasPort = true;
+    filteredArgs.push(arg);
+    if (i + 1 < rawArgs.length) {
+      filteredArgs.push(rawArgs[i + 1]);
+      i++;
+    }
+    continue;
+  }
+  if (arg.startsWith('--port=')) {
+    hasPort = true;
+    filteredArgs.push(arg);
+    continue;
+  }
+  if (arg === '-H' || arg === '--hostname') {
+    hasHost = true;
+    filteredArgs.push(arg);
+    if (i + 1 < rawArgs.length) {
+      filteredArgs.push(rawArgs[i + 1]);
+      i++;
+    }
+    continue;
+  }
+  if (arg.startsWith('--hostname=')) {
+    hasHost = true;
+    filteredArgs.push(arg);
+    continue;
+  }
+  filteredArgs.push(arg);
 }
 
-// Use 'next' if it's in the path, otherwise use the absolute path to the binary
-const next = spawn(nextBin, ['dev', '-p', '3000', '-H', '0.0.0.0', ...filteredArgs], {
+const nextArgs = [nextCli, 'dev'];
+if (!hasPort) {
+  nextArgs.push('-p', '3000');
+}
+if (!hasHost) {
+  nextArgs.push('-H', '0.0.0.0');
+}
+nextArgs.push(...filteredArgs);
+
+const child = spawn(process.execPath, nextArgs, {
   stdio: 'inherit',
-  shell: true
+  env: process.env,
 });
 
-next.on('exit', (code) => {
-  process.exit(code);
+const handleSignal = (signal) => {
+  if (child && !child.killed) {
+    child.kill(signal);
+  }
+};
+
+process.on('SIGTERM', () => handleSignal('SIGTERM'));
+process.on('SIGINT', () => handleSignal('SIGINT'));
+process.on('SIGHUP', () => handleSignal('SIGHUP'));
+
+child.on('exit', (code, signal) => {
+  if (signal) {
+    process.kill(process.pid, signal);
+  } else {
+    process.exit(code ?? 0);
+  }
 });

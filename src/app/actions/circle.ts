@@ -20,6 +20,22 @@ export async function updateCircleIdentity(circleId: string, name: string, descr
   }
 }
 
+export async function updateMemberColor(circleId: string, profileId: string, color: string) {
+  try {
+    const { error } = await supabaseAdmin
+      .from('circle_members')
+      .update({ color })
+      .eq('circle_id', circleId)
+      .eq('profile_id', profileId);
+
+    if (error) throw error;
+    return { success: true };
+  } catch (err: any) {
+    console.error('Error in updateMemberColor:', err);
+    return { success: false, error: err.message || 'Failed to update member color.' };
+  }
+}
+
 export async function verifyAndJoinCircle(circleId: string, userId: string, inviteCode: string) {
   try {
     // 1. Rate Limiting Protection (Extract IP from headers in Next.js)

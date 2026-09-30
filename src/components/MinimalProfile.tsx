@@ -93,17 +93,23 @@ export default function MinimalProfile({
   // We'll combine custom links, website, email, and phone into one unified stack
   return (
     <div 
-      className="min-h-screen py-8 sm:py-10 px-4 flex flex-col items-center justify-start transition-colors duration-500 relative"
+      className={cn(
+        "px-4 flex flex-col items-center justify-start transition-colors duration-500 relative",
+        profile?.isEmbeddedPreview ? "min-h-full py-4" : "min-h-screen py-8 sm:py-10"
+      )}
       style={{
         background: isGlassTheme ? 'transparent' : appliedColors.background,
         color: appliedColors.text,
         fontFamily: theme.fonts.body
       }}
     >
-      {/* Fixed Ambient Background & Moving Light Orbs: stationary on scroll to maximize glass refraction */}
+      {/* Ambient Background & Moving Light Orbs: stationary on scroll to maximize glass refraction */}
       {isGlassTheme && (
         <div 
-          className="fixed inset-0 pointer-events-none overflow-hidden select-none z-0" 
+          className={cn(
+            "pointer-events-none overflow-hidden select-none z-0",
+            profile?.isEmbeddedPreview ? "absolute inset-0" : "fixed inset-0"
+          )}
           aria-hidden="true"
           style={{
             background: appliedColors.background

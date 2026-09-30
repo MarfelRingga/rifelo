@@ -15,15 +15,9 @@ import {
   Palette,
   Briefcase
 } from 'lucide-react';
-import { Cinzel } from 'next/font/google';
 import MessageForm from '@/app/(public)/u/[username]/MessageForm';
 import { getPlatformInfo } from '@/lib/platforms';
-
-const cinzel = Cinzel({
-  weight: ['400', '600', '700', '800'],
-  subsets: ['latin'],
-  display: 'swap',
-});
+import { cn } from '@/lib/utils';
 
 // Custom SVGs for authentic playing card suits
 const SpadeIcon = ({ className = "w-4 h-4" }: { className?: string }) => (
@@ -74,11 +68,17 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
   };
 
   return (
-    <div className={`min-h-screen bg-[#0b0807] text-[#f7eedb] py-8 sm:py-10 px-4 flex flex-col items-center justify-start relative overflow-x-hidden selection:bg-[#d4af37]/30 selection:text-[#fdf8ee]`}>
+    <div className={cn(
+      "bg-[#0b0807] text-[#f7eedb] px-4 flex flex-col items-center justify-start relative overflow-x-hidden selection:bg-[#d4af37]/30 selection:text-[#fdf8ee]",
+      profile?.isEmbeddedPreview ? "min-h-full py-4" : "min-h-screen py-8 sm:py-10"
+    )}>
       
       {/* 1. Deep Atmospheric Vignette & Candlelight Glow */}
       <div 
-        className="fixed inset-0 pointer-events-none z-0"
+        className={cn(
+          "pointer-events-none z-0",
+          profile?.isEmbeddedPreview ? "absolute inset-0" : "fixed inset-0"
+        )}
         style={{
           background: 'radial-gradient(ellipse at 50% 15%, rgba(68, 42, 28, 0.35) 0%, rgba(18, 12, 10, 0.8) 55%, #080605 100%)'
         }}
@@ -91,7 +91,10 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
           scale: [1, 1.08, 1]
         }}
         transition={{ duration: 10, repeat: Infinity, ease: "easeInOut" }}
-        className="fixed top-[-10%] right-[-5%] w-[45vw] h-[45vw] rounded-full bg-[#d4af37]/10 blur-[120px] pointer-events-none z-0" 
+        className={cn(
+          "rounded-full bg-[#d4af37]/10 blur-[120px] pointer-events-none z-0",
+          profile?.isEmbeddedPreview ? "absolute -top-10 -right-10 w-48 h-48" : "fixed top-[-10%] right-[-5%] w-[45vw] h-[45vw]"
+        )}
       />
       <motion.div 
         animate={{ 
@@ -99,11 +102,17 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
           scale: [1, 1.12, 1]
         }}
         transition={{ duration: 14, repeat: Infinity, ease: "easeInOut" }}
-        className="fixed bottom-[-10%] left-[-5%] w-[50vw] h-[50vw] rounded-full bg-[#8c1d1d]/10 blur-[130px] pointer-events-none z-0" 
+        className={cn(
+          "rounded-full bg-[#8c1d1d]/10 blur-[130px] pointer-events-none z-0",
+          profile?.isEmbeddedPreview ? "absolute -bottom-10 -left-10 w-48 h-48" : "fixed bottom-[-10%] left-[-5%] w-[50vw] h-[50vw]"
+        )}
       />
 
       {/* Floating Subtle Suit Watermarks */}
-      <div className="fixed inset-0 pointer-events-none z-0 overflow-hidden select-none">
+      <div className={cn(
+        "pointer-events-none z-0 overflow-hidden select-none",
+        profile?.isEmbeddedPreview ? "absolute inset-0" : "fixed inset-0"
+      )}>
         <motion.div 
           animate={{ y: [-12, 12, -12], rotate: [-8, -4, -8] }}
           transition={{ duration: 12, repeat: Infinity, ease: "easeInOut" }}
@@ -145,42 +154,14 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
         className="relative z-10 w-full max-w-2xl bg-gradient-to-b from-[#1c130f]/95 via-[#160f0c]/95 to-[#110b09]/95 border border-[#d4af37]/30 shadow-[0_25px_70px_-15px_rgba(0,0,0,0.95)] backdrop-blur-xl p-6 sm:p-8 space-y-6 sm:space-y-8 mx-auto"
         style={{ borderRadius: deckContainerRadius }}
       >
-        {/* Corner Card Indexes (Without Inner Border) */}
-        <div 
-          className="absolute inset-2.5 sm:inset-3 pointer-events-none"
-          style={{ borderRadius: deckContainerRadius === '0px' ? '0px' : 'calc(24px - 10px)' }}
-        >
-          {/* Top-Left Playing Card Index */}
-          <div className="absolute top-2.5 left-2.5 flex flex-col items-center leading-none text-[#d4af37]/40">
-            <span className={`${cinzel.className} text-[11px] font-bold`}>A</span>
-            <SpadeIcon className="w-2.5 h-2.5 mt-0.5" />
-          </div>
-
-          {/* Top-Right Pip */}
-          <div className="absolute top-2.5 right-2.5 text-[#d4af37]/30">
-            <DiamondIcon className="w-2.5 h-2.5" />
-          </div>
-
-          {/* Bottom-Left Pip */}
-          <div className="absolute bottom-2.5 left-2.5 text-[#d4af37]/30">
-            <ClubSvgIcon className="w-2.5 h-2.5" />
-          </div>
-
-          {/* Bottom-Right Playing Card Index (Inverted) */}
-          <div className="absolute bottom-2.5 right-2.5 flex flex-col items-center leading-none text-[#d4af37]/40 rotate-180">
-            <span className={`${cinzel.className} text-[11px] font-bold`}>A</span>
-            <SpadeIcon className="w-2.5 h-2.5 mt-0.5" />
-          </div>
-        </div>
-
         {/* Content Container */}
-        <div className="relative z-10 flex flex-col gap-6 w-full pt-2 sm:pt-3">
+        <div className="relative z-10 flex flex-col gap-6 w-full">
           
           {/* Header & Identity */}
           <div className="flex flex-col items-center text-center space-y-3">
             
             {/* Name */}
-            <h1 className={`${cinzel.className} text-2xl sm:text-3xl md:text-4xl font-bold tracking-wider text-[#fdf8ee] text-balance`}>
+            <h1 className="font-cinzel text-2xl sm:text-3xl md:text-4xl font-bold tracking-wider text-[#fdf8ee] text-balance">
               {profile.fullName}
             </h1>
             
@@ -208,7 +189,7 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
               {profile.bio && (
                 <div className="space-y-2">
                   {profile.profileMode !== 'casual' && (
-                    <div className={`${cinzel.className} text-[11px] font-semibold tracking-widest text-[#d4af37]/80 uppercase flex items-center justify-center gap-1.5`}>
+                    <div className="font-cinzel text-[11px] font-semibold tracking-widest text-[#d4af37]/80 uppercase flex items-center justify-center gap-1.5">
                       {profile.profileMode === 'professional' && (
                         <>
                           <FileText className="w-3 h-3 text-[#d4af37]" />
@@ -439,7 +420,7 @@ export default function PhantomDeckProfile({ profile, containerRadius }: { profi
                   >
                     <div className="flex items-center w-full">
                       <div className="w-10 h-10 flex items-center justify-center mr-4 shadow-sm font-bold opacity-80 rounded-xl shrink-0" style={{ background: 'rgba(212, 175, 55, 0.05)' }}>
-                        <span className={`${cinzel.className} text-base text-[#d4af37]`}>
+                        <span className="font-cinzel text-base text-[#d4af37]">
                           {link.title ? link.title.charAt(0).toUpperCase() : '#'}
                         </span>
                       </div>

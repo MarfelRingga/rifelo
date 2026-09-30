@@ -23,7 +23,7 @@ export async function PUT(
     if (authError || !user) return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
 
     const body = await request.json();
-    const { tagName, interactionMode, redirectUrl, circleId } = body;
+    const { tagName, interactionMode, redirectUrl, circleId, status } = body;
 
     // Verify ownership
     const { data: tag, error: findError } = await supabaseAdmin
@@ -35,14 +35,27 @@ export async function PUT(
     if (findError || !tag) return NextResponse.json({ error: 'Tag not found' }, { status: 404 });
     if (tag.user_id !== user.id) return NextResponse.json({ error: 'Unauthorized' }, { status: 403 });
 
+    const updatePayload: Record<string, any> = {};
+
+    if (tagName !== undefined) {
+      updatePayload.tag_name = tagName?.trim() || 'My NFC Tag';
+    }
+    if (interactionMode !== undefined) {
+      updatePayload.interaction_mode = interactionMode;
+    }
+    if (redirectUrl !== undefined) {
+      updatePayload.redirect_url = redirectUrl?.trim() || null;
+    }
+    if (circleId !== undefined) {
+      updatePayload.circle_id = circleId || null;
+    }
+    if (status === 'active' || status === 'inactive') {
+      updatePayload.status = status;
+    }
+
     const { error: updateError } = await supabaseAdmin
       .from('nfc_tags')
-      .update({ 
-        tag_name: tagName?.trim() || 'My NFC Tag',
-        interaction_mode: interactionMode,
-        redirect_url: redirectUrl?.trim() || null,
-        circle_id: circleId || null
-      })
+      .update(updatePayload)
       .eq('id', id);
 
     if (updateError) throw updateError;
@@ -91,6 +104,13 @@ export async function PUT(
     } catch(e) {}
     return NextResponse.json({ error: 'Internal server error' }, { status: 500 });
   }
+}
+
+export async function PATCH(
+  request: Request,
+  context: { params: Promise<{ id: string }> }
+) {
+  return PUT(request, context);
 }
 
 export async function DELETE(

@@ -2,7 +2,7 @@
 
 import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
-import { Save, ExternalLink, Plus, Trash2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Link as LinkIcon, Loader2, Palette } from 'lucide-react';
+import { Save, ExternalLink, Plus, Trash2, CheckCircle2, AlertCircle, ChevronDown, ChevronUp, Eye, EyeOff, Link as LinkIcon, Loader2, Palette, MessageSquare, Lightbulb, Smile, Briefcase, MessageSquareOff } from 'lucide-react';
 import Link from 'next/link';
 import { supabase } from '@/lib/supabase';
 import { getPlatformInfo } from '@/lib/platforms';
@@ -10,6 +10,7 @@ import { revalidateProfile } from '@/app/actions/revalidate';
 import { ProfileSkeleton } from '@/components/profile/ProfileSkeleton';
 import { encodeMessageSettings, decodeMessageSettings } from '@/lib/messageSettings';
 import { useToast } from '@/components/ui/ToastContext';
+import MessageForm from '@/app/(public)/u/[username]/MessageForm';
 
 import { ModeSelector } from '@/components/profile/ModeSelector';
 import { ThemeSelector } from '@/components/profile/ThemeSelector';
@@ -21,9 +22,10 @@ import { arrayMove, SortableContext, sortableKeyboardCoordinates, verticalListSo
 import { ProfileMode } from '@/lib/types/profile';
 import { migrateFieldData } from '@/lib/profileMigration';
 import { getValidationErrors } from '@/lib/validation/profileValidation';
-import { getThemesByMode, getTheme } from '@/lib/themePresets';
+import { getThemesByMode, getTheme, themePresets } from '@/lib/themePresets';
 import { cn } from '@/lib/utils';
 import PublicProfileView from '@/components/profile/PublicProfileView';
+import { normalizePhoneNumber } from '@/lib/phone';
 
 interface CustomLink {
   id: string;
@@ -89,6 +91,7 @@ export default function ProfilePage() {
   const [pendingMode, setPendingMode] = useState<ProfileMode | null>(null);
   const [isAppearanceOpen, setIsAppearanceOpen] = useState(false);
   const [activeAppearanceTab, setActiveAppearanceTab] = useState<'mode' | 'theme' | 'shape' | 'font'>('mode');
+  const [activeMessageTab, setActiveMessageTab] = useState<'presets' | 'custom'>('presets');
 
   const ACCENT_COLORS = [
     { id: 'gold', name: 'Rifelo Gold', value: '#d4af37', bg: 'bg-[#d4af37]' },
@@ -468,7 +471,7 @@ export default function ProfilePage() {
         job_title: dynamicValues.job_title || '',
         company: dynamicValues.company || '',
         email: dynamicValues.email || '',
-        phone: dynamicValues.phone || null,
+        phone: dynamicValues.phone ? normalizePhoneNumber(dynamicValues.phone) : null,
         bio: dynamicValues.bio || '',
         profile_mode: currentMode,
         theme_preset: currentTheme,
@@ -561,7 +564,8 @@ export default function ProfilePage() {
     messagePlaceholderContent: messagePlaceholderContent,
     profileMode: profileMode,
     themePreset: themePreset,
-    customTheme: customTheme
+    customTheme: customTheme,
+    isEmbeddedPreview: true,
   };
 
   return (
@@ -593,67 +597,215 @@ export default function ProfilePage() {
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
              {/* Studio Header (Compact) */}
              <div className="px-4 py-3 sm:px-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
-               <div className="flex items-center gap-2.5">
-                 <div className="p-1.5 bg-amber-100 text-amber-800 rounded-lg">
-                   <Palette className="w-4 h-4" />
-                 </div>
-                 <h2 className="text-base sm:text-lg font-bold text-slate-900">Appearance</h2>
-               </div>
+               <h2 className="text-base sm:text-lg font-bold text-slate-900">Appearance</h2>
              </div>
 
-              <div className="p-4 sm:p-5">
-                {/* Segmented Control: Persona | Theme | Shape | Font */}
-                <div className="flex bg-slate-100/90 p-1.5 rounded-xl mb-4 overflow-x-auto hide-scrollbar gap-1">
-                <button 
-                  onClick={() => setActiveAppearanceTab('mode')} 
-                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'mode' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
-                >
-                  Persona
-                </button>
-                <button 
-                  onClick={() => setActiveAppearanceTab('theme')} 
-                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'theme' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
-                >
-                  Theme
-                </button>
-                <button 
-                  onClick={() => setActiveAppearanceTab('shape')} 
-                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'shape' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
-                >
-                  Shape
-                </button>
-                <button 
-                  onClick={() => setActiveAppearanceTab('font')} 
-                  className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm sm:text-base font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'font' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
-                >
-                  Font
-                </button>
-              </div>
+            {/* Two-column layout on laptop: Selectors Left, Live Preview Right */}
+            <div className="grid grid-cols-1 lg:grid-cols-12 lg:divide-x lg:divide-slate-100">
+              {/* Left Column: Selectors (Persona, Theme, Shape, Font) */}
+              <div className="p-4 sm:p-5 lg:p-6 lg:col-span-7 flex flex-col justify-start">
+                {/* Mobile View: Segmented Control Tabs (hidden on laptop) */}
+                <div className="block lg:hidden">
+                  <div className="flex bg-slate-100/90 p-1.5 rounded-xl mb-4 overflow-x-auto hide-scrollbar gap-1">
+                    <button 
+                      onClick={() => setActiveAppearanceTab('mode')} 
+                      className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'mode' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                    >
+                      Persona
+                    </button>
+                    <button 
+                      onClick={() => setActiveAppearanceTab('theme')} 
+                      className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'theme' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                    >
+                      Theme
+                    </button>
+                    <button 
+                      onClick={() => setActiveAppearanceTab('shape')} 
+                      className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'shape' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                    >
+                      Shape
+                    </button>
+                    <button 
+                      onClick={() => setActiveAppearanceTab('font')} 
+                      className={cn("flex-1 py-2.5 px-3 sm:px-4 text-sm font-semibold rounded-lg transition-all whitespace-nowrap", activeAppearanceTab === 'font' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700")}
+                    >
+                      Font
+                    </button>
+                  </div>
 
-              {/* Tab Content (Flexible height, no wasted space) */}
-              <div>
-                {activeAppearanceTab === 'mode' && (
-                  <div className="animate-in fade-in duration-200">
+                  {/* Mobile Tab Active Content */}
+                  <div>
+                    {activeAppearanceTab === 'mode' && (
+                      <div className="animate-in fade-in duration-200">
+                        <ModeSelector 
+                          currentMode={profileMode}
+                          onModeSelect={handleModeChange}
+                        />
+                      </div>
+                    )}
+                    
+                    {activeAppearanceTab === 'theme' && (
+                      <div className="animate-in fade-in duration-200 space-y-4">
+                        <ThemeSelector
+                          currentMode={profileMode}
+                          currentTheme={themePreset}
+                          onThemeSelect={handleThemeChange}
+                          accentColor={customTheme?.accent?.value}
+                        />
+
+                        {(themePreset === 'minimal' || themePreset === 'glassmorphism') && (
+                          <div className="pt-3 border-t border-slate-100 animate-in fade-in duration-200">
+                            <div className="flex items-center justify-between mb-2.5">
+                              <span className="text-xs sm:text-sm font-semibold text-slate-700">
+                                {themePreset === 'glassmorphism' ? 'Glass Accent Color' : 'Minimal Accent Color'}
+                              </span>
+                              {customTheme?.accent?.name ? (
+                                <div className="flex items-center gap-2">
+                                  <span className="text-xs text-slate-600 font-medium">{customTheme.accent.name}</span>
+                                  <button
+                                    type="button"
+                                    onClick={() => updateCustomTheme({ accent: null })}
+                                    className="text-[11px] text-slate-400 hover:text-rose-600 underline transition-colors"
+                                  >
+                                    Reset
+                                  </button>
+                                </div>
+                              ) : (
+                                <span className="text-xs text-slate-400 font-medium">
+                                  {themePreset === 'glassmorphism' ? 'Frosted Crystal' : 'Default Monochrome'}
+                                </span>
+                              )}
+                            </div>
+                            <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                              {ACCENT_COLORS.map(color => {
+                                const isSelected = customTheme?.accent?.value === color.value;
+                                return (
+                                  <button
+                                    key={color.id}
+                                    type="button"
+                                    onClick={() => {
+                                      if (isSelected) {
+                                        updateCustomTheme({ accent: null });
+                                      } else {
+                                        updateCustomTheme({ accent: { value: color.value, name: color.name } });
+                                      }
+                                    }}
+                                    className={cn(
+                                      "w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all hover:scale-105 shrink-0 flex items-center justify-center",
+                                      isSelected ? "border-slate-900 scale-105 shadow-md ring-2 ring-slate-900/20" : "border-white shadow-sm",
+                                      color.bg
+                                    )}
+                                    title={isSelected ? `${color.name} (Klik untuk lepas)` : color.name}
+                                  >
+                                    {isSelected && (
+                                      <div className="w-2 h-2 rounded-full bg-white shadow-xs" />
+                                    )}
+                                  </button>
+                                );
+                              })}
+                            </div>
+                          </div>
+                        )}
+                      </div>
+                    )}
+
+                    {activeAppearanceTab === 'shape' && (
+                      <div className="animate-in fade-in duration-200 py-1">
+                        <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                          <button 
+                            type="button"
+                            onClick={() => updateCustomTheme({ borderRadius: 'sharp' })}
+                            className={cn(
+                              "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-none",
+                              (customTheme?.borderRadius) === 'sharp' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                            )}
+                          >
+                            <span className="w-3.5 h-3.5 border-2 border-current rounded-none shrink-0" />
+                            <span className="text-xs sm:text-sm">Sharp</span>
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => updateCustomTheme({ borderRadius: 'rounded' })}
+                            className={cn(
+                              "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-xl",
+                              (customTheme?.borderRadius || 'rounded') === 'rounded' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                            )}
+                          >
+                            <span className="w-3.5 h-3.5 border-2 border-current rounded-md shrink-0" />
+                            <span className="text-xs sm:text-sm">Standard</span>
+                          </button>
+                          <button 
+                            type="button"
+                            onClick={() => updateCustomTheme({ borderRadius: 'pill' })}
+                            className={cn(
+                              "flex items-center justify-center gap-2 p-2.5 sm:p-3 border-2 transition-all rounded-full",
+                              (customTheme?.borderRadius) === 'pill' ? "border-slate-900 bg-slate-900 text-white font-semibold shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                            )}
+                          >
+                            <span className="w-3.5 h-3.5 border-2 border-current rounded-full shrink-0" />
+                            <span className="text-xs sm:text-sm">Pill</span>
+                          </button>
+                        </div>
+                      </div>
+                    )}
+
+                    {activeAppearanceTab === 'font' && (
+                      <div className="animate-in fade-in duration-200 py-1">
+                        <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                          {FONTS.map(font => (
+                            <button
+                              key={font.id}
+                              type="button"
+                              onClick={() => updateCustomTheme({ fontFamily: font.value })}
+                              className={cn(
+                                "flex items-center justify-between sm:justify-center gap-2 px-3 py-2 sm:py-2.5 border-2 transition-all rounded-xl",
+                                (customTheme?.fontFamily || FONTS[0].value) === font.value ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
+                              )}
+                            >
+                              <span className={cn("text-xs sm:text-sm", font.class, (customTheme?.fontFamily || FONTS[0].value) === font.value ? "font-bold text-white" : "font-medium text-slate-700")}>{font.name}</span>
+                              <span className={cn("text-sm opacity-70", font.class)}>Aa</span>
+                            </button>
+                          ))}
+                        </div>
+                      </div>
+                    )}
+                  </div>
+                </div>
+
+                {/* Laptop View: Vertical Stack for Persona, Theme, Shape, and Font */}
+                <div className="hidden lg:flex lg:flex-col lg:space-y-7">
+                  {/* 1. Persona */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Persona</label>
+                      <span className="text-xs text-slate-400 capitalize">{profileMode} mode</span>
+                    </div>
                     <ModeSelector 
                       currentMode={profileMode}
                       onModeSelect={handleModeChange}
                     />
                   </div>
-                )}
-                
-                {activeAppearanceTab === 'theme' && (
-                  <div className="animate-in fade-in duration-200 space-y-4">
+
+                  <div className="h-px bg-slate-100" />
+
+                  {/* 2. Theme */}
+                  <div className="space-y-4">
+                    <div className="flex items-center justify-between">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Theme</label>
+                      <span className="text-xs text-slate-400 capitalize">{themePreset}</span>
+                    </div>
                     <ThemeSelector
                       currentMode={profileMode}
                       currentTheme={themePreset}
                       onThemeSelect={handleThemeChange}
+                      accentColor={customTheme?.accent?.value}
                     />
 
                     {/* Accent Color: Available for Minimal & Glassmorphism Themes */}
                     {(themePreset === 'minimal' || themePreset === 'glassmorphism') && (
                       <div className="pt-3 border-t border-slate-100 animate-in fade-in duration-200">
                         <div className="flex items-center justify-between mb-2.5">
-                          <span className="text-xs sm:text-sm font-semibold text-slate-700">
+                          <span className="text-xs font-semibold text-slate-700">
                             {themePreset === 'glassmorphism' ? 'Glass Accent Color' : 'Minimal Accent Color'}
                           </span>
                           {customTheme?.accent?.name ? (
@@ -673,7 +825,7 @@ export default function ProfilePage() {
                             </span>
                           )}
                         </div>
-                        <div className="flex flex-wrap items-center gap-2.5 sm:gap-3">
+                        <div className="flex flex-wrap items-center gap-2.5">
                           {ACCENT_COLORS.map(color => {
                             const isSelected = customTheme?.accent?.value === color.value;
                             return (
@@ -688,7 +840,7 @@ export default function ProfilePage() {
                                   }
                                 }}
                                 className={cn(
-                                  "w-8 h-8 sm:w-9 sm:h-9 rounded-full border-2 transition-all hover:scale-105 shrink-0 flex items-center justify-center",
+                                  "w-8 h-8 rounded-full border-2 transition-all hover:scale-105 shrink-0 flex items-center justify-center",
                                   isSelected ? "border-slate-900 scale-105 shadow-md ring-2 ring-slate-900/20" : "border-white shadow-sm",
                                   color.bg
                                 )}
@@ -704,11 +856,16 @@ export default function ProfilePage() {
                       </div>
                     )}
                   </div>
-                )}
 
-                {activeAppearanceTab === 'shape' && (
-                  <div className="animate-in fade-in duration-200 py-1">
-                    <div className="grid grid-cols-3 gap-2 sm:gap-3">
+                  <div className="h-px bg-slate-100" />
+
+                  {/* 3. Shape */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Button Shape</label>
+                      <span className="text-xs text-slate-400 capitalize">{customTheme?.borderRadius || 'rounded'}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
                       {/* Sharp */}
                       <button 
                         type="button"
@@ -749,18 +906,23 @@ export default function ProfilePage() {
                       </button>
                     </div>
                   </div>
-                )}
 
-                {activeAppearanceTab === 'font' && (
-                  <div className="animate-in fade-in duration-200 py-1">
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-2">
+                  <div className="h-px bg-slate-100" />
+
+                  {/* 4. Font */}
+                  <div>
+                    <div className="flex items-center justify-between mb-2.5">
+                      <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">Typography</label>
+                      <span className="text-xs text-slate-400 capitalize">{FONTS.find(f => f.value === (customTheme?.fontFamily || FONTS[0].value))?.name}</span>
+                    </div>
+                    <div className="grid grid-cols-3 gap-2.5">
                       {FONTS.map(font => (
                         <button
                           key={font.id}
                           type="button"
                           onClick={() => updateCustomTheme({ fontFamily: font.value })}
                           className={cn(
-                            "flex items-center justify-between sm:justify-center gap-2 px-3 py-2 sm:py-2.5 border-2 transition-all rounded-xl",
+                            "flex items-center justify-center gap-2 px-3 py-2.5 border-2 transition-all rounded-xl",
                             (customTheme?.fontFamily || FONTS[0].value) === font.value ? "border-slate-900 bg-slate-900 text-white shadow-sm" : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700"
                           )}
                         >
@@ -770,15 +932,14 @@ export default function ProfilePage() {
                       ))}
                     </div>
                   </div>
-                )}
+                </div>
               </div>
-            </div>
 
-            {/* Live Preview directly integrated inside Appearance card */}
-            <div className="border-t border-slate-100 py-6 sm:py-8 flex justify-center items-center overflow-hidden">
-              {/* Scaled Device Wrapper with exact layout dimensions to fit 100% cleanly on mobile screen without clipping */}
-              <div className="w-[270px] sm:w-[312px] h-[567px] sm:h-[654px] relative shrink-0 flex justify-center">
-                  <div className="w-[416px] h-[872px] origin-top scale-[0.65] sm:scale-[0.75] shrink-0">
+              {/* Right Column: Live Interactive Smartphone Preview */}
+              <div className="border-t lg:border-t-0 border-slate-100 py-6 sm:py-8 lg:py-8 lg:px-4 lg:col-span-5 flex flex-col items-center justify-center overflow-hidden bg-slate-50/50 w-full h-full min-h-full">
+                {/* Scaled Device Wrapper with exact layout dimensions to fit 100% cleanly on mobile and laptop screen without clipping */}
+                <div className="w-[270px] sm:w-[312px] h-[567px] sm:h-[654px] relative shrink-0 flex justify-center my-auto">
+                  <div className="w-[416px] h-[872px] origin-top scale-[0.65] sm:scale-[0.75] shrink-0 [transform:translateZ(0)]">
                     {/* Physical Smartphone Chassis (Exact 390x844 px screen ratio) */}
                     <div className="w-[416px] h-[872px] bg-[#0c0d12] rounded-[3.4rem] p-[13px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] border-[3.5px] border-slate-700/80 flex flex-col relative shrink-0 select-none">
                       
@@ -821,7 +982,7 @@ export default function ProfilePage() {
                         </div>
 
                         {/* Scrollable Viewport with interactive events enabled */}
-                        <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scroll-smooth overscroll-contain touch-pan-y">
+                        <div className="w-full flex-1 overflow-y-auto overflow-x-hidden scroll-smooth overscroll-contain touch-pan-y relative z-10 [transform:translateZ(0)]">
                           <PublicProfileView profile={previewProfile} />
                         </div>
 
@@ -838,6 +999,7 @@ export default function ProfilePage() {
                 </div>
               </div>
             </div>
+          </div>
 
           {/* Section 3: Dynamic Fields */}
           <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6 space-y-6">
@@ -845,7 +1007,7 @@ export default function ProfilePage() {
             <div className="pb-6 border-b border-slate-100">
               {/* Top row: URL/Username label and Public Profile Visibility toggle */}
               <div className="flex flex-col sm:flex-row sm:items-center justify-between gap-3 sm:gap-2 mb-3 sm:mb-2">
-                <label className="block text-sm font-medium text-slate-900 order-2 sm:order-1">URL/Username</label>
+                <label className="block text-sm font-medium text-slate-700 order-2 sm:order-1">URL / Username</label>
                 
                 <div className="flex items-center justify-between sm:justify-end shrink-0 order-1 sm:order-2">
                   <span className="mr-3 text-sm font-medium text-slate-900 whitespace-nowrap">Public Profile Visibility</span>
@@ -947,51 +1109,301 @@ export default function ProfilePage() {
           </div>
 
           {/* Section 5: Message Box Settings */}
-          <div className="bg-white border border-slate-200 rounded-2xl shadow-sm p-6">
-            <div className="mb-6 flex flex-col sm:flex-row justify-between sm:items-center gap-3 sm:gap-0">
-              <div className="order-2 sm:order-1">
-                <h3 className="text-lg font-bold text-slate-900">Message Box Settings</h3>
-                <p className="text-sm text-slate-500 mt-1">Customize the placeholders for the message box on your public profile.</p>
-              </div>
-              <div className="flex items-center justify-between sm:justify-end shrink-0 order-1 sm:order-2">
-                <span className="mr-3 text-sm font-medium text-slate-900">Enable Message Box</span>
-                <button
-                  type="button"
-                  onClick={() => setAllowMessages(!allowMessages)}
-                  className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
-                    allowMessages 
-                      ? 'bg-emerald-500/15 border-emerald-500/30 backdrop-blur-sm' 
-                      : 'bg-slate-100/70 border-slate-200 backdrop-blur-sm'
-                  }`}
-                >
-                  <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
-                    allowMessages ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
-                  }`} />
-                </button>
-              </div>
-            </div>
+          {(() => {
+            const currentThemeConfig = getTheme(themePreset) || themePresets.minimal;
+            const isGlassTheme = themePreset === 'glassmorphism';
+            const isBrutalismTheme = themePreset === 'brutalism';
             
-            <div className={`grid grid-cols-1 md:grid-cols-2 gap-6 transition-opacity duration-300 ${allowMessages ? 'opacity-100' : 'opacity-40 pointer-events-none'}`}>
+            const previewColors = {
+              primary: customTheme?.colors?.primary || currentThemeConfig.colors.primary,
+              secondary: customTheme?.colors?.secondary || currentThemeConfig.colors.secondary,
+              accent: customTheme?.colors?.accent || currentThemeConfig.colors.accent,
+              background: customTheme?.colors?.background || currentThemeConfig.colors.background,
+              text: isGlassTheme ? '#090d16' : (isBrutalismTheme ? '#ffffff' : (customTheme?.colors?.text || currentThemeConfig.colors.text)),
+              cardBg: isGlassTheme ? 'rgba(255, 255, 255, 0.9)' : (customTheme?.colors?.cardBg || currentThemeConfig.colors.cardBg),
+              cardBorder: isGlassTheme ? 'rgba(0, 0, 0, 0.12)' : (customTheme?.colors?.cardBorder || currentThemeConfig.colors.cardBorder),
+              inputBg: isGlassTheme ? 'rgba(255, 255, 255, 0.95)' : (customTheme?.colors?.inputBg || currentThemeConfig.colors.inputBg),
+              inputBorder: isGlassTheme ? 'rgba(0, 0, 0, 0.15)' : (customTheme?.colors?.inputBorder || currentThemeConfig.colors.inputBorder),
+            };
+
+            const containerRadius = customTheme?.borderRadius === 'sharp' 
+              ? '0px' 
+              : customTheme?.borderRadius === 'pill' 
+              ? '32px' 
+              : '24px';
+
+            const appliedFont = customTheme?.fontFamily || currentThemeConfig.fonts.body;
+
+            const MESSAGE_PRESETS = [
+              {
+                id: 'casual',
+                label: 'Casual',
+                icon: Smile,
+                name: 'Your Name (Optional)',
+                message: 'Send a message or say hello...',
+              },
+              {
+                id: 'collab',
+                label: 'Collaboration',
+                icon: Briefcase,
+                name: 'Name / Company',
+                message: 'Tell me about your project or idea...',
+              },
+              {
+                id: 'secret',
+                label: 'Secret Q&A',
+                icon: MessageSquare,
+                name: 'Anonymous',
+                message: 'Ask anything anonymously...',
+              },
+              {
+                id: 'feedback',
+                label: 'Feedback',
+                icon: Lightbulb,
+                name: 'Your Name',
+                message: 'Share suggestions or feedback...',
+              },
+            ];
+
+            const renderPresetsContent = () => (
               <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Name Input Placeholder</label>
-                <input 
-                  type="text" 
-                  value={messagePlaceholderName}
-                  onChange={(e) => setMessagePlaceholderName(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-                />
+                <div className="mb-2">
+                  <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                    Presets
+                  </label>
+                </div>
+                <div className="grid grid-cols-2 gap-2">
+                  {MESSAGE_PRESETS.map((preset) => {
+                    const Icon = preset.icon;
+                    const isActive = messagePlaceholderName === preset.name && messagePlaceholderContent === preset.message;
+                    return (
+                      <button
+                        key={preset.id}
+                        type="button"
+                        onClick={() => {
+                          setMessagePlaceholderName(preset.name);
+                          setMessagePlaceholderContent(preset.message);
+                          if (!allowMessages) setAllowMessages(true);
+                        }}
+                        className={`p-2.5 sm:p-3 rounded-xl border text-left transition-all duration-200 flex items-center gap-2.5 ${
+                          isActive 
+                            ? 'border-slate-900 bg-slate-900 text-white shadow-xs' 
+                            : 'bg-slate-50/70 hover:bg-white border-slate-200 text-slate-700'
+                        }`}
+                      >
+                        <div className={`w-7 h-7 rounded-lg flex items-center justify-center shrink-0 transition-colors ${
+                          isActive ? 'bg-white/15 text-white' : 'bg-white text-slate-700 border border-slate-200/60 shadow-2xs'
+                        }`}>
+                          <Icon className="w-3.5 h-3.5" />
+                        </div>
+                        <div className="min-w-0 flex-1">
+                          <span className={`text-xs font-bold block truncate ${isActive ? 'text-white' : 'text-slate-900'}`}>
+                            {preset.label}
+                          </span>
+                        </div>
+                      </button>
+                    );
+                  })}
+                </div>
               </div>
-              <div>
-                <label className="block text-sm font-medium text-slate-700 mb-2">Message Input Placeholder</label>
-                <input 
-                  type="text" 
-                  value={messagePlaceholderContent}
-                  onChange={(e) => setMessagePlaceholderContent(e.target.value)}
-                  className="w-full px-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-slate-900 transition-all" 
-                />
+            );
+
+            const renderCustomInputs = () => (
+              <div className="space-y-3.5">
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      Name Placeholder
+                    </label>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {messagePlaceholderName.length}/50
+                    </span>
+                  </div>
+                  <input 
+                    type="text" 
+                    value={messagePlaceholderName}
+                    maxLength={50}
+                    onChange={(e) => setMessagePlaceholderName(e.target.value)}
+                    placeholder="Your Name (Optional)"
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all" 
+                  />
+                </div>
+
+                <div>
+                  <div className="flex items-center justify-between mb-1.5">
+                    <label className="text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                      Message Placeholder
+                    </label>
+                    <span className="text-[11px] text-slate-400 font-mono">
+                      {messagePlaceholderContent.length}/150
+                    </span>
+                  </div>
+                  <textarea 
+                    rows={2}
+                    value={messagePlaceholderContent}
+                    maxLength={150}
+                    onChange={(e) => setMessagePlaceholderContent(e.target.value)}
+                    placeholder="Write a message..."
+                    className="w-full px-3.5 py-2 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-900 placeholder:text-slate-400 focus:bg-white focus:outline-none focus:ring-2 focus:ring-slate-900/10 focus:border-slate-900 transition-all resize-none" 
+                  />
+                </div>
               </div>
-            </div>
-          </div>
+            );
+
+            const renderPreviewContent = () => (
+              <div className="w-full max-w-[420px] flex flex-col items-center">
+                {allowMessages ? (
+                  <div className="w-full relative group">
+                    {/* Outer Preview Stage matching current theme background */}
+                    <div 
+                      className="w-full rounded-2xl p-4 sm:p-5 transition-all duration-300 relative border border-slate-200/80 shadow-2xs"
+                      style={{
+                        background: previewColors.background,
+                      }}
+                    >
+                      {/* Profile Card Container (Identical to PublicProfileView / MinimalProfile card) */}
+                      <div 
+                        className="w-full p-4 sm:p-5 transition-all duration-300 shadow-sm relative"
+                        style={{
+                          backgroundColor: previewColors.cardBg,
+                          borderColor: previewColors.cardBorder,
+                          borderWidth: '1px',
+                          borderStyle: 'solid',
+                          borderRadius: containerRadius,
+                          color: previewColors.text,
+                          fontFamily: appliedFont,
+                        }}
+                      >
+                        <MessageForm 
+                          profileId="preview-id"
+                          placeholderName={messagePlaceholderName || 'Your Name (Optional)'}
+                          placeholderContent={messagePlaceholderContent || 'Write a message...'}
+                          themeColors={{
+                            primary: previewColors.primary,
+                            secondary: previewColors.secondary,
+                            accent: previewColors.accent,
+                            background: previewColors.background,
+                            text: previewColors.text,
+                            inputBg: previewColors.inputBg,
+                            inputBorder: previewColors.inputBorder,
+                          }}
+                          themePreset={themePreset}
+                        />
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="w-full min-h-[240px] rounded-2xl border-2 border-dashed border-slate-200 bg-white/60 p-6 flex flex-col items-center justify-center text-center">
+                    <div className="w-10 h-10 rounded-xl bg-white border border-slate-200 shadow-xs flex items-center justify-center text-slate-400 mb-2.5">
+                      <MessageSquareOff className="w-5 h-5" />
+                    </div>
+                    <h4 className="text-sm font-bold text-slate-800">Message Box Disabled</h4>
+                    <p className="text-xs text-slate-400 mt-0.5">Hidden on your public profile.</p>
+                    <button
+                      type="button"
+                      onClick={() => setAllowMessages(true)}
+                      className="mt-3 px-3.5 py-1.5 bg-slate-900 text-white text-xs font-semibold rounded-lg hover:bg-slate-800 transition-colors shadow-xs"
+                    >
+                      Enable
+                    </button>
+                  </div>
+                )}
+              </div>
+            );
+
+            return (
+              <div className="bg-white border border-slate-200 rounded-2xl shadow-sm overflow-hidden">
+                {/* Header */}
+                <div className="px-4 py-3 sm:px-5 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+                  <div className="flex items-center gap-2.5">
+                    <h2 className="text-base sm:text-lg font-bold text-slate-900">Message Box</h2>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    <span className="text-xs sm:text-sm font-medium text-slate-700 select-none">
+                      {allowMessages ? 'Enabled' : 'Disabled'}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => setAllowMessages(!allowMessages)}
+                      aria-label="Toggle message box"
+                      className={`relative inline-flex h-6 w-11 items-center rounded-full transition-all duration-300 border focus:outline-none ${
+                        allowMessages 
+                          ? 'bg-emerald-500/15 border-emerald-500/30' 
+                          : 'bg-slate-100/80 border-slate-300'
+                      }`}
+                    >
+                      <span className={`inline-block h-4 w-4 transform rounded-full shadow-md transition-transform duration-300 ${
+                        allowMessages ? 'translate-x-6 bg-emerald-500' : 'translate-x-1 bg-slate-400'
+                      }`} />
+                    </button>
+                  </div>
+                </div>
+
+                {/* Two-column layout on laptop: Selectors Left, Live Preview Right */}
+                <div className="grid grid-cols-1 lg:grid-cols-12 lg:divide-x lg:divide-slate-100">
+                  
+                  {/* Left Column: Presets & Custom Text Fields */}
+                  <div className="p-4 sm:p-5 lg:p-6 lg:col-span-7 flex flex-col justify-start">
+                    
+                    {/* Mobile View: Segmented Control Tabs (hidden on laptop) */}
+                    <div className="block lg:hidden">
+                      <div className="flex bg-slate-100/90 p-1.5 rounded-xl mb-4 overflow-x-auto hide-scrollbar gap-1">
+                        <button 
+                          type="button"
+                          onClick={() => setActiveMessageTab('presets')} 
+                          className={cn(
+                            "flex-1 py-2 px-3 text-sm font-semibold rounded-lg transition-all whitespace-nowrap text-center", 
+                            activeMessageTab === 'presets' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                          )}
+                        >
+                          Presets
+                        </button>
+                        <button 
+                          type="button"
+                          onClick={() => setActiveMessageTab('custom')} 
+                          className={cn(
+                            "flex-1 py-2 px-3 text-sm font-semibold rounded-lg transition-all whitespace-nowrap text-center", 
+                            activeMessageTab === 'custom' ? "bg-white shadow-sm text-slate-900" : "text-slate-500 hover:text-slate-700"
+                          )}
+                        >
+                          Custom
+                        </button>
+                      </div>
+
+                      {/* Mobile Tab Active Content */}
+                      <div>
+                        {activeMessageTab === 'presets' && (
+                          <div className="animate-in fade-in duration-200">
+                            {renderPresetsContent()}
+                          </div>
+                        )}
+
+                        {activeMessageTab === 'custom' && (
+                          <div className="animate-in fade-in duration-200">
+                            {renderCustomInputs()}
+                          </div>
+                        )}
+                      </div>
+                    </div>
+
+                    {/* Laptop View: Vertical Stack for Presets & Custom Fields */}
+                    <div className="hidden lg:flex lg:flex-col lg:space-y-6">
+                      {renderPresetsContent()}
+                      <div className="h-px bg-slate-100" />
+                      {renderCustomInputs()}
+                    </div>
+                  </div>
+
+                  {/* Right Column: Live Preview on laptop, bottom on mobile */}
+                  <div className="border-t lg:border-t-0 border-slate-100 py-6 sm:py-8 lg:py-8 px-4 sm:px-6 lg:px-5 lg:col-span-5 flex flex-col items-center justify-center overflow-hidden bg-slate-50/50 w-full h-full min-h-full">
+                    {renderPreviewContent()}
+                  </div>
+
+                </div>
+              </div>
+            );
+          })()}
         </div>
       </div>
 

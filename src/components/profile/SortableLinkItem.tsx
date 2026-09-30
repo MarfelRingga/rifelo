@@ -105,7 +105,7 @@ export function SortableLinkItem({
         <div className="px-4 pb-4 pt-3 border-t border-slate-200 cursor-default" onClick={(e) => e.stopPropagation()}>
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">Platform</label>
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">Platform</label>
               <input 
                 type="text" 
                 placeholder="Instagram, Portfolio..." 
@@ -115,7 +115,7 @@ export function SortableLinkItem({
               />
             </div>
             <div>
-              <label className="block text-[10px] font-bold text-slate-500 uppercase tracking-wider mb-1">
+              <label className="block text-[11px] font-semibold text-slate-500 uppercase tracking-wider mb-1.5">
                 {platformInfo ? 'Username' : 'URL'}
               </label>
               <input 

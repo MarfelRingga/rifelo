@@ -21,7 +21,7 @@ export function ModeSelector({
   readOnly = false,
 }: ModeSelectorProps) {
   return (
-    <div className="flex overflow-x-auto gap-3 py-3 snap-x hide-scrollbar -mx-4 px-4">
+    <div className="flex items-center gap-2 sm:gap-3 py-1 overflow-x-auto hide-scrollbar">
       {MODES.map((mode) => {
         const isSelected = currentMode === mode.id;
         const Icon = mode.icon;
@@ -33,15 +33,15 @@ export function ModeSelector({
             onClick={() => !readOnly && onModeSelect(mode.id)}
             disabled={readOnly}
             className={cn(
-              "snap-center shrink-0 flex items-center gap-2 px-6 py-3 rounded-2xl transition-all duration-300 font-semibold text-sm border-2",
+              "shrink-0 flex items-center justify-center gap-2 p-2.5 sm:p-3 px-4 sm:px-5 rounded-full transition-all duration-200 font-semibold text-xs sm:text-sm border-2 whitespace-nowrap",
               isSelected
-                ? "bg-slate-900 border-slate-900 text-white shadow-md scale-[1.02]"
-                : "bg-white border-slate-200 text-slate-500 hover:border-slate-300 hover:text-slate-800 hover:bg-slate-50",
+                ? "bg-slate-900 border-slate-900 text-white shadow-sm"
+                : "border-slate-200 bg-slate-50 hover:bg-white text-slate-700 hover:border-slate-300",
               readOnly && "cursor-default opacity-70"
             )}
           >
-            <Icon className={cn("w-4 h-4", isSelected ? "text-white" : "text-slate-400")} />
-            <span className="leading-none">{mode.name}</span>
+            <Icon className={cn("w-3.5 h-3.5 sm:w-4 sm:h-4 shrink-0", isSelected ? "text-white" : "text-slate-500")} />
+            <span className="leading-none whitespace-nowrap">{mode.name}</span>
           </button>
         );
       })}

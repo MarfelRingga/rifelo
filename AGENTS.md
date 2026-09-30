@@ -20,9 +20,43 @@ This document serves as the absolute source of truth for UI/UX design, styling, 
 
 ## 3. Typography
 - **Font Pairings:** Use structural Sans-Serif (system fonts or Inter) paired with elegant Serif (Cinzel) for specific premium accents.
-- **Headings (H1/H2):** Massive, confident, tight tracking (`tracking-tight`), tight leading (`leading-tight` or `leading-none`). E.g., `text-5xl sm:text-7xl font-bold tracking-tight`.
-- **Eyebrows / Labels:** Tiny, uppercase, extra-wide tracking, bold. E.g., `text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37]`.
+- **Headings (H1/H2 - Landing & Hero):** Massive, confident, tight tracking (`tracking-tight`), tight leading (`leading-tight` or `leading-none`). E.g., `text-5xl sm:text-7xl font-bold tracking-tight`.
+- **Eyebrows / Labels (Hero & Accents):** Tiny, uppercase, extra-wide tracking, bold. E.g., `text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37]`.
 - **Body Text:** Minimum `16px` (text-base) to `18px` (text-lg), `leading-relaxed`. Max width of `65-75ch` (`max-w-2xl`) for readability.
+
+### 3.1 Dashboard Typography Scale & Guide (Reference: `/profile`)
+Across all dashboard views (Profile, Inbox, NFC Tags, Settings), typography must adhere to the standardized font hierarchy:
+- **Page Title (H1):** `text-2xl font-bold tracking-tight text-slate-900`
+  - Purpose: Unified main view title across all dashboard tabs.
+- **Page Subtitle / Tagline:** `text-sm text-slate-500 mt-1`
+  - Purpose: Concise view purpose summary directly beneath the title.
+- **Card / Section Header Title (H2 / H3):** `text-lg font-bold text-slate-900`
+  - Compact Card Header alternative: `text-base font-bold text-slate-900`
+- **Card Subtitle / Description:** `text-sm text-slate-500 mt-1` (or `text-xs text-slate-500 mt-0.5`)
+- **Form Field Labels:**
+  - Standard descriptive label: `text-sm font-medium text-slate-700 mb-1.5`
+  - Eyebrow / Categorical uppercase label: `text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5`
+  - Inline row / toggle label: `text-sm font-medium text-slate-900` or `text-xs font-semibold text-slate-900`
+- **Inputs & Dropdown Text:**
+  - Input text: `text-sm font-medium text-slate-900 placeholder:text-slate-400`
+  - Input prefixes / badges: `text-sm font-medium text-slate-500`
+  - Dropdown primary label: `text-sm font-semibold text-slate-900`
+  - Dropdown helper description: `text-[11px] text-slate-400`
+- **Buttons & Action Controls:**
+  - Primary Action Button: `text-sm font-semibold`
+  - Secondary / Ghost / Header Action Button: `text-sm font-medium text-slate-700`
+  - Small Controls / Filter Pills / Tag Tabs: `text-xs font-semibold`
+  - Dangerous / Destructive Action Button: `text-xs font-semibold` or `text-sm font-semibold`
+- **Badges, Counter Pills & Meta:**
+  - Header Counter / Status Badge: `text-xs font-semibold`
+  - Notification / New Pill: `text-[10px] font-bold uppercase tracking-wider`
+  - Hardware Code / Token: `font-mono text-xs text-slate-500`
+  - Timestamps & Meta: `text-[11px] font-medium text-slate-400 tabular-nums`
+- **Microcopy & Helper Notes:**
+  - Guidance & hints: `text-xs text-slate-500 leading-relaxed`
+  - Error message: `text-xs text-red-600 font-medium` or `text-sm text-red-600 font-medium`
+  - Empty state headline: `text-lg font-bold text-slate-900 mb-1.5`
+  - Empty state description: `text-sm text-slate-500 leading-relaxed`
 
 ## 4. Layout, Spacing & Hierarchy
 - **Generous Whitespace:** Sections must have massive breathing room. Use `py-24 sm:py-32`. Do not cram content.

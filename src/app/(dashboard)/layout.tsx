@@ -1,6 +1,6 @@
 'use client';
 
-import { ReactNode, useState, useEffect } from 'react';
+import { ReactNode, useState, useEffect, useMemo } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import Image from 'next/image';
@@ -157,8 +157,14 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
               console.error('Error fetching pb events', e);
             }
 
+            const currentPhone = session.user.phone || profileData.phone || '';
             setWorkspaces(prev => {
-              const baseWorkspaces = prev.filter(w => w.type === 'personal');
+              const baseWorkspaces: Workspace[] = [{
+                id: 'personal',
+                type: 'personal',
+                name: 'Personal Account',
+                subtitle: currentPhone || 'Personal'
+              }];
               const adminWorkspaces = profileData.is_admin ? [{ id: 'admin', type: 'admin' as WorkspaceRole, name: 'Admin Dashboard', subtitle: 'System Management' }] : [];
               
                 const circleWorkspaces = (joinedCircles || [])
@@ -228,7 +234,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
     });
 
     return () => subscription.unsubscribe();
-  }, [router]);
+  }, []);
   
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>('personal');
   const [isWorkspaceLoaded, setIsWorkspaceLoaded] = useState(false);
@@ -306,7 +312,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   const activeWorkspace = workspaces.find(w => String(w.id) === String(activeWorkspaceId)) || workspaces[0];
 
   // Define menu items based on the active workspace
-  const getMenuItems = () => {
+  const menuItems = useMemo(() => {
     switch (activeWorkspace.type) {
       case 'photobooth':
         return [
@@ -336,9 +342,7 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
           { name: 'Settings', href: '/settings', icon: Settings, show: true },
         ];
     }
-  };
-
-  const menuItems = getMenuItems();
+  }, [activeWorkspace.type, activeWorkspace.eventCode, activeWorkspace.slug, activeWorkspace.inviteCode]);
 
   useEffect(() => {
     if (isWorkspaceLoaded && activeWorkspaceId && pathname) {
@@ -356,10 +360,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (isWorkspaceLoaded && isWorkspacesLoaded && workspaces.length > 0) {
       // Check if the current workspace actually exists in the loaded workspaces
-      const workspaceExists = workspaces.some(w => w.id === activeWorkspaceId);
+      const workspaceExists = workspaces.some(w => String(w.id) === String(activeWorkspaceId));
       
-      // If the saved workspace doesn't exist (e.g., user was removed from circle), fallback to personal
-      if (!workspaceExists && activeWorkspaceId !== 'personal') {
+      // If the saved workspace doesn't exist and workspaces are fully populated
+      const hasCircleWorkspaces = workspaces.some(w => w.type === 'circle');
+      if (!workspaceExists && activeWorkspaceId !== 'personal' && hasCircleWorkspaces) {
         setActiveWorkspaceId('personal');
         localStorage.setItem('activeWorkspaceId', 'personal');
         router.push('/profile');
@@ -371,8 +376,8 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
         return pathname === item.href || pathname.startsWith(item.href + '/');
       });
       
-      if (!isValidPath) {
-        router.push(menuItems[0].href);
+      if (!isValidPath && pathname !== '/' && !pathname.startsWith('/login')) {
+        router.push(menuItems[0]?.href || '/profile');
       }
     }
   }, [activeWorkspaceId, pathname, workspaces, isWorkspaceLoaded, isWorkspacesLoaded]);
@@ -524,7 +529,11 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
                 <p className="text-sm font-semibold text-slate-900 truncate">
                   {activeWorkspace.name}
                 </p>
-                <p className="text-xs text-slate-500 capitalize">{activeWorkspace.subtitle}</p>
+                <p className="text-xs text-slate-500 truncate">
+                  {activeWorkspace.type === 'personal' 
+                    ? (user?.phone || profile?.phone || activeWorkspace.subtitle)
+                    : activeWorkspace.subtitle}
+                </p>
               </div>
             </div>
             <ChevronDown className="w-4 h-4 text-slate-400 flex-shrink-0" />
@@ -596,18 +605,6 @@ export default function DashboardLayout({ children }: { children: ReactNode }) {
             );
           })}
         </nav>
-
-        <div className="p-4 border-t border-slate-100">
-          <div className="flex items-center px-2">
-            <div className="w-8 h-8 rounded-full bg-slate-200 flex items-center justify-center text-slate-600 font-bold text-xs">
-              {profile?.full_name?.charAt(0) || user?.phone?.charAt(1) || '?'}
-            </div>
-            <div className="ml-3 overflow-hidden">
-              <p className="text-sm font-medium text-slate-900 truncate">{profile?.full_name || 'User'}</p>
-              <p className="text-xs text-slate-500 truncate">{user?.phone || user?.email}</p>
-            </div>
-          </div>
-        </div>
       </aside>
 
       {/* Main Content */}

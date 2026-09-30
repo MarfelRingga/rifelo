@@ -12,12 +12,20 @@ import {
   AlertCircle,
   CheckCircle2,
   X,
-  ChevronDown
+  ChevronDown,
+  Globe,
+  Radio,
+  Link as LinkIcon,
+  Check,
+  Shield,
+  QrCode,
+  User
 } from 'lucide-react';
 import { supabase } from '@/lib/supabase';
 import { motion, AnimatePresence } from 'motion/react';
 import { PageSkeleton } from '@/components/ui/PageSkeleton';
 import { getPlatformInfo } from '@/lib/platforms';
+import { cn } from '@/lib/utils';
 
 interface NFCTag {
   id: string;
@@ -42,18 +50,22 @@ function NFCTagsContent() {
   const router = useRouter();
   
   const [tags, setTags] = useState<NFCTag[]>([]);
+  const [selectedTagId, setSelectedTagId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(true);
-  const [isAddModalOpen, setIsAddModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingTag, setEditingTag] = useState<NFCTag | null>(null);
+  const [isAddingNew, setIsAddingNew] = useState(false);
+  
+  // Form States for Selected Tag
   const [token, setToken] = useState('');
   const [tagName, setTagName] = useState('');
+  const [tagStatus, setTagStatus] = useState<'active' | 'inactive'>('active');
   const [interactionMode, setInteractionMode] = useState('profile');
   const [redirectUrl, setRedirectUrl] = useState('');
   const [customRedirectMode, setCustomRedirectMode] = useState<'link' | 'custom'>('link');
+  
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [success, setSuccess] = useState<string | null>(null);
+  
   const [userCircles, setUserCircles] = useState<any[]>([]);
   const [userLinks, setUserLinks] = useState<any[]>([]);
   const [activeWorkspaceId, setActiveWorkspaceId] = useState<string>('personal');
@@ -66,7 +78,6 @@ function NFCTagsContent() {
 
   // Dropdown States
   const [isInteractionModeOpen, setIsInteractionModeOpen] = useState(false);
-  const [isSelectCircleOpen, setIsSelectCircleOpen] = useState(false);
 
   useEffect(() => {
     const claimToken = searchParams.get('claim');
@@ -151,68 +162,44 @@ function NFCTagsContent() {
     return () => window.removeEventListener('workspace-changed', handleWorkspaceChange);
   }, []);
 
-  async function fetchTags() {
+  const populateFormWithTag = (tag: NFCTag, currentLinks: any[] = userLinks) => {
+    setTagName(tag.tag_name || '');
+    setTagStatus((tag.status as 'active' | 'inactive') || 'active');
+    setInteractionMode(tag.interaction_mode || 'profile');
+    setRedirectUrl(tag.redirect_url || '');
+    setError(null);
+    setSuccess(null);
+    setIsInteractionModeOpen(false);
+
+    if (tag.interaction_mode === 'redirect' && tag.redirect_url) {
+      const isLink = currentLinks.some(l => {
+        const platform = getPlatformInfo(l.title, l.url);
+        const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+        return resolved === tag.redirect_url || l.url === tag.redirect_url;
+      });
+      setCustomRedirectMode(isLink ? 'link' : 'custom');
+    } else {
+      setCustomRedirectMode('link');
+    }
+  };
+
+  const fetchTags = async () => {
     setIsLoading(true);
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('Invalid Refresh Token')) {
-          await supabase.auth.signOut();
-          router.push('/login');
-          return;
-        }
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        setIsLoading(false);
+        return;
       }
-      if (!session) return;
 
-      const { data, error } = await supabase
-        .from('nfc_tags')
-        .select('*')
-        .eq('user_id', session.user.id)
-        .order('created_at', { ascending: false });
-
-      if (error) throw error;
-      setTags(data || []);
-
-      // Check if user is admin
+      // Check admin status
       const { data: profile } = await supabase
         .from('profiles')
-        .select('is_admin')
+        .select('role')
         .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (profile?.is_admin) {
-        setIsAdmin(true);
-        // Admins see all circles
-        const { data: allCircles, error: circlesError } = await supabase
-          .from('circles')
-          .select('id, name, invite_code, slug')
-          .order('name');
-        
-        if (!circlesError && allCircles) {
-          setUserCircles(allCircles);
-        }
-      } else {
-        // Regular users see joined circles
-        const { data: memberCircles, error: circlesError } = await supabase
-          .from('circle_members')
-          .select(`
-            role,
-            circles (
-              id,
-              name,
-              invite_code,
-              slug
-            )
-          `)
-          .eq('profile_id', session.user.id);
-        
-        if (!circlesError && memberCircles) {
-          const circles = memberCircles
-            .map((m: any) => m.circles)
-            .filter(Boolean);
-          setUserCircles(circles);
-        }
-      }
+        .single();
+      
+      setIsAdmin(profile?.role === 'admin' || profile?.role === 'superadmin');
 
       // Fetch user's profile links for custom redirect dropdown
       const { data: linksData } = await supabase
@@ -221,8 +208,57 @@ function NFCTagsContent() {
         .eq('profile_id', session.user.id)
         .order('sort_order', { ascending: true });
       
-      if (linksData) {
-        setUserLinks(linksData);
+      const loadedLinks = linksData || [];
+      setUserLinks(loadedLinks);
+
+      // Fetch tags
+      let query = supabase
+        .from('nfc_tags')
+        .select('*')
+        .order('created_at', { ascending: false });
+
+      if (activeWorkspaceId === 'personal') {
+        query = query.eq('user_id', session.user.id).is('circle_id', null);
+      } else if (activeWorkspaceId === 'admin') {
+        // Admin workspace views all user's tags
+        query = query.eq('user_id', session.user.id);
+      } else {
+        // Circle workspace views tags assigned to circle
+        query = query.eq('circle_id', activeWorkspaceId);
+      }
+
+      const { data, error } = await query;
+
+      if (error) {
+        console.error('Error fetching tags:', error);
+      } else {
+        const loadedTags = data || [];
+        setTags(loadedTags);
+
+        // Select the active tag
+        if (loadedTags.length > 0) {
+          const currentSelected = loadedTags.find(t => t.id === selectedTagId);
+          const activeTag = currentSelected || loadedTags[0];
+          setSelectedTagId(activeTag.id);
+          populateFormWithTag(activeTag, loadedLinks);
+        } else {
+          setSelectedTagId(null);
+        }
+      }
+
+      // Fetch user's circles for redirect options
+      if (activeWorkspaceId === 'personal') {
+        const { data: memberCircles } = await supabase
+          .from('circle_members')
+          .select('circles(id, name, slug, invite_code)')
+          .eq('profile_id', session.user.id);
+
+        if (memberCircles) {
+          const circles = memberCircles
+            .map((m: any) => m.circles)
+            .filter(Boolean);
+          setUserCircles(circles);
+        }
       }
     } catch (err: any) {
       console.error('Error fetching tags:', err);
@@ -235,6 +271,78 @@ function NFCTagsContent() {
     fetchTags();
   }, [activeWorkspaceId]);
 
+  const currentTag = tags.find(t => t.id === selectedTagId) || null;
+
+  const handleSelectTag = (tag: NFCTag) => {
+    setSelectedTagId(tag.id);
+    setIsAddingNew(false);
+    populateFormWithTag(tag);
+  };
+
+  const handleSaveTag = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!currentTag) return;
+
+    setIsSubmitting(true);
+    setError(null);
+    setSuccess(null);
+
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) throw new Error('Not authenticated');
+
+      let targetUrl = redirectUrl;
+      if (interactionMode === 'redirect' && customRedirectMode === 'custom') {
+        if (!redirectUrl.startsWith('http://') && !redirectUrl.startsWith('https://')) {
+          targetUrl = `https://${redirectUrl}`;
+        }
+      }
+
+      // Find circle_id if interaction mode is circle
+      let targetCircleId = null;
+      if (interactionMode === 'circle' && redirectUrl) {
+        const circle = userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl);
+        if (circle) targetCircleId = circle.id;
+      }
+
+      const response = await fetch(`/api/tags/${currentTag.id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${session.access_token}`
+        },
+        body: JSON.stringify({
+          tagName: tagName.trim(),
+          interactionMode: interactionMode,
+          redirectUrl: targetUrl ? targetUrl.trim() : null,
+          circleId: targetCircleId,
+          status: tagStatus
+        })
+      });
+
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error || 'Failed to update tag');
+
+      // Update local state smoothly
+      setTags(prev => prev.map(t => t.id === currentTag.id ? {
+        ...t,
+        tag_name: tagName.trim() || 'My NFC Tag',
+        status: tagStatus,
+        interaction_mode: interactionMode,
+        redirect_url: targetUrl ? targetUrl.trim() : null
+      } : t));
+
+      setSuccess('Tag configuration saved successfully!');
+      setTimeout(() => {
+        setSuccess(null);
+      }, 3000);
+    } catch (err: any) {
+      setError(err.message || 'Failed to update tag');
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
   const handleAddTag = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsSubmitting(true);
@@ -242,14 +350,7 @@ function NFCTagsContent() {
     setSuccess(null);
 
     try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('Invalid Refresh Token')) {
-          await supabase.auth.signOut();
-          router.push('/login');
-          return;
-        }
-      }
+      const { data: { session } } = await supabase.auth.getSession();
       if (!session) throw new Error('Not authenticated');
 
       const response = await fetch('/api/tags/claim', {
@@ -260,120 +361,27 @@ function NFCTagsContent() {
         },
         body: JSON.stringify({
           token: token.trim(),
-          tagName: tagName.trim()
+          tagName: tagName.trim() || 'My NFC Tag',
+          circleId: isCircleWorkspace ? activeWorkspaceId : null
         })
       });
 
       const result = await response.json();
 
       if (!response.ok) {
-        throw new Error(result.error || 'Failed to claim tag');
+        throw new Error(result.error || 'Failed to add tag');
       }
 
-      if (result.tag?.circle_id) {
-        // Refresh circles list
-        await fetchTags();
-        window.dispatchEvent(new Event('workspace-changed'));
-      }
-
-      setSuccess('Tag added successfully!');
       setToken('');
       setTagName('');
-      setTimeout(() => {
-        setIsAddModalOpen(false);
-        setSuccess(null);
-        fetchTags();
-      }, 1500);
+      setIsAddingNew(false);
+      setSuccess('Tag connected successfully!');
+      await fetchTags();
     } catch (err: any) {
-      setError(err.message || 'Failed to add tag');
+      setError(err.message || 'Failed to connect tag');
     } finally {
       setIsSubmitting(false);
     }
-  };
-
-  const handleEditTag = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!editingTag) return;
-    setIsSubmitting(true);
-    setError(null);
-    setSuccess(null);
-
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      if (sessionError) {
-        if (sessionError.message.includes('Refresh Token Not Found') || sessionError.message.includes('Invalid Refresh Token')) {
-          await supabase.auth.signOut();
-          router.push('/login');
-          return;
-        }
-      }
-      if (!session) throw new Error('Not authenticated');
-
-      // Find circle_id if interaction mode is circle
-      let targetCircleId = null;
-      if (interactionMode === 'circle' && redirectUrl) {
-        const circle = userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl);
-        if (circle) targetCircleId = circle.id;
-      }
-
-      const response = await fetch(`/api/tags/${editingTag.id}`, {
-        method: 'PUT',
-        headers: {
-          'Content-Type': 'application/json',
-          'Authorization': `Bearer ${session.access_token}`
-        },
-        body: JSON.stringify({
-          tagName: tagName.trim(),
-          interactionMode: interactionMode,
-          redirectUrl: redirectUrl.trim(),
-          circleId: targetCircleId
-        })
-      });
-
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error || 'Failed to update tag');
-
-      if (targetCircleId) {
-        await fetchTags();
-        window.dispatchEvent(new Event('workspace-changed'));
-      }
-
-      setSuccess('Tag updated successfully!');
-      setTimeout(() => {
-        setIsEditModalOpen(false);
-        setEditingTag(null);
-        setSuccess(null);
-        fetchTags();
-      }, 1500);
-    } catch (err: any) {
-      setError(err.message || 'Failed to update tag');
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
-
-  const openEditModal = (tag: NFCTag) => {
-    setEditingTag(tag);
-    setTagName(tag.tag_name || '');
-    setInteractionMode(tag.interaction_mode || 'profile');
-    setRedirectUrl(tag.redirect_url || '');
-    
-    if (tag.interaction_mode === 'redirect' && tag.redirect_url) {
-      const isLink = userLinks.some(l => {
-        const platform = getPlatformInfo(l.title, l.url);
-        const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
-        return resolved === tag.redirect_url || l.url === tag.redirect_url;
-      });
-      setCustomRedirectMode(isLink ? 'link' : 'custom');
-    } else {
-      setCustomRedirectMode('link');
-    }
-    
-    setIsEditModalOpen(true);
-  };
-
-  const handleDeleteTag = async (id: string) => {
-    setDeleteId(id);
   };
 
   const confirmDelete = async () => {
@@ -393,11 +401,10 @@ function NFCTagsContent() {
       const result = await response.json();
       if (!response.ok) throw new Error(result.error || 'Failed to detach tag');
 
-      fetchTags();
       setDeleteId(null);
+      await fetchTags();
     } catch (err: any) {
       console.error('Error deleting tag:', err);
-      // Optional telegram notification
       fetch('/api/notify-error', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -407,110 +414,684 @@ function NFCTagsContent() {
     }
   };
 
+  const getSelectedModeInfo = () => {
+    if (interactionMode === 'profile') {
+      return {
+        label: 'Digital Profile (Default)',
+        sublabel: 'Directs to your public profile',
+        icon: Globe,
+        iconColor: 'text-slate-700',
+        bgColor: 'bg-slate-100 border border-slate-200/60'
+      };
+    }
+
+    if (interactionMode === 'redirect') {
+      if (customRedirectMode === 'custom') {
+        return {
+          label: 'Custom URL',
+          sublabel: redirectUrl || 'External web destination',
+          icon: ExternalLink,
+          iconColor: 'text-slate-700',
+          bgColor: 'bg-slate-100 border border-slate-200/60'
+        };
+      }
+
+      const matched = userLinks.find(l => {
+        const p = getPlatformInfo(l.title, l.url);
+        const res = p ? p.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+        return res === redirectUrl || l.url === redirectUrl;
+      });
+
+      if (matched) {
+        const p = getPlatformInfo(matched.title, matched.url);
+        if (p) {
+          return {
+            label: matched.title || p.id,
+            sublabel: redirectUrl || matched.url,
+            icon: p.icon,
+            iconColor: p.color,
+            bgColor: 'bg-slate-50 border border-slate-200/60'
+          };
+        }
+        return {
+          label: matched.title || 'Profile Link',
+          sublabel: redirectUrl || matched.url,
+          icon: LinkIcon,
+          iconColor: 'text-slate-700',
+          bgColor: 'bg-slate-100 border border-slate-200/60'
+        };
+      }
+
+      return {
+        label: 'Custom URL',
+        sublabel: redirectUrl || 'External web destination',
+        icon: ExternalLink,
+        iconColor: 'text-slate-700',
+        bgColor: 'bg-slate-100 border border-slate-200/60'
+      };
+    }
+
+    if (interactionMode === 'photobooth') {
+      return {
+        label: 'Queue Customer',
+        sublabel: 'Photobooth event queue',
+        icon: QrCode,
+        iconColor: 'text-amber-600',
+        bgColor: 'bg-amber-50 border border-amber-200/60'
+      };
+    }
+
+    if (interactionMode === 'circle') {
+      const circle = userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl);
+      return {
+        label: circle ? `Circle (${circle.name})` : 'Circle Protocol',
+        sublabel: 'Smart scan access flow',
+        icon: Shield,
+        iconColor: 'text-indigo-600',
+        bgColor: 'bg-indigo-50 border border-indigo-200/60'
+      };
+    }
+
+    return {
+      label: 'Digital Profile (Default)',
+      sublabel: 'Directs to your public profile',
+      icon: Globe,
+      iconColor: 'text-slate-700',
+      bgColor: 'bg-slate-100 border border-slate-200/60'
+    };
+  };
+
   if (isLoading) return <PageSkeleton type="tags" />;
 
-  return (
-    <div className="p-6 max-w-4xl mx-auto">
-      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-8">
-        <div>
-          <h1 className="text-2xl font-bold text-slate-900">NFC Tags</h1>
-          <p className="text-slate-500">Manage your connected physical identities</p>
-        </div>
-        <button
-          onClick={() => setIsAddModalOpen(true)}
-          className="w-full sm:w-auto flex items-center justify-center gap-2 bg-black text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition-colors"
-        >
-          <Plus className="w-4 h-4" />
-          Add Tag
-        </button>
-      </div>
+  const testLiveUrl = currentTag ? `/t/${currentTag.token}` : null;
 
-      {tags.length === 0 ? (
-        <div className="text-center py-16 bg-slate-50 rounded-3xl border-2 border-dashed border-slate-200">
-          <Smartphone className="w-12 h-12 text-slate-300 mx-auto mb-4" />
-          <h3 className="text-lg font-medium text-slate-900">No tags connected</h3>
-          <p className="text-slate-500 mb-6">Connect your first NFC tag to get started</p>
+  return (
+    <div className="space-y-6 sm:space-y-8 font-sans max-w-4xl mx-auto pb-24">
+      {/* Page Header */}
+      <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+        <div>
+          <div className="flex items-center gap-3">
+            <h1 className="text-2xl font-bold tracking-tight text-slate-900">NFC Tags</h1>
+            <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200/60">
+              {tags.length} {tags.length === 1 ? 'tag' : 'tags'}
+            </span>
+          </div>
+          <p className="text-sm text-slate-500 mt-1">Configure your physical NFC device and tap destination.</p>
+        </div>
+
+        <div className="flex flex-wrap items-center justify-center sm:justify-end gap-2.5 w-full sm:w-auto">
+          {currentTag && !isAddingNew && testLiveUrl && (
+            <a
+              href={testLiveUrl}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-slate-200/80 text-slate-700 text-sm font-semibold rounded-xl hover:bg-slate-50 transition-all shadow-2xs hover:border-slate-300"
+            >
+              <ExternalLink className="w-4 h-4 text-slate-400" />
+              <span>Test Live Link</span>
+            </a>
+          )}
+
           <button
-            onClick={() => setIsAddModalOpen(true)}
-            className="text-black font-semibold hover:underline"
+            type="button"
+            onClick={() => {
+              if (isAddingNew && tags.length > 0) {
+                setIsAddingNew(false);
+              } else {
+                setToken('');
+                setTagName('');
+                setError(null);
+                setSuccess(null);
+                setIsAddingNew(true);
+              }
+            }}
+            className={cn(
+              "inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl font-semibold text-sm transition-all shadow-2xs active:scale-[0.98]",
+              isAddingNew
+                ? "bg-white border border-slate-200 text-slate-700 hover:bg-slate-50"
+                : "bg-slate-900 text-white hover:bg-slate-800"
+            )}
           >
-            Add your first tag
+            {isAddingNew ? (
+              <>
+                <X className="w-4 h-4" />
+                <span>Cancel</span>
+              </>
+            ) : (
+              <>
+                <Plus className="w-4 h-4" />
+                <span>Pair New Tag</span>
+              </>
+            )}
           </button>
         </div>
-      ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          {tags.map((tag) => (
-            <div 
-              key={tag.id}
-              className="bg-white p-5 rounded-2xl border border-slate-200 hover:border-slate-300 transition-all group"
-            >
-              <div className="flex justify-between items-start mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="w-10 h-10 bg-slate-100 rounded-xl flex items-center justify-center">
-                    <Smartphone className="w-5 h-5 text-slate-600" />
-                  </div>
-                  <div>
-                    <h3 className="font-semibold text-slate-900">{tag.tag_name || 'Unnamed Tag'}</h3>
-                    <p className="text-xs text-slate-400 font-mono">{tag.token}</p>
-                  </div>
-                </div>
-                <div className="flex items-center gap-1">
-                  <button 
-                    onClick={() => openEditModal(tag)}
-                    className="p-2 text-slate-400 hover:text-slate-600 hover:bg-slate-50 rounded-lg transition-colors"
-                  >
-                    <Settings2 className="w-4 h-4" />
-                  </button>
-                  <button 
-                    onClick={() => handleDeleteTag(tag.id)}
-                    className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-colors"
-                  >
-                    <Trash2 className="w-4 h-4" />
-                  </button>
-                </div>
-              </div>
+      </div>
 
-              <div className="flex items-center justify-between pt-4 border-t border-slate-50">
-                <div className="flex items-center gap-2">
-                  <span className={`w-2 h-2 rounded-full ${tag.status === 'active' ? 'bg-emerald-500' : 'bg-slate-300'}`} />
-                  <span className="text-xs font-medium text-slate-500 capitalize">{tag.status}</span>
-                </div>
-                <div className="text-xs text-slate-400">
-                  Mode: <span className="text-slate-600 font-medium capitalize">{tag.interaction_mode}</span>
-                </div>
-              </div>
-            </div>
+      {/* Horizontal Multi-Tag Selector Tabs (when user has multiple tags and not in add mode) */}
+      {tags.length > 1 && !isAddingNew && (
+        <div className="flex items-center gap-2 overflow-x-auto pb-1 hide-scrollbar">
+          {tags.map((t) => (
+            <button
+              key={t.id}
+              type="button"
+              onClick={() => handleSelectTag(t)}
+              className={cn(
+                "px-3.5 py-2 rounded-xl text-xs font-semibold whitespace-nowrap transition-all border flex items-center gap-2 active:scale-[0.98]",
+                selectedTagId === t.id
+                  ? "bg-slate-900 text-white border-slate-900 shadow-2xs"
+                  : "bg-white text-slate-600 border-slate-200 hover:bg-slate-50 hover:border-slate-300"
+              )}
+            >
+              <span className={cn(
+                "w-1.5 h-1.5 rounded-full",
+                t.status === 'active' ? "bg-emerald-400" : "bg-slate-400"
+              )} />
+              <span>{t.tag_name || 'Unnamed Tag'}</span>
+              <span className="font-mono text-[10px] opacity-70 bg-white/10 px-1.5 py-0.5 rounded">
+                {t.token}
+              </span>
+            </button>
           ))}
         </div>
       )}
 
-      {/* Delete Confirmation Modal */}
+      {/* VIEW 1: Connect First Tag / Pair Tag Full Page Card */}
+      {(tags.length === 0 || isAddingNew) ? (
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          <div className="px-5 py-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+            <div className="flex items-center gap-3">
+              <div className="w-9 h-9 rounded-xl bg-slate-900 text-white flex items-center justify-center">
+                <Radio className="w-4 h-4" />
+              </div>
+              <div>
+                <h2 className="text-base font-bold text-slate-900">
+                  {tags.length === 0 ? 'Connect Your First Tag' : 'Pair New NFC Tag'}
+                </h2>
+                <p className="text-xs text-slate-500">
+                  Enter the hardware token or code printed on your NFC device.
+                </p>
+              </div>
+            </div>
+            {isAddingNew && tags.length > 0 && (
+              <button
+                type="button"
+                onClick={() => setIsAddingNew(false)}
+                className="text-xs font-semibold text-slate-500 hover:text-slate-800"
+              >
+                Back to tag
+              </button>
+            )}
+          </div>
+
+          <form onSubmit={handleAddTag} className="p-5 sm:p-6 space-y-5">
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                Hardware Token / Tag Code
+              </label>
+              <input
+                type="text"
+                required
+                value={token}
+                onChange={(e) => setToken(e.target.value)}
+                placeholder="e.g. AB12CD34 or rifelo.com/t/..."
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400 font-mono"
+              />
+            </div>
+
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                Tag Label (Optional)
+              </label>
+              <input
+                type="text"
+                value={tagName}
+                onChange={(e) => setTagName(e.target.value)}
+                placeholder="e.g. Black Wristband, Desk Card"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
+              />
+            </div>
+
+            <div className="pt-2 flex flex-col sm:flex-row items-center gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting || !token.trim()}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs inline-flex items-center justify-center gap-2"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Connecting Tag...</span>
+                  </>
+                ) : (
+                  'Connect Tag'
+                )}
+              </button>
+
+              {error && (
+                <span className="flex items-center text-sm text-red-600 font-medium">
+                  <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                  {error}
+                </span>
+              )}
+            </div>
+          </form>
+        </div>
+      ) : currentTag && (
+        /* VIEW 2: Configure Tag Full Page Form (Direct on Page like /profile) */
+        <div className="bg-white border border-slate-200 rounded-2xl shadow-xs overflow-hidden">
+          {/* Card Header */}
+          <div className="px-5 py-4 sm:px-6 border-b border-slate-100 flex items-center justify-between bg-slate-50/70">
+            <div className="flex items-center gap-3 min-w-0">
+              <div className="w-10 h-10 rounded-xl bg-slate-900 text-white flex items-center justify-center shrink-0">
+                <Radio className="w-5 h-5" />
+              </div>
+              <div className="min-w-0">
+                <div className="flex items-center gap-2">
+                  <h2 className="text-base font-bold text-slate-900 truncate">
+                    {currentTag.tag_name || 'My NFC Tag'}
+                  </h2>
+                  <span className="font-mono text-xs text-slate-500 bg-slate-100 border border-slate-200/60 px-2 py-0.5 rounded-md shrink-0">
+                    {currentTag.token}
+                  </span>
+                </div>
+                <p className="text-xs text-slate-500 mt-0.5">
+                  Physical tag identifier and destination routing
+                </p>
+              </div>
+            </div>
+
+            <button
+              type="button"
+              onClick={() => setDeleteId(currentTag.id)}
+              className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-xl transition-colors border border-transparent hover:border-red-100"
+              title="Unbind tag from your account"
+              aria-label="Unbind tag"
+            >
+              <Trash2 className="w-4 h-4" />
+            </button>
+          </div>
+
+          {/* Form Body */}
+          <form onSubmit={handleSaveTag} className="p-5 sm:p-6 space-y-6">
+            {/* Field: Tag Name */}
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                Tag Label
+              </label>
+              <input
+                type="text"
+                value={tagName}
+                onChange={(e) => setTagName(e.target.value)}
+                placeholder="e.g. Black Wristband, Desk Card"
+                className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
+              />
+            </div>
+
+            {/* Field: Tag Status Toggle Switch */}
+            <div className="flex items-center justify-between p-4 rounded-xl border border-slate-200/80 bg-slate-50/50">
+              <div className="space-y-0.5 min-w-0 pr-3">
+                <div className="flex items-center gap-2">
+                  <span className="text-xs font-semibold text-slate-900">Active Status</span>
+                  <span className={cn(
+                    "inline-flex items-center gap-1.5 px-2 py-0.5 rounded-full text-[10px] font-semibold border",
+                    tagStatus === 'active'
+                      ? "bg-emerald-50 text-emerald-700 border-emerald-200/70"
+                      : "bg-slate-100 text-slate-600 border-slate-200"
+                  )}>
+                    <span className={cn(
+                      "w-1.5 h-1.5 rounded-full",
+                      tagStatus === 'active' ? "bg-emerald-500 animate-pulse" : "bg-slate-400"
+                    )} />
+                    <span className="capitalize">{tagStatus}</span>
+                  </span>
+                </div>
+                <p className="text-[11px] text-slate-400 leading-relaxed">
+                  {tagStatus === 'active' 
+                    ? 'Tag is active. Tapping the tag will immediately redirect visitors to your destination.'
+                    : 'Tag is paused. Tapping the tag will be temporarily disabled until re-activated.'}
+                </p>
+              </div>
+
+              <button
+                type="button"
+                role="switch"
+                aria-checked={tagStatus === 'active'}
+                onClick={() => setTagStatus(prev => prev === 'active' ? 'inactive' : 'active')}
+                className={cn(
+                  "relative inline-flex h-6 w-11 shrink-0 cursor-pointer rounded-full border-2 border-transparent transition-colors duration-200 ease-in-out focus:outline-none focus:ring-2 focus:ring-slate-900 focus:ring-offset-2",
+                  tagStatus === 'active' ? "bg-emerald-500" : "bg-slate-300"
+                )}
+              >
+                <span
+                  className={cn(
+                    "pointer-events-none inline-block h-5 w-5 transform rounded-full bg-white shadow-md ring-0 transition duration-200 ease-in-out",
+                    tagStatus === 'active' ? "translate-x-5" : "translate-x-0"
+                  )}
+                />
+              </button>
+            </div>
+
+            {/* Field: Interaction Mode & Destination with App Logos */}
+            <div>
+              <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500 mb-1.5">
+                Interaction Mode & Destination
+              </label>
+              <div>
+                <input type="hidden" name="interactionMode" value={interactionMode} />
+                
+                {/* Trigger button with current app logo */}
+                <button
+                  type="button"
+                  onClick={() => setIsInteractionModeOpen(!isInteractionModeOpen)}
+                  className={cn(
+                    "flex items-center justify-between w-full p-2.5 px-3.5 rounded-xl border outline-none transition-all shadow-2xs",
+                    isInteractionModeOpen
+                      ? "bg-slate-50/80 border-slate-900 ring-1 ring-slate-900"
+                      : "bg-white border-slate-200/80 hover:border-slate-300"
+                  )}
+                >
+                  {(() => {
+                    const currentInfo = getSelectedModeInfo();
+                    const CurrentIcon = currentInfo.icon;
+                    return (
+                      <div className="flex items-center gap-3 min-w-0">
+                        <div className={`w-8 h-8 rounded-lg ${currentInfo.bgColor} flex items-center justify-center shrink-0`}>
+                          <CurrentIcon className={`w-4 h-4 ${currentInfo.iconColor}`} />
+                        </div>
+                        <div className="text-left min-w-0">
+                          <div className="text-sm font-semibold text-slate-900 truncate">
+                            {currentInfo.label}
+                          </div>
+                          <div className="text-[11px] text-slate-400 truncate">
+                            {currentInfo.sublabel}
+                          </div>
+                        </div>
+                      </div>
+                    );
+                  })()}
+                  <ChevronDown className={cn(
+                    "w-4 h-4 text-slate-400 shrink-0 ml-2 transition-transform duration-200",
+                    isInteractionModeOpen && "rotate-180 text-slate-900"
+                  )} />
+                </button>
+                
+                {/* Options list rendered in-flow right on the page */}
+                {isInteractionModeOpen && (
+                  <div className="mt-2.5 bg-slate-50/60 border border-slate-200/90 rounded-2xl p-1.5 max-h-72 overflow-y-auto divide-y divide-slate-100 shadow-2xs animate-in fade-in slide-in-from-top-1 duration-150">
+                    
+                    {/* 1. Digital Profile default */}
+                    <div className="py-1">
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInteractionMode('profile');
+                          setRedirectUrl('');
+                          setIsInteractionModeOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all",
+                          interactionMode === 'profile' ? "bg-white shadow-2xs text-slate-900 font-medium" : "hover:bg-white/80 text-slate-700"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200/60 flex items-center justify-center shrink-0">
+                            <Globe className="w-4 h-4 text-slate-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold truncate">Digital Profile (Default)</div>
+                            <div className="text-[11px] text-slate-400 truncate">Directs to your public profile</div>
+                          </div>
+                        </div>
+                        {interactionMode === 'profile' && <Check className="w-4 h-4 text-slate-900 shrink-0 ml-2" />}
+                      </button>
+                    </div>
+
+                    {/* 2. User Social / Web Links */}
+                    {userLinks.length > 0 && (
+                      <div className="py-1">
+                        <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                          Your Social & Profile Links
+                        </div>
+                        {userLinks.map(link => {
+                          const platform = getPlatformInfo(link.title, link.url);
+                          const resolvedTarget = platform ? platform.finalUrl : (link.url.startsWith('http') ? link.url : `https://${link.url}`);
+                          const isSelected = interactionMode === 'redirect' && customRedirectMode === 'link' && redirectUrl === resolvedTarget;
+                          const IconComponent = platform?.icon || LinkIcon;
+                          const iconColor = platform?.color || 'text-slate-700';
+
+                          return (
+                            <button
+                              key={link.id}
+                              type="button"
+                              onClick={() => {
+                                setInteractionMode('redirect');
+                                setCustomRedirectMode('link');
+                                setRedirectUrl(resolvedTarget);
+                                setIsInteractionModeOpen(false);
+                              }}
+                              className={cn(
+                                "w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all",
+                                isSelected ? "bg-white shadow-2xs text-slate-900 font-medium" : "hover:bg-white/80 text-slate-700"
+                              )}
+                            >
+                              <div className="flex items-center gap-3 min-w-0">
+                                <div className="w-8 h-8 rounded-lg bg-white border border-slate-200/60 flex items-center justify-center shrink-0">
+                                  <IconComponent className={`w-4 h-4 ${iconColor}`} />
+                                </div>
+                                <div className="min-w-0">
+                                  <div className="text-sm font-semibold truncate">{link.title || platform?.id || 'Link'}</div>
+                                  <div className="text-[11px] text-slate-400 truncate">{link.url}</div>
+                                </div>
+                              </div>
+                              {isSelected && <Check className="w-4 h-4 text-slate-900 shrink-0 ml-2" />}
+                            </button>
+                          );
+                        })}
+                      </div>
+                    )}
+
+                    {/* 3. Custom URL & Special Protocols */}
+                    <div className="py-1">
+                      <div className="px-2.5 py-1 text-[10px] font-bold uppercase tracking-wider text-slate-400">
+                        Custom & Protocols
+                      </div>
+                      
+                      {/* Custom URL Option */}
+                      <button
+                        type="button"
+                        onClick={() => {
+                          setInteractionMode('redirect');
+                          setCustomRedirectMode('custom');
+                          if (!redirectUrl || !redirectUrl.startsWith('http')) {
+                            setRedirectUrl('https://');
+                          }
+                          setIsInteractionModeOpen(false);
+                        }}
+                        className={cn(
+                          "w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all",
+                          interactionMode === 'redirect' && customRedirectMode === 'custom' ? "bg-white shadow-2xs text-slate-900 font-medium" : "hover:bg-white/80 text-slate-700"
+                        )}
+                      >
+                        <div className="flex items-center gap-3 min-w-0">
+                          <div className="w-8 h-8 rounded-lg bg-slate-100 border border-slate-200/60 flex items-center justify-center shrink-0">
+                            <ExternalLink className="w-4 h-4 text-slate-700" />
+                          </div>
+                          <div className="min-w-0">
+                            <div className="text-sm font-semibold truncate">Custom URL</div>
+                            <div className="text-[11px] text-slate-400 truncate">Enter any external destination</div>
+                          </div>
+                        </div>
+                        {interactionMode === 'redirect' && customRedirectMode === 'custom' && <Check className="w-4 h-4 text-slate-900 shrink-0 ml-2" />}
+                      </button>
+
+                      {/* Queue Customer */}
+                      {(isAdmin || hasQueueMode) && (
+                        <button
+                          type="button"
+                          onClick={() => {
+                            setInteractionMode('photobooth');
+                            setIsInteractionModeOpen(false);
+                          }}
+                          className={cn(
+                            "w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all",
+                            interactionMode === 'photobooth' ? "bg-white shadow-2xs text-slate-900 font-medium" : "hover:bg-white/80 text-slate-700"
+                          )}
+                        >
+                          <div className="flex items-center gap-3 min-w-0">
+                            <div className="w-8 h-8 rounded-lg bg-amber-50 border border-amber-200/60 flex items-center justify-center shrink-0">
+                              <QrCode className="w-4 h-4 text-amber-700" />
+                            </div>
+                            <div className="min-w-0">
+                              <div className="text-sm font-semibold truncate">Queue Customer</div>
+                              <div className="text-[11px] text-slate-400 truncate">Photobooth / event queue flow</div>
+                            </div>
+                          </div>
+                          {interactionMode === 'photobooth' && <Check className="w-4 h-4 text-slate-900 shrink-0 ml-2" />}
+                        </button>
+                      )}
+
+                      {/* Circle Protocols */}
+                      {userCircles.map(c => {
+                        const isSelected = interactionMode === 'circle' && (redirectUrl === c.slug || redirectUrl === c.invite_code);
+                        return (
+                          <button
+                            key={c.id}
+                            type="button"
+                            onClick={() => {
+                              setInteractionMode('circle');
+                              setRedirectUrl(c.slug || c.invite_code);
+                              setIsInteractionModeOpen(false);
+                            }}
+                            className={cn(
+                              "w-full flex items-center justify-between p-2.5 rounded-xl text-left transition-all",
+                              isSelected ? "bg-white shadow-2xs text-slate-900 font-medium" : "hover:bg-white/80 text-slate-700"
+                            )}
+                          >
+                            <div className="flex items-center gap-3 min-w-0">
+                              <div className="w-8 h-8 rounded-lg bg-indigo-50 border border-indigo-200/60 flex items-center justify-center shrink-0">
+                                <Shield className="w-4 h-4 text-indigo-700" />
+                              </div>
+                              <div className="min-w-0">
+                                <div className="text-sm font-semibold truncate">Circle ({c.name})</div>
+                                <div className="text-[11px] text-slate-400 truncate">Smart scan access flow</div>
+                              </div>
+                            </div>
+                            {isSelected && <Check className="w-4 h-4 text-slate-900 shrink-0 ml-2" />}
+                          </button>
+                        );
+                      })}
+                    </div>
+
+                  </div>
+                )}
+              </div>
+            </div>
+
+            {/* Additional inputs depending on selected mode */}
+            {interactionMode === 'redirect' && (customRedirectMode === 'custom' || !userLinks.find(l => {
+              const platform = getPlatformInfo(l.title, l.url);
+              const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
+              return resolved === redirectUrl || l.url === redirectUrl;
+            })) && (
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  Destination URL
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={redirectUrl}
+                  onChange={(e) => setRedirectUrl(e.target.value)}
+                  placeholder="https://"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all text-sm"
+                />
+              </div>
+            )}
+
+            {interactionMode === 'photobooth' && (
+              <div className="space-y-1.5 pt-1">
+                <label className="block text-[11px] font-semibold uppercase tracking-wider text-slate-500">
+                  Link Queue Registration (Event Join Link)
+                </label>
+                <input
+                  type="url"
+                  required
+                  value={redirectUrl}
+                  onChange={(e) => setRedirectUrl(e.target.value)}
+                  placeholder="https://rifelo.com/q/join?event_id=XYZ"
+                  className="w-full px-4 py-2.5 rounded-xl border border-slate-200/80 focus:ring-2 focus:ring-slate-900 focus:border-transparent outline-none transition-all text-sm"
+                />
+                <p className="text-[11px] text-slate-400">
+                  When the tag is tapped, the visitor will be directed to this queue join link.
+                </p>
+              </div>
+            )}
+
+            {/* Bottom Actions Bar (Matches /profile save design) */}
+            <div className="pt-4 border-t border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
+              <button
+                type="submit"
+                disabled={isSubmitting}
+                className="w-full sm:w-auto px-6 py-2.5 bg-slate-900 text-white rounded-xl font-semibold text-sm hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all shadow-2xs inline-flex items-center justify-center gap-2 active:scale-[0.98]"
+              >
+                {isSubmitting ? (
+                  <>
+                    <Loader2 className="w-4 h-4 animate-spin" />
+                    <span>Saving Changes...</span>
+                  </>
+                ) : (
+                  'Save Changes'
+                )}
+              </button>
+
+              <div className="flex items-center">
+                {error && (
+                  <span className="flex items-center text-sm text-red-600 font-medium">
+                    <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
+                    {error}
+                  </span>
+                )}
+                {success && (
+                  <span className="flex items-center text-sm text-emerald-600 font-medium">
+                    <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
+                    {success}
+                  </span>
+                )}
+              </div>
+            </div>
+          </form>
+        </div>
+      )}
+
+      {/* Delete Confirmation Dialog */}
       <AnimatePresence>
         {deleteId && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 text-center"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-xl p-6 text-center border border-slate-200"
             >
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <Trash2 className="w-8 h-8 text-red-600" />
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <Trash2 className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Unbind Tag?</h3>
-              <p className="text-slate-500 mb-6">
-                Are you sure you want to unbind this tag from your account?
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Unbind Tag?</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-6">
+                Are you sure you want to unbind this tag from your account? You can re-pair it anytime using its token code.
               </p>
               <div className="flex gap-3">
                 <button
+                  type="button"
                   onClick={() => setDeleteId(null)}
-                  className="flex-1 px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-bold hover:bg-slate-200 transition-colors"
+                  className="flex-1 py-2.5 bg-slate-100 text-slate-700 rounded-xl text-sm font-semibold hover:bg-slate-200/80 transition-colors"
                 >
                   Cancel
                 </button>
                 <button
+                  type="button"
                   onClick={confirmDelete}
-                  className="flex-1 px-4 py-2 bg-red-600 text-white rounded-xl font-bold hover:bg-red-700 transition-colors"
+                  className="flex-1 py-2.5 bg-red-600 text-white rounded-xl text-sm font-semibold hover:bg-red-700 transition-colors shadow-2xs"
                 >
                   Unbind
                 </button>
@@ -523,391 +1104,25 @@ function NFCTagsContent() {
       {/* Error Message Modal */}
       <AnimatePresence>
         {errorMessage && (
-          <div className="fixed inset-0 z-[60] flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm">
+          <div className="fixed inset-0 z-[65] flex items-center justify-center p-4 bg-slate-900/50 backdrop-blur-sm">
             <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-2xl p-6 text-center"
+              initial={{ opacity: 0, scale: 0.95, y: 10 }}
+              animate={{ opacity: 1, scale: 1, y: 0 }}
+              exit={{ opacity: 0, scale: 0.95, y: 10 }}
+              className="bg-white w-full max-w-sm rounded-3xl overflow-hidden shadow-xl p-6 text-center border border-slate-200"
             >
-              <div className="w-16 h-16 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
-                <AlertCircle className="w-8 h-8 text-red-600" />
+              <div className="w-12 h-12 bg-red-50 rounded-full flex items-center justify-center mx-auto mb-4">
+                <AlertCircle className="w-6 h-6 text-red-600" />
               </div>
-              <h3 className="text-xl font-bold text-slate-900 mb-2">Error</h3>
-              <p className="text-slate-500 mb-6">{errorMessage}</p>
+              <h3 className="text-lg font-bold text-slate-900 mb-2">Error</h3>
+              <p className="text-sm text-slate-500 leading-relaxed mb-6">{errorMessage}</p>
               <button
+                type="button"
                 onClick={() => setErrorMessage(null)}
-                className="w-full px-4 py-2 bg-black text-white rounded-xl font-bold hover:bg-slate-800 transition-colors"
+                className="w-full py-2.5 bg-slate-900 text-white rounded-xl text-sm font-semibold hover:bg-slate-800 transition-colors shadow-2xs"
               >
                 Close
               </button>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Add Tag Modal */}
-      <AnimatePresence>
-        {isAddModalOpen && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white w-full max-w-md rounded-3xl shadow-2xl my-auto"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Add New Tag</h2>
-                <button 
-                  onClick={() => setIsAddModalOpen(false)}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-slate-500" />
-                </button>
-              </div>
-
-              <form onSubmit={handleAddTag} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Tag Token / Code
-                  </label>
-                  <input
-                    type="text"
-                    required
-                    value={token}
-                    onChange={(e) => setToken(e.target.value)}
-                    placeholder="Enter the code or paste the link (e.g. AB12CD34 or rifelo.com/t/...)"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400 placeholder:font-sans font-mono"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Tag Name (Optional)
-                  </label>
-                  <input
-                    type="text"
-                    value={tagName}
-                    onChange={(e) => setTagName(e.target.value)}
-                    placeholder="Tag label"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div className="pt-4 flex flex-col items-center gap-3">
-                  {error && (
-                    <span className="flex items-center text-sm text-red-600 font-medium animate-in fade-in slide-in-from-bottom-2 text-center">
-                      <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
-                      {error}
-                    </span>
-                  )}
-                  {success && (
-                    <span className="flex items-center text-sm text-emerald-600 font-medium animate-in fade-in slide-in-from-bottom-2 text-center">
-                      <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
-                      {success}
-                    </span>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Adding...
-                      </>
-                    ) : (
-                      'Add Tag'
-                    )}
-                  </button>
-                </div>
-              </form>
-            </motion.div>
-          </div>
-        )}
-      </AnimatePresence>
-
-      {/* Edit Tag Modal */}
-      <AnimatePresence>
-        {isEditModalOpen && editingTag && (
-          <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/40 backdrop-blur-sm overflow-y-auto">
-            <motion.div
-              initial={{ opacity: 0, scale: 0.95 }}
-              animate={{ opacity: 1, scale: 1 }}
-              exit={{ opacity: 0, scale: 0.95 }}
-              className="bg-white w-full max-w-md rounded-3xl shadow-2xl my-auto"
-            >
-              <div className="p-6 border-b border-slate-100 flex justify-between items-center">
-                <h2 className="text-xl font-bold text-slate-900">Edit Tag</h2>
-                <button 
-                  onClick={() => {
-                    setIsEditModalOpen(false);
-                    setEditingTag(null);
-                  }}
-                  className="p-2 hover:bg-slate-100 rounded-full transition-colors"
-                >
-                  <X className="w-5 h-5 text-slate-500" />
-                </button>
-              </div>
-
-              <form onSubmit={handleEditTag} className="p-6 space-y-4">
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Tag Name
-                  </label>
-                  <input
-                    type="text"
-                    value={tagName}
-                    onChange={(e) => setTagName(e.target.value)}
-                    placeholder="New tag label"
-                    className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-[#1A1A1A] focus:border-transparent outline-none transition-all text-sm text-slate-900 placeholder:text-slate-400"
-                  />
-                </div>
-
-                <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">
-                    Interaction Mode
-                  </label>
-                  <div className="relative">
-                    <input type="hidden" name="interactionMode" value={interactionMode} />
-                    <button
-                      type="button"
-                      onClick={() => setIsInteractionModeOpen(!isInteractionModeOpen)}
-                      className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
-                    >
-                      <span className="truncate">
-                        {interactionMode === 'profile' ? 'Digital Profile (Default)' :
-                         interactionMode === 'redirect' ? (customRedirectMode === 'custom' ? 'Custom URL' : (userLinks.find(l => {
-                           const platform = getPlatformInfo(l.title, l.url);
-                           const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
-                           return resolved === redirectUrl || l.url === redirectUrl;
-                         })?.title || 'Custom URL')) :
-                         interactionMode === 'photobooth' ? 'Queue Customer' :
-                          interactionMode === 'circle' && userCircles.length === 1 ? `Circle (${userCircles[0].name})` :
-                         'Circle Protocol'}
-                      </span>
-                      <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
-                    </button>
-                    
-                    {isInteractionModeOpen && (
-                      <>
-                        <div className="fixed inset-0 z-40" onClick={() => setIsInteractionModeOpen(false)} />
-                        <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto">
-                          <ul className="flex flex-col">
-                            <li
-                              onClick={() => {
-                                setInteractionMode('profile');
-                                setRedirectUrl('');
-                                setIsInteractionModeOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'profile' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                            >
-                              Digital Profile (Default)
-                            </li>
-                            {userLinks.map(link => {
-                              const platform = getPlatformInfo(link.title, link.url);
-                              const resolvedTarget = platform ? platform.finalUrl : (link.url.startsWith('http') ? link.url : `https://${link.url}`);
-                              return (
-                                <li
-                                  key={link.id}
-                                  onClick={() => {
-                                    setInteractionMode('redirect');
-                                    setCustomRedirectMode('link');
-                                    setRedirectUrl(resolvedTarget);
-                                    setIsInteractionModeOpen(false);
-                                  }}
-                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'redirect' && customRedirectMode === 'link' && redirectUrl === resolvedTarget ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                                >
-                                  {link.title || link.url}
-                                </li>
-                              );
-                            })}
-                            <li
-                              onClick={() => {
-                                setInteractionMode('redirect');
-                                setCustomRedirectMode('custom');
-                                setRedirectUrl('https://');
-                                setIsInteractionModeOpen(false);
-                              }}
-                              className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'redirect' && customRedirectMode === 'custom' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                            >
-                              Custom URL
-                            </li>
-                            {(isAdmin || hasQueueMode) && (
-                              <li
-                                onClick={() => {
-                                  setInteractionMode('photobooth');
-                                  setIsInteractionModeOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'photobooth' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                              >
-                                Queue Customer
-                              </li>
-                            )}
-                            
-                            {userCircles.length === 1 && (
-                              <li
-                                onClick={() => {
-                                  setInteractionMode('circle');
-                                  setRedirectUrl(userCircles[0].slug || userCircles[0].invite_code);
-                                  setIsInteractionModeOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'circle' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                              >
-                                Circle ({userCircles[0].name})
-                              </li>
-                            )}
-                            
-                            {userCircles.length > 1 && (
-                              <li
-                                onClick={() => {
-                                  setInteractionMode('circle');
-                                  setIsInteractionModeOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${interactionMode === 'circle' ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                              >
-                                Circle Protocol
-                              </li>
-                            )}
-                            
-                            {/* Do not show No circles found */}
-                          </ul>
-                        </div>
-                      </>
-                    )}
-                  </div>
-                </div>
-
-                {interactionMode === 'circle' && userCircles.length > 1 && (
-                  <div>
-                    <label className="block text-sm font-medium text-slate-700 mb-1">
-                      Select Circle
-                    </label>
-                    <div className="relative">
-                      <input type="hidden" name="redirectUrl" value={redirectUrl} />
-                      <button
-                        type="button"
-                        onClick={() => setIsSelectCircleOpen(!isSelectCircleOpen)}
-                        className="flex items-center justify-between w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all bg-white"
-                      >
-                        <span className="truncate">
-                          {redirectUrl ? userCircles.find(c => c.invite_code === redirectUrl || c.slug === redirectUrl)?.name || 'Choose a circle...' : 'Choose a circle...'}
-                        </span>
-                        <ChevronDown className="w-5 h-5 text-slate-400 shrink-0 ml-2" />
-                      </button>
-                      
-                      {isSelectCircleOpen && (
-                        <>
-                          <div className="fixed inset-0 z-40" onClick={() => setIsSelectCircleOpen(false)} />
-                          <div className="absolute left-0 right-0 top-full mt-2 bg-white border border-slate-200 rounded-xl shadow-lg z-50 py-1 max-h-60 overflow-y-auto">
-                            <ul className="flex flex-col">
-                              <li
-                                onClick={() => {
-                                  setRedirectUrl('');
-                                  setIsSelectCircleOpen(false);
-                                }}
-                                className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${!redirectUrl ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                              >
-                                Choose a circle...
-                              </li>
-                              {userCircles.map(c => (
-                                <li
-                                  key={c.id}
-                                  onClick={() => {
-                                    setRedirectUrl(c.slug || c.invite_code);
-                                    setIsSelectCircleOpen(false);
-                                  }}
-                                  className={`w-full text-left px-4 py-3 text-sm hover:bg-gray-100 cursor-pointer transition-colors ${redirectUrl === c.invite_code || redirectUrl === c.slug ? 'bg-gray-100 text-slate-900 font-medium' : 'text-slate-600'}`}
-                                >
-                                  {c.name}
-                                </li>
-                              ))}
-                            </ul>
-                          </div>
-                        </>
-                      )}
-                    </div>
-                    <p className="mt-1 text-xs text-slate-400">
-                      Tag will redirect to the smart scan flow for this circle.
-                    </p>
-                  </div>
-                )}
-
-                {interactionMode === 'redirect' && (
-                  <div className="space-y-3">
-                    {(customRedirectMode === 'custom' || !userLinks.find(l => {
-                      const platform = getPlatformInfo(l.title, l.url);
-                      const resolved = platform ? platform.finalUrl : (l.url.startsWith('http') ? l.url : `https://${l.url}`);
-                      return resolved === redirectUrl || l.url === redirectUrl;
-                    })) && (
-                      <div>
-                        <label className="block text-sm font-medium text-slate-700 mb-1">
-                          Custom URL
-                        </label>
-                        <input
-                          type="url"
-                          required
-                          value={redirectUrl}
-                          onChange={(e) => setRedirectUrl(e.target.value)}
-                          placeholder="https://"
-                          className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                        />
-                      </div>
-                    )}
-                  </div>
-                )}
-
-                {interactionMode === 'photobooth' && (
-                  <div className="space-y-3">
-                    <div>
-                      <label className="block text-sm font-medium text-slate-700 mb-1">
-                        Link Queue Registration (Event Join Link)
-                      </label>
-                      <input
-                        type="url"
-                        required
-                        value={redirectUrl}
-                        onChange={(e) => setRedirectUrl(e.target.value)}
-                        placeholder="https://rifelo.com/q/join?event_id=XYZ"
-                        className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-black focus:border-transparent outline-none transition-all"
-                      />
-                      <p className="mt-1 text-xs text-slate-400">
-                        When the tag is tapped, the user will be redirected to this queue registration page.
-                      </p>
-                    </div>
-                  </div>
-                )}
-
-                <div className="pt-4 flex flex-col items-center gap-3">
-                  {error && (
-                    <span className="flex items-center text-sm text-red-600 font-medium animate-in fade-in slide-in-from-bottom-2 text-center">
-                      <AlertCircle className="w-4 h-4 mr-1.5 shrink-0" />
-                      {error}
-                    </span>
-                  )}
-                  {success && (
-                    <span className="flex items-center text-sm text-emerald-600 font-medium animate-in fade-in slide-in-from-bottom-2 text-center">
-                      <CheckCircle2 className="w-4 h-4 mr-1.5 shrink-0" />
-                      {success}
-                    </span>
-                  )}
-                  <button
-                    type="submit"
-                    disabled={isSubmitting}
-                    className="w-full bg-black text-white py-3 rounded-xl font-bold hover:bg-slate-800 disabled:opacity-50 disabled:cursor-not-allowed transition-all flex items-center justify-center gap-2"
-                  >
-                    {isSubmitting ? (
-                      <>
-                        <Loader2 className="w-5 h-5 animate-spin" />
-                        Saving...
-                      </>
-                    ) : (
-                      'Save Changes'
-                    )}
-                  </button>
-                </div>
-              </form>
             </motion.div>
           </div>
         )}
