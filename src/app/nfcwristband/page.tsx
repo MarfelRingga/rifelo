@@ -216,7 +216,7 @@ export default function NfcWristbandPage() {
         </div>
 
         {/* Dynamic Spec & Microcopy beneath Carousel */}
-        <div className="min-h-[70px] mt-4 flex flex-col items-center justify-center max-w-md">
+        <div className="min-h-[50px] mt-4 flex flex-col items-center justify-center max-w-md">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -226,9 +226,6 @@ export default function NfcWristbandPage() {
               transition={{ duration: 0.4 }}
               className="space-y-1"
             >
-              <p className="text-[11px] font-bold uppercase tracking-widest text-[#9E7D2B]">
-                {currentSlide.label} &bull; {currentSlide.highlight}
-              </p>
               <h2 className="text-sm font-semibold text-[#1A1A1A]">
                 {currentSlide.title}
               </h2>
