@@ -4,7 +4,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'motion/react';
 import Image from 'next/image';
 import Link from 'next/link';
-import { ChevronLeft, ChevronRight, Zap, Shield, Waves, ArrowRight } from 'lucide-react';
+import { ChevronLeft, ChevronRight, ArrowRight } from 'lucide-react';
 
 const SLIDES = [
   {
@@ -272,45 +272,6 @@ export default function NfcWristbandPage() {
           >
             Explore Ecosystem
           </Link>
-        </div>
-
-        {/* Tactile Highlights Grid (Hardware specs) */}
-        <div className="w-full max-w-3xl mt-16 pt-10 border-t border-[#1A1A1A]/10 grid grid-cols-1 sm:grid-cols-3 gap-6 text-left">
-          <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-black/[0.02]">
-            <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] text-[#EAE6CB] flex items-center justify-center shrink-0">
-              <Zap className="w-4 h-4 text-[#d4af37]" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A]">Zero Battery</h3>
-              <p className="text-xs text-[#1A1A1A]/60 mt-1 leading-relaxed">
-                Powered passively by the magnetic field of the receiving phone. Never needs a recharge.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-black/[0.02]">
-            <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] text-[#EAE6CB] flex items-center justify-center shrink-0">
-              <Waves className="w-4 h-4 text-[#d4af37]" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A]">Waterproof</h3>
-              <p className="text-xs text-[#1A1A1A]/60 mt-1 leading-relaxed">
-                IP68 rated waterproof and sweat-resistant silicone for sports, swimming, and travel.
-              </p>
-            </div>
-          </div>
-
-          <div className="flex items-start gap-3.5 p-3 rounded-2xl bg-black/[0.02]">
-            <div className="w-9 h-9 rounded-xl bg-[#1A1A1A] text-[#EAE6CB] flex items-center justify-center shrink-0">
-              <Shield className="w-4 h-4 text-[#d4af37]" />
-            </div>
-            <div>
-              <h3 className="text-xs font-bold uppercase tracking-wider text-[#1A1A1A]">Instant Tap</h3>
-              <p className="text-xs text-[#1A1A1A]/60 mt-1 leading-relaxed">
-                Universal compatibility with iOS and Android devices without requiring any app.
-              </p>
-            </div>
-          </div>
         </div>
 
       </main>
