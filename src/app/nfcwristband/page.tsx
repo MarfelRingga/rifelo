@@ -110,25 +110,25 @@ export default function NfcWristbandPage() {
       </div>
 
       {/* Header / Brand Navigation */}
-      <header className="w-full max-w-6xl mx-auto px-6 pt-8 pb-4 flex items-center justify-between z-30">
+      <header className="w-full max-w-6xl mx-auto px-6 sm:px-8 pt-8 pb-4 flex items-center justify-between z-30">
         <Link 
           href="/" 
-          className="text-xs font-bold tracking-[0.25em] uppercase text-[#1A1A1A] hover:opacity-80 transition-opacity"
+          className="text-xs sm:text-sm font-bold tracking-[0.25em] uppercase text-[#1A1A1A] hover:opacity-80 transition-opacity"
         >
           Rifelo<span className="text-[#9E7D2B]">.</span>
         </Link>
 
-        <div className="flex items-center gap-6">
+        <div className="flex items-center gap-4 sm:gap-6">
           <Link
             href="/profile"
-            className="text-xs font-semibold text-[#1A1A1A]/70 hover:text-[#1A1A1A] transition-colors"
+            className="text-xs sm:text-sm font-semibold text-[#1A1A1A]/70 hover:text-[#1A1A1A] transition-colors"
           >
             Dashboard
           </Link>
           <Link
             href="https://wa.me/6281234567890"
             target="_blank"
-            className="px-5 py-2 bg-[#1A1A1A] text-[#EAE6CB] text-[11px] font-bold uppercase tracking-wider rounded-full hover:bg-[#2b2b2b] transition-colors"
+            className="px-4 sm:px-5 py-2 sm:py-2.5 bg-[#1A1A1A] text-[#EAE6CB] text-[11px] sm:text-xs font-bold uppercase tracking-wider rounded-full hover:bg-[#2b2b2b] active:scale-95 transition-all"
           >
             Pre-Order
           </Link>
@@ -136,27 +136,27 @@ export default function NfcWristbandPage() {
       </header>
 
       {/* Main Hero Section */}
-      <main className="w-full max-w-5xl mx-auto px-6 py-8 sm:py-12 flex-1 flex flex-col items-center justify-center text-center z-10">
+      <main className="w-full max-w-5xl mx-auto px-6 sm:px-8 py-8 sm:py-14 flex-1 flex flex-col items-center justify-center text-center z-10">
         
-        {/* Eyebrow & Headline */}
+        {/* Headline & Body Typography (Standardized with Blueprint) */}
         <motion.div
           initial={{ opacity: 0, y: 16 }}
           animate={{ opacity: 1, y: 0 }}
           transition={{ duration: 0.8, ease: 'easeOut' }}
-          className="space-y-4 mb-6 sm:mb-10 max-w-3xl"
+          className="space-y-4 sm:space-y-5 mb-6 sm:mb-10 max-w-3xl"
         >
           <h1 className="text-4xl sm:text-6xl md:text-7xl font-bold tracking-tight text-[#1A1A1A] leading-[1.08]">
             Physical Meets Digital.
           </h1>
           
-          <p className="text-sm sm:text-base text-[#1A1A1A]/70 max-w-xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-xl text-[#1A1A1A]/70 max-w-2xl mx-auto leading-relaxed font-normal">
             The next-generation NFC wearable designed for instant contact exchange, profile sharing, and effortless physical interactions.
           </p>
         </motion.div>
 
         {/* Carousel Showcase Container */}
         <div 
-          className="relative w-full max-w-lg aspect-[4/3] sm:aspect-[16/11] my-4 flex items-center justify-center"
+          className="relative w-full max-w-sm sm:max-w-lg md:max-w-xl aspect-[4/3] sm:aspect-[16/11] my-4 sm:my-6 flex items-center justify-center"
           onMouseEnter={() => setIsPaused(true)}
           onMouseLeave={() => setIsPaused(false)}
         >
@@ -189,7 +189,7 @@ export default function NfcWristbandPage() {
                   src={currentSlide.image}
                   alt={currentSlide.alt}
                   fill
-                  sizes="(max-width: 640px) 90vw, 512px"
+                  sizes="(max-width: 640px) 90vw, (max-width: 1024px) 512px, 576px"
                   className="object-contain drop-shadow-[0_25px_40px_rgba(26,26,26,0.18)] pointer-events-none select-none transition-transform duration-700"
                   priority
                 />
@@ -201,7 +201,7 @@ export default function NfcWristbandPage() {
           <button
             onClick={prevSlide}
             aria-label="Previous view"
-            className="hidden sm:flex absolute -left-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white text-[#1A1A1A] border border-[#1A1A1A]/10 items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all z-20"
+            className="hidden sm:flex absolute -left-12 lg:-left-14 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-white/70 hover:bg-white text-[#1A1A1A] border border-[#1A1A1A]/10 items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all z-20"
           >
             <ChevronLeft className="w-5 h-5" />
           </button>
@@ -209,14 +209,14 @@ export default function NfcWristbandPage() {
           <button
             onClick={nextSlide}
             aria-label="Next view"
-            className="hidden sm:flex absolute -right-12 top-1/2 -translate-y-1/2 w-10 h-10 rounded-full bg-white/70 hover:bg-white text-[#1A1A1A] border border-[#1A1A1A]/10 items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all z-20"
+            className="hidden sm:flex absolute -right-12 lg:-right-14 top-1/2 -translate-y-1/2 w-10 h-10 lg:w-11 lg:h-11 rounded-full bg-white/70 hover:bg-white text-[#1A1A1A] border border-[#1A1A1A]/10 items-center justify-center shadow-sm hover:scale-105 active:scale-95 transition-all z-20"
           >
             <ChevronRight className="w-5 h-5" />
           </button>
         </div>
 
         {/* Dynamic Spec & Microcopy beneath Carousel */}
-        <div className="min-h-[50px] mt-4 flex flex-col items-center justify-center max-w-md">
+        <div className="min-h-[56px] mt-2 sm:mt-4 flex flex-col items-center justify-center max-w-md px-4">
           <AnimatePresence mode="wait">
             <motion.div
               key={currentIndex}
@@ -226,10 +226,10 @@ export default function NfcWristbandPage() {
               transition={{ duration: 0.4 }}
               className="space-y-1"
             >
-              <h2 className="text-sm font-semibold text-[#1A1A1A]">
+              <h2 className="text-base sm:text-lg font-bold text-[#1A1A1A] tracking-tight">
                 {currentSlide.title}
               </h2>
-              <p className="text-xs text-[#1A1A1A]/60 leading-relaxed max-w-sm">
+              <p className="text-xs sm:text-sm text-[#1A1A1A]/65 leading-relaxed max-w-sm sm:max-w-md mx-auto">
                 {currentSlide.description}
               </p>
             </motion.div>
@@ -255,12 +255,12 @@ export default function NfcWristbandPage() {
           ))}
         </div>
 
-        {/* Primary Call to Action */}
-        <div className="mt-2 flex flex-col sm:flex-row items-center gap-3">
+        {/* Primary Call to Action with Parallel Sizing */}
+        <div className="mt-2 flex flex-col sm:flex-row items-center justify-center gap-3 sm:gap-4 w-full sm:w-auto max-w-xs sm:max-w-none">
           <Link
             href="https://wa.me/6281234567890"
             target="_blank"
-            className="inline-flex items-center justify-center gap-2 px-10 py-4 bg-[#1A1A1A] text-[#EAE6CB] text-xs font-bold uppercase tracking-widest active:scale-95 transition-all duration-200 rounded-full shadow-[0_6px_25px_rgba(26,26,26,0.18)] hover:bg-[#2b2b2b]"
+            className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-8 sm:px-10 py-3.5 sm:py-4 bg-[#1A1A1A] text-[#EAE6CB] text-xs sm:text-sm font-semibold uppercase tracking-wider active:scale-95 transition-all duration-200 rounded-full shadow-[0_4px_20px_rgba(26,26,26,0.18)] hover:bg-[#2b2b2b]"
           >
             <span>Pre-Order Wristband</span>
             <ArrowRight className="w-4 h-4" />
@@ -268,7 +268,7 @@ export default function NfcWristbandPage() {
           
           <Link
             href="/"
-            className="inline-flex items-center justify-center px-6 py-4 text-xs font-semibold text-[#1A1A1A]/80 hover:text-[#1A1A1A] transition-colors"
+            className="w-full sm:w-auto inline-flex items-center justify-center px-8 sm:px-10 py-3.5 sm:py-4 text-xs sm:text-sm font-semibold uppercase tracking-wider text-[#1A1A1A] border border-[#1A1A1A]/20 hover:border-[#1A1A1A]/40 hover:bg-[#1A1A1A]/5 rounded-full active:scale-95 transition-all duration-200"
           >
             Explore Ecosystem
           </Link>
@@ -277,9 +277,9 @@ export default function NfcWristbandPage() {
       </main>
 
       {/* Minimal Footer */}
-      <footer className="w-full max-w-6xl mx-auto px-6 py-8 flex flex-col sm:flex-row items-center justify-between text-[11px] text-[#1A1A1A]/50 border-t border-[#1A1A1A]/5">
+      <footer className="w-full max-w-6xl mx-auto px-6 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-[#1A1A1A]/60 border-t border-[#1A1A1A]/10 gap-2 sm:gap-0 text-center sm:text-left">
         <p>&copy; {new Date().getFullYear()} Rifelo. All physical rights reserved.</p>
-        <p className="mt-2 sm:mt-0 font-medium">Physical Hardware Meets Digital Identity</p>
+        <p className="font-medium">Physical Hardware Meets Digital Identity</p>
       </footer>
 
     </div>
