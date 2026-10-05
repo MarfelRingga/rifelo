@@ -2,8 +2,13 @@ name: Supabase Backup
 
 on:
   schedule:
-    - cron: '0 0 * * *' # Every day at midnight
-  workflow_dispatch: # Allow manual trigger
+    - cron: '0 0 * * *' # Every day at midnight UTC (07:00 WIB)
+  workflow_dispatch: # Allow manual trigger from GitHub Actions or Telegram / Admin API
+    inputs:
+      destination:
+        description: 'Destination folder on remote (default: rifelo-backup)'
+        required: false
+        default: 'rifelo-backup'
 
 jobs:
   backup:
@@ -12,36 +17,42 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Install dependencies
+      - name: Install PostgreSQL Client and rclone
         run: |
           sudo apt-get update
-          sudo apt-get install -y curl ca-certificates gnupg
-          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor -o /usr/share/keyrings/postgresql-keyring.gpg
+          sudo apt-get install -y curl ca-certificates gnupg lsb-release
+          curl -fsSL https://www.postgresql.org/media/keys/ACCC4CF8.asc | sudo gpg --dearmor --yes -o /usr/share/keyrings/postgresql-keyring.gpg
           echo "deb [signed-by=/usr/share/keyrings/postgresql-keyring.gpg] http://apt.postgresql.org/pub/repos/apt/ $(lsb_release -cs)-pgdg main" | sudo tee /etc/apt/sources.list.d/postgresql.list
           sudo apt-get update
-          sudo apt-get install -y postgresql-client-17
-          sudo -v ; curl https://rclone.org/install.sh | sudo bash
+          sudo apt-get install -y postgresql-client-17 || sudo apt-get install -y postgresql-client-16
+          curl https://rclone.org/install.sh | sudo bash
 
       - name: Setup rclone with OAuth Config
         env:
           RCLONE_CONF: ${{ secrets.RCLONE_CONFIG_CONTENT }}
         run: |
+          if [ -z "$RCLONE_CONF" ]; then
+            echo "::error::RCLONE_CONFIG_CONTENT secret is not set!"
+            exit 1
+          fi
           mkdir -p ~/.config/rclone
           echo "$RCLONE_CONF" > ~/.config/rclone/rclone.conf
           chmod 600 ~/.config/rclone/rclone.conf
 
-      - name: Verify Setup
+      - name: Verify rclone Remotes
         run: |
-          echo "List Current Remotes:"
+          echo "Configured remotes:"
           rclone listremotes
-          rclone config show
-          
-      - name: Test Connection
-        run: |
-          echo "Testing access to remote..."
-          rclone about gdrive: || rclone lsd gdrive: -v
+          # Note: We intentionally avoid 'rclone config show' to prevent credential leakage in CI logs.
 
-      - name: Run backup script
+      - name: Test Remote Connection
+        run: |
+          echo "Checking connection to remote storage..."
+          rclone about gdrive: -v || true
+          echo "Current folders in gdrive root:"
+          rclone lsd gdrive: --max-depth 1 || true
+
+      - name: Run Backup Script
         env:
           DB_URL: ${{ secrets.DB_URL }}
           TELEGRAM_BOT_TOKEN: ${{ secrets.TELEGRAM_BOT_TOKEN }}
@@ -49,8 +60,8 @@ jobs:
           NEXT_PUBLIC_SUPABASE_URL: ${{ secrets.NEXT_PUBLIC_SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
           BACKUP_LOCAL_PATH: "./backups"
-          RCLONE_REMOTE_NAME: "gdrive"
-          RCLONE_DEST_PATH: ""
+          RCLONE_REMOTE_NAME: ${{ secrets.RCLONE_REMOTE_NAME || 'gdrive' }}
+          RCLONE_DEST_PATH: ${{ github.event.inputs.destination || secrets.RCLONE_DEST_PATH || 'rifelo-backup' }}
         run: |
           chmod +x ./scripts/supabase_backup.sh
           ./scripts/supabase_backup.sh
