@@ -214,15 +214,18 @@ if ! command -v rclone &> /dev/null; then
 fi
 
 # 6. Upload to Cloud Storage via rclone
-TARGET_DEST="$RCLONE_REMOTE_NAME"
-if [ -n "$RCLONE_DEST_PATH" ]; then
-    TARGET_DEST="$RCLONE_REMOTE_NAME:$RCLONE_DEST_PATH"
-else
-    TARGET_DEST="$RCLONE_REMOTE_NAME:"
+# Normalize folder path: trim whitespace, remove leading/trailing slashes
+RCLONE_DEST_PATH=$(echo "${RCLONE_DEST_PATH:-rifelo-backup}" | sed 's/^[ \t\/]*//;s/[ \t\/]*$//')
+
+# If empty after trimming, enforce default folder "rifelo-backup"
+if [ -z "$RCLONE_DEST_PATH" ]; then
+    RCLONE_DEST_PATH="rifelo-backup"
 fi
 
-echo "Uploading $LOCAL_FILE to $TARGET_DEST via rclone..."
-RCLONE_OUTPUT=$(rclone copy -v "$LOCAL_FILE" "$TARGET_DEST" 2>&1)
+TARGET_DEST="$RCLONE_REMOTE_NAME:$RCLONE_DEST_PATH"
+
+echo "Uploading $LOCAL_FILE into folder '$RCLONE_DEST_PATH' on remote '$RCLONE_REMOTE_NAME' via rclone copyto..."
+RCLONE_OUTPUT=$(rclone copyto -v "$LOCAL_FILE" "$TARGET_DEST/$BACKUP_NAME" 2>&1)
 RCLONE_EXIT=$?
 
 if [ $RCLONE_EXIT -ne 0 ]; then
@@ -241,8 +244,8 @@ fi
 echo "rclone upload output:"
 echo "$RCLONE_OUTPUT"
 
-# Verify file existence on Google Drive
-echo "Verifying file on remote storage ($TARGET_DEST)..."
+# Verify file existence inside the folder on Google Drive
+echo "Verifying file inside folder ($TARGET_DEST)..."
 rclone lsl "$TARGET_DEST/$BACKUP_NAME" 2>&1 || rclone lsf "$TARGET_DEST" 2>&1
 
 # 7. Success
