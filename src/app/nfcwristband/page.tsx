@@ -14,7 +14,7 @@ const SLIDES = [
     alt: 'Rifelo NFC Wristband - Full Body Matte Finish Hardware',
     label: '01 / Full Silhouette',
     title: 'Engineered Precision',
-    description: 'Minimal matte hardware crafted for seamless daily wear and instant identity sharing.',
+    description: 'Minimal matte hardware crafted for seamless daily wear and instant dynamic profile sharing.',
     highlight: 'Universal Hardware'
   },
   {
@@ -150,7 +150,7 @@ export default function NfcWristbandPage() {
           </h1>
           
           <p className="text-base sm:text-lg md:text-xl text-[#1A1A1A]/70 max-w-2xl mx-auto leading-relaxed font-normal">
-            The next-generation NFC wearable designed for instant contact exchange, profile sharing, and effortless physical interactions.
+            The next-generation NFC wearable designed for instant contact exchange, dynamic profile sharing, and effortless physical interactions.
           </p>
         </motion.div>
 
@@ -279,7 +279,7 @@ export default function NfcWristbandPage() {
       {/* Minimal Footer */}
       <footer className="w-full max-w-6xl mx-auto px-6 sm:px-8 py-8 flex flex-col sm:flex-row items-center justify-between text-xs sm:text-sm text-[#1A1A1A]/60 border-t border-[#1A1A1A]/10 gap-2 sm:gap-0 text-center sm:text-left">
         <p>&copy; {new Date().getFullYear()} Rifelo. All physical rights reserved.</p>
-        <p className="font-medium">Physical Hardware Meets Digital Identity</p>
+        <p className="font-medium">Physical Hardware Meets Dynamic Profile</p>
       </footer>
 
     </div>
