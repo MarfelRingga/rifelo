@@ -31,7 +31,7 @@ The system utilizes a secure ownership model that links physical items to digita
 
 Because interaction behavior is dynamically configurable, a single NFC tag can assume multiple conceptual modes depending on server-side configuration:
 
-*   **Profile:** Resolves to a specific user's public identity or digital business card.
+*   **Profile:** Resolves to a specific user's dynamic profile.
 *   **Redirect:** Acts as a shortened smart link to explicit external URLs.
 *   **Photobooth / Event Queue:** Serves as a dynamic pass to instantly join a physical event queue.
 *   **Circle:** Grants immediate access or an invitation to a specific community space.
