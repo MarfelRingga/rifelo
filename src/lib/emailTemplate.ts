@@ -86,7 +86,7 @@ export const getBaseEmailHtml = (title: string, bodyHtml: string, ctaText?: stri
 };
 
 export const getWelcomeEmailTemplate = (name: string, customBody?: string) => {
-  const defaultBody = `Hi {name},\n\nYou can now set up your profile and start sharing your identity instantly. It only takes a minute.`;
+  const defaultBody = `Hi {name},\n\nYou can now set up your dynamic profile and start sharing instantly. It only takes a minute.`;
   const body = customBody || defaultBody;
   const formattedBody = body
     .replace(/{name}/g, name)
