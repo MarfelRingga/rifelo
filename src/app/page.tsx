@@ -1,7 +1,7 @@
 'use client';
 
-import { useState, useEffect, useRef } from 'react';
-import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue, useAnimation, animate } from 'motion/react';
+import { useState, useEffect, useRef, useMemo } from 'react';
+import { motion, AnimatePresence, useScroll, useTransform, useMotionValueEvent, useMotionValue, useAnimation, animate, useAnimationFrame } from 'motion/react';
 import Link from 'next/link';
 import Image from 'next/image';
 import { supabase } from '@/lib/supabase';
@@ -18,19 +18,26 @@ import {
   EyeOff,
   Briefcase,
   Mail,
+  Send,
+  Clock,
+  CheckCheck,
+  ExternalLink,
+  ChevronDown,
+  Trash2,
+  Phone,
   Globe,
   MessageCircle,
   Twitter,
   ListOrdered,
   BarChart3,
   Users,
+  User,
   Instagram,
   Linkedin,
   Github,
   AtSign,
   Music,
   Link as LinkIcon,
-  Zap,
   Smartphone,
   RefreshCw,
   Activity,
@@ -40,45 +47,430 @@ import {
 
 import { decodeMessageSettings } from '@/lib/messageSettings';
 import { getPlatformInfo } from '@/lib/platforms';
+import PublicProfileView from '@/components/profile/PublicProfileView';
+
+const DEFAULT_MARFEL_PROFILE = {
+  id: "0b6ff8f5-f571-4e32-9119-89b9e81cbdde",
+  username: "marfel",
+  fullName: "Marfel RP",
+  bio: "Trust yourself",
+  company: "Rifelo",
+  email: "marfelringga@gmail.com",
+  phone: "628159999410",
+  website: "",
+  jobTitle: "Founder",
+  links: [
+    {
+      id: "4021c1bc-262c-444d-9a71-8cbf8726adba",
+      url: "rifelo.id",
+      title: "Instagram",
+      is_visible: true,
+      sort_order: 1
+    },
+    {
+      id: "8f314800-d9f0-41c3-ad4a-00465a756cc6",
+      url: "https://rifelo.id",
+      title: "Website",
+      is_visible: true,
+      sort_order: 3
+    }
+  ],
+  isPublic: true,
+  allowMessages: true,
+  messagePlaceholderName: "Name / Company",
+  messagePlaceholderContent: "Tell me about your project or idea...",
+  profileMode: "professional",
+  themePreset: "glassmorphism",
+  customTheme: {
+    accent: {
+      name: "Emerald Forest",
+      value: "#059669"
+    },
+    fontFamily: "var(--font-heading), system-ui, serif",
+    borderRadius: "rounded"
+  },
+  isEmbeddedPreview: true
+};
+
+const CircleNameDisplay = ({ name, isVisible }: { name: string; isVisible: boolean }) => {
+  const lines = (name || 'Untitled').split('\n').slice(0, 3);
+  const maxLineLength = Math.max(...lines.map(l => l.length));
+  let textSizeClass = 'text-lg';
+  if (maxLineLength > 8 || lines.length > 1) textSizeClass = 'text-base';
+  if (maxLineLength > 12 || lines.length === 3) textSizeClass = 'text-sm';
+  if (maxLineLength > 18) textSizeClass = 'text-xs';
+
+  return (
+    <div className={`font-black ${textSizeClass} tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] relative z-20 transition-opacity duration-[2000ms] px-2 text-center flex flex-col items-center justify-center leading-tight w-full h-full ${isVisible ? 'opacity-100' : 'opacity-0'}`}>
+      {lines.map((line, idx) => (
+        <span key={idx} className="block w-full break-words">
+          {line}
+        </span>
+      ))}
+    </div>
+  );
+};
+
+function PrivacyControlMockup() {
+  const [isInstagramHidden, setIsInstagramHidden] = useState(false);
+  const [isToggling, setIsToggling] = useState(false);
+
+  useEffect(() => {
+    let t1: NodeJS.Timeout;
+    let t2: NodeJS.Timeout;
+
+    const cycle = () => {
+      t1 = setTimeout(() => {
+        setIsToggling(true);
+        t2 = setTimeout(() => {
+          setIsInstagramHidden(prev => !prev);
+          setIsToggling(false);
+        }, 250);
+      }, 2400);
+    };
+
+    cycle();
+    const interval = setInterval(cycle, 3600);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div className="w-full max-w-[230px] mx-auto flex flex-col gap-2.5 select-none text-left">
+      {/* 1. Instagram Link Item (from /profile) */}
+      <motion.div
+        animate={{
+          opacity: isInstagramHidden ? 0.6 : 1,
+        }}
+        transition={{ duration: 0.3 }}
+        className={`flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-2xl border transition-all ${
+          isInstagramHidden
+            ? 'bg-slate-50/70 border-slate-200/60'
+            : 'bg-white border-slate-200/90 shadow-2xs'
+        }`}
+      >
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs">
+            <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-600" />
+          </div>
+          <div className="flex-1 truncate">
+            <p className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate leading-tight">
+              Instagram
+            </p>
+            <p className="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight mt-0.5">
+              rifelo.id
+            </p>
+          </div>
+        </div>
+
+        {/* Action controls directly matching /profile */}
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+          <motion.div
+            animate={isToggling ? { scale: 0.8 } : { scale: 1 }}
+            transition={{ duration: 0.15 }}
+            className={`p-1.5 rounded-md transition-colors ${
+              isInstagramHidden
+                ? 'text-slate-400 bg-slate-100'
+                : 'text-emerald-500 bg-emerald-50/80'
+            }`}
+          >
+            {isInstagramHidden ? (
+              <EyeOff className="w-3.5 h-3.5" />
+            ) : (
+              <Eye className="w-3.5 h-3.5" />
+            )}
+          </motion.div>
+          <div className="p-1.5 text-slate-400 rounded-md">
+            <Trash2 className="w-3.5 h-3.5" />
+          </div>
+          <div className="p-1.5 text-slate-400 rounded-md">
+            <ChevronDown className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </motion.div>
+
+      {/* 2. Whatsapp Link Item (from /profile with 62xxxxxxxxxx) */}
+      <div className="flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-2xl border border-slate-200/90 bg-white shadow-2xs transition-all">
+        <div className="flex items-center gap-2.5 flex-1 min-w-0">
+          <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs">
+            <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+          </div>
+          <div className="flex-1 truncate">
+            <p className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate leading-tight">
+              Whatsapp
+            </p>
+            <p className="text-[9.5px] sm:text-[10px] text-slate-400 truncate leading-tight mt-0.5 font-mono">
+              62xxxxxxxxxx
+            </p>
+          </div>
+        </div>
+
+        {/* Action controls directly matching /profile */}
+        <div className="flex items-center gap-1 shrink-0 ml-2">
+          <div className="p-1.5 text-emerald-500 bg-emerald-50/80 rounded-md">
+            <Eye className="w-3.5 h-3.5" />
+          </div>
+          <div className="p-1.5 text-slate-400 rounded-md">
+            <Trash2 className="w-3.5 h-3.5" />
+          </div>
+          <div className="p-1.5 text-slate-400 rounded-md">
+            <ChevronDown className="w-3.5 h-3.5" />
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function DirectInboxMockup() {
+  const [viewState, setViewState] = useState<'send' | 'received'>('send');
+  const [isSending, setIsSending] = useState(false);
+
+  useEffect(() => {
+    let t1: NodeJS.Timeout;
+    let t2: NodeJS.Timeout;
+
+    const run = () => {
+      setViewState('send');
+      setIsSending(false);
+
+      // Trigger button press at 2.6s
+      t1 = setTimeout(() => {
+        setIsSending(true);
+
+        // Switch to received view at 3.2s
+        t2 = setTimeout(() => {
+          setViewState('received');
+          setIsSending(false);
+        }, 600);
+      }, 2600);
+    };
+
+    run();
+    const interval = setInterval(run, 7200);
+
+    return () => {
+      clearTimeout(t1);
+      clearTimeout(t2);
+      clearInterval(interval);
+    };
+  }, []);
+
+  return (
+    <div className="relative w-full h-full flex items-center justify-center select-none p-1 sm:p-2">
+      <AnimatePresence mode="wait">
+        {viewState === 'send' ? (
+          <motion.div
+            key="send"
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="w-full max-w-[220px] bg-white rounded-2xl p-3 sm:p-3.5 shadow-sm border border-slate-100 flex flex-col gap-1.5 text-left"
+          >
+            {/* Header directly from /u/username MessageForm */}
+            <div className="mb-0.5">
+              <h4 className="text-[11.5px] sm:text-xs font-bold tracking-tight text-slate-900 leading-none">
+                Leave a Message
+              </h4>
+              <p className="text-[8px] sm:text-[8.5px] text-slate-500 font-medium mt-1 leading-tight">
+                Send a secret message or say hello.
+              </p>
+            </div>
+
+            {/* Name Input directly from /u/username */}
+            <div className="w-full px-2.5 py-1.5 border border-slate-200/90 rounded-xl bg-white text-[8px] sm:text-[8.5px] text-slate-400 font-medium">
+              Your Name (Optional)
+            </div>
+
+            {/* Message Textarea directly from /u/username with exact requested input text */}
+            <div className="w-full px-2.5 py-1.5 border border-slate-200/90 rounded-xl bg-white text-[8px] sm:text-[8.5px] text-slate-800 font-medium leading-relaxed min-h-[46px]">
+              Hi, I'm the one who just talked to you on the bus, nice portfolio btw!
+            </div>
+
+            {/* Send Button directly styled with warm gold from screenshot */}
+            <motion.div
+              animate={isSending ? { scale: 0.95, opacity: 0.9 } : { scale: 1, opacity: 1 }}
+              transition={{ duration: 0.2 }}
+              className="w-full flex items-center justify-center px-3 py-1.5 sm:py-2 text-[9px] sm:text-[9.5px] font-bold rounded-xl shadow-2xs cursor-pointer select-none"
+              style={{
+                backgroundColor: '#dfc681',
+                color: '#524116',
+              }}
+            >
+              <Send className="w-3 h-3 mr-1.5 text-[#524116]" />
+              {isSending ? 'Sending...' : 'Send Message'}
+            </motion.div>
+          </motion.div>
+        ) : (
+          <motion.div
+            key="received"
+            initial={{ opacity: 0, y: 6, scale: 0.97 }}
+            animate={{ opacity: 1, y: 0, scale: 1 }}
+            exit={{ opacity: 0, y: -6, scale: 0.97 }}
+            transition={{ duration: 0.35, ease: "easeOut" }}
+            className="w-full max-w-[220px] bg-white rounded-2xl border border-slate-200/80 shadow-xs p-3 sm:p-3.5 flex flex-col justify-between text-left"
+          >
+            {/* Top row directly from /inbox: Avatar A + Name A + Timestamp */}
+            <div className="flex items-center gap-2 mb-2">
+              <div className="w-7 h-7 rounded-full bg-slate-100 border border-slate-200/70 flex items-center justify-center font-bold text-xs text-slate-700 shrink-0 select-none">
+                A
+              </div>
+              <div className="min-w-0 flex-1">
+                <div className="font-semibold text-slate-900 text-xs leading-none">
+                  A
+                </div>
+                <div className="flex items-center text-[8.5px] font-medium text-slate-400 mt-0.5">
+                  <Clock className="w-2.5 h-2.5 mr-1 shrink-0 opacity-70 text-slate-400" />
+                  <span className="tabular-nums">28/09/26 • 15:39</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Message Body Box directly from /inbox with exact requested text */}
+            <div className="p-2 sm:p-2.5 rounded-xl bg-slate-50/70 border border-slate-200/70 text-slate-800 text-[8.5px] sm:text-[9px] leading-relaxed break-words">
+              Hi, I'm the one who just talked to you on the bus, nice portfolio btw!
+            </div>
+
+            {/* Card Bottom: Read status directly from /inbox */}
+            <div className="mt-2 pt-1 border-t border-slate-100 flex items-center justify-end text-[8.5px] text-slate-400 font-medium">
+              <span className="flex items-center gap-1">
+                <CheckCheck className="w-3.5 h-3.5 text-slate-400" />
+                <span>Read</span>
+              </span>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+    </div>
+  );
+}
+
+function CircleResonanceMockup() {
+  return (
+    <div className="relative w-full h-full min-h-[220px] flex items-center justify-center select-none overflow-hidden p-6">
+      {/* Deep Ambient Radial Glow behind the central circle (exact teal/emerald aura from image) */}
+      <div 
+        className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full pointer-events-none transition-transform duration-1000"
+        style={{
+          background: 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(13, 148, 136, 0.25) 40%, rgba(5, 150, 105, 0.08) 65%, transparent 80%)',
+          filter: 'blur(22px)',
+        }}
+      />
+      
+      {/* Pulsing Aura Wave */}
+      <motion.div 
+        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 0.85, 0.6] }}
+        transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
+        className="absolute w-36 h-36 sm:w-42 sm:h-42 rounded-full pointer-events-none"
+        style={{
+          background: 'radial-gradient(circle, rgba(45, 212, 191, 0.45) 0%, rgba(20, 184, 166, 0.18) 45%, transparent 70%)',
+          filter: 'blur(14px)',
+        }}
+      />
+
+      {/* Orbit Stage - properly scaled with breathing room to prevent clipping */}
+      <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
+        {/* 4 Auras without names revolving smoothly around the circle (NO dashed line) */}
+        <div className="absolute inset-0 animate-[spin_24s_linear_infinite]">
+          {/* Aura 1: Top (0°) */}
+          <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
+              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+            </div>
+          </div>
+
+          {/* Aura 2: Right (90°) */}
+          <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
+              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+            </div>
+          </div>
+
+          {/* Aura 3: Bottom (180°) */}
+          <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
+              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+            </div>
+          </div>
+
+          {/* Aura 4: Left (270°) */}
+          <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2">
+            <div className="relative flex items-center justify-center">
+              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
+              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+            </div>
+          </div>
+        </div>
+
+        {/* Large Central Circle with 'Rifelo' (exact match with image.png) */}
+        <div 
+          className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full flex items-center justify-center z-10 shadow-[0_0_30px_rgba(13,148,136,0.4),inset_0_0_20px_rgba(0,0,0,0.7)] border border-teal-500/30 transition-transform duration-500 group-hover:scale-105"
+          style={{
+            background: 'radial-gradient(circle at 45% 45%, #0d2822 0%, #061713 70%, #030d0a 100%)',
+          }}
+        >
+          {/* Subtle inner emerald rim glow */}
+          <div className="absolute inset-0 rounded-full border border-teal-300/10 pointer-events-none" />
+          
+          {/* Text 'Rifelo' */}
+          <span className="text-white font-bold text-base sm:text-lg tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
+            Rifelo
+          </span>
+        </div>
+      </div>
+    </div>
+  );
+}
 
 function SpecialCustomDirectMockup() {
-  const [urlText, setUrlText] = useState('');
+  const [urlText, setUrlText] = useState('https://rifelo.id');
   const [isSaved, setIsSaved] = useState(false);
 
   useEffect(() => {
-    const fullText = 'rifelo.id/nfcwristband';
+    const fullText = 'https://rifelo.id';
     let isMounted = true;
     
     const runCycle = async () => {
       while (isMounted) {
-        // Typing
-        for (let i = 0; i <= fullText.length; i++) {
-          if (!isMounted) return;
-          setUrlText(fullText.substring(0, i));
-          await new Promise((resolve) => setTimeout(resolve, 80));
-        }
-        
-        // Hold
-        await new Promise((resolve) => setTimeout(resolve, 1500));
-        
-        if (!isMounted) return;
-        setIsSaved(true);
-        
-        // Hold saved state
-        await new Promise((resolve) => setTimeout(resolve, 2000));
-        
-        if (!isMounted) return;
+        // 1. Initial pause with full text
+        setUrlText(fullText);
         setIsSaved(false);
-        
-        // Backspacing
-        for (let i = fullText.length; i >= 0; i--) {
+        await new Promise((resolve) => setTimeout(resolve, 1800));
+        if (!isMounted) return;
+
+        // 2. Trigger Save Changes
+        setIsSaved(true);
+        await new Promise((resolve) => setTimeout(resolve, 2500));
+        if (!isMounted) return;
+
+        setIsSaved(false);
+
+        // 3. Backspace
+        for (let i = fullText.length; i >= 'https://'.length; i--) {
           if (!isMounted) return;
           setUrlText(fullText.substring(0, i));
-          await new Promise((resolve) => setTimeout(resolve, 40));
+          await new Promise((resolve) => setTimeout(resolve, 50));
         }
-        
-        // Hold empty
-        await new Promise((resolve) => setTimeout(resolve, 800));
+
+        await new Promise((resolve) => setTimeout(resolve, 400));
+        if (!isMounted) return;
+
+        // 4. Re-type
+        for (let i = 'https://'.length; i <= fullText.length; i++) {
+          if (!isMounted) return;
+          setUrlText(fullText.substring(0, i));
+          await new Promise((resolve) => setTimeout(resolve, 70));
+        }
+
+        await new Promise((resolve) => setTimeout(resolve, 1000));
       }
     };
 
@@ -89,50 +481,69 @@ function SpecialCustomDirectMockup() {
   }, []);
 
   return (
-    <div className="w-[85%] max-w-[190px] mx-auto bg-white rounded-lg shadow-md border border-slate-100 p-2.5 relative z-10 select-none text-left">
-      <div className="flex justify-between items-center mb-1.5 animate-fade-in">
-         <div className="text-[9px] font-bold text-slate-800">Edit Tag</div>
-         <div className="w-3.5 h-3.5 rounded-full bg-slate-50 flex items-center justify-center">
-            <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-         </div>
-      </div>
-
-      <div className="mb-1.5">
-         <div className="text-[6.5px] font-medium text-slate-400 mb-0.5">Interaction Mode</div>
-         <div className="flex items-center justify-between w-full px-1.5 py-1 rounded-md border border-slate-200 bg-white">
-            <span className="text-[7.5px] font-medium text-slate-800 truncate">Custom URL Redirect</span>
-            <svg width="6" height="6" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" className="text-slate-400"><polyline points="6 9 12 15 18 9"></polyline></svg>
-         </div>
-      </div>
-
-      <div className="space-y-1">
-         <div>
-            <div className="text-[6.5px] font-medium text-slate-400 mb-0.5">Custom URL</div>
-            <div className={`w-full px-1.5 py-1 rounded-md border transition-all duration-300 ${isSaved ? 'border-emerald-500/50 bg-emerald-50/40 shadow-[0_0_0_1px_rgba(16,185,129,0.1)]' : 'border-purple-500/50 bg-purple-50/30 shadow-[0_0_0_1px_rgba(168,85,247,0.1)]'} flex items-center overflow-hidden`}>
-               <div className="flex items-center min-w-max">
-                  <span className={`text-[7.5px] font-medium font-mono transition-colors duration-300 ${isSaved ? 'text-emerald-700' : 'text-slate-800'}`}>
-                    {urlText}
-                  </span>
-                  <motion.div 
-                     animate={{ opacity: [1, 0] }}
-                     transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                     className={`w-px h-2.5 ml-0.5 ${isSaved ? 'bg-emerald-600' : 'bg-slate-800'}`}
-                  />
-               </div>
+    <div className="relative w-full h-full flex items-center justify-center select-none p-1 sm:p-2">
+      <div className="w-full max-w-[210px] sm:max-w-[215px] bg-white rounded-2xl p-2.5 sm:p-3 shadow-sm border border-slate-100 flex flex-col gap-1.5 text-left select-none">
+        {/* Field: Interaction Mode & Destination (from /tags) */}
+        <div>
+          <label className="block text-[8px] sm:text-[8.5px] font-semibold uppercase tracking-wider text-slate-500 mb-1">
+            Interaction Mode & Destination
+          </label>
+          
+          {/* Trigger button directly from /tags */}
+          <div className="flex items-center justify-between w-full p-1.5 px-2 rounded-xl border border-slate-200/80 bg-white shadow-2xs">
+            <div className="flex items-center gap-2 min-w-0">
+              <div className="w-6 h-6 rounded-lg bg-slate-100 border border-slate-200/60 flex items-center justify-center shrink-0">
+                <ExternalLink className="w-3 h-3 text-slate-700" />
+              </div>
+              <div className="text-left min-w-0">
+                <div className="text-[11px] font-semibold text-slate-900 truncate leading-none">
+                  Custom URL
+                </div>
+                <div className="text-[7.5px] sm:text-[8px] text-slate-400 truncate leading-none mt-0.5">
+                  https://rifelo.id
+                </div>
+              </div>
             </div>
-         </div>
-      </div>
-      
-      <div className="mt-2.5">
-         <motion.div 
-            animate={isSaved ? { scale: [1, 0.95, 1] } : {}}
-            transition={{ duration: 0.3 }}
-            className={`w-full text-white rounded-md py-1 flex items-center justify-center gap-1 shadow-sm transition-all duration-300 ${isSaved ? 'bg-emerald-600' : 'bg-slate-900 hover:bg-slate-800'}`}
-         >
-            <span className="text-[7.5px] font-bold pb-px">
-              {isSaved ? 'Changes Saved' : 'Save Changes'}
-            </span>
-         </motion.div>
+            <ChevronDown className="w-3 h-3 text-slate-400 shrink-0 ml-1" />
+          </div>
+        </div>
+
+        {/* Destination URL Field (from /tags) */}
+        <div>
+          <label className="block text-[8px] sm:text-[8.5px] font-semibold uppercase tracking-wider text-slate-500 mb-0.5">
+            Destination URL
+          </label>
+          <div className="w-full px-2 py-1 sm:py-1.5 rounded-lg border border-slate-200/80 bg-white text-[8.5px] sm:text-[9px] font-normal text-slate-900 flex items-center shadow-2xs overflow-hidden">
+            <span className="truncate">{urlText}</span>
+            <motion.span
+              animate={{ opacity: [1, 0] }}
+              transition={{ repeat: Infinity, duration: 0.8 }}
+              className="w-px h-3 bg-slate-900 ml-0.5"
+            />
+          </div>
+        </div>
+
+        {/* Bottom Actions: Save Changes (from /tags) */}
+        <div className="pt-1 border-t border-slate-100 mt-0.5">
+          <motion.div
+            animate={isSaved ? { scale: [1, 0.96, 1] } : {}}
+            transition={{ duration: 0.25 }}
+            className={`w-full py-1.5 rounded-lg font-semibold text-[8.5px] sm:text-[9px] transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer ${
+              isSaved 
+                ? 'bg-emerald-600 text-white' 
+                : 'bg-slate-900 text-white hover:bg-slate-800'
+            }`}
+          >
+            {isSaved ? (
+              <>
+                <CheckCircle2 className="w-3 h-3 text-white" />
+                <span>Saved</span>
+              </>
+            ) : (
+              <span>Save Changes</span>
+            )}
+          </motion.div>
+        </div>
       </div>
     </div>
   );
@@ -227,7 +638,7 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
       
       <div className="text-left w-full px-3 pb-1 flex-grow flex flex-col justify-between select-none pointer-events-none">
         <div>
-          <span className="text-[10px] uppercase tracking-widest font-bold text-[#a299af]/90 mb-2 block">{item.badge}</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-[#d4af37] mb-2 block">{item.badge}</span>
           <h3 className="text-lg font-bold tracking-tight text-[#0c0e0b] mb-2">{item.title}</h3>
           <p className="text-xs sm:text-sm text-[#0c0e0b]/70 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
         </div>
@@ -266,14 +677,46 @@ export default function LandingPage() {
   const [isMobile, setIsMobile] = useState(false);
   const [circleView, setCircleView] = useState<'public' | 'member'>('public');
   const [isProfilePublic, setIsProfilePublic] = useState(true);
-  const [resonanceStatus, setResonanceStatus] = useState<'idle' | 'activating' | 'merged'>('idle');
+  
+  // Resonance animation states identical 100% to /c/circle (UnifiedCirclePage)
+  const [phase, setPhase] = useState<'pulsing' | 'rotating' | 'accelerating' | 'merged'>('rotating');
+  const rotation = useMotionValue(0);
+  const speed = useMotionValue(36);
+
+  useEffect(() => {
+    let timeout: NodeJS.Timeout;
+    if (phase === 'accelerating') {
+      timeout = setTimeout(() => {
+        setPhase('merged');
+      }, 3000); // 3.0 seconds to allow multiple fast orbits first as in /c/circle
+    }
+    return () => clearTimeout(timeout);
+  }, [phase]);
+
+  useEffect(() => {
+    if (phase === 'rotating' || phase === 'pulsing') {
+      animate(speed, 36, { duration: 1, ease: "easeOut" });
+    } else if (phase === 'accelerating') {
+      animate(speed, 1080, { duration: 3.0, ease: "easeIn" });
+    } else if (phase === 'merged') {
+      animate(speed, 18, { duration: 3.0, ease: "easeOut" });
+    }
+  }, [phase, speed]);
+
+  useAnimationFrame((t, delta) => {
+    rotation.set(rotation.get() + (speed.get() * (delta / 1000)));
+  });
+
   const [activeIndexes, setActiveIndexes] = useState<number[]>([0, 1]); // initial 2 members active state
   const [mounted, setMounted] = useState(false);
-  const [demoProfile, setDemoProfile] = useState<any>(null);
+  const [demoProfile, setDemoProfile] = useState<any>(DEFAULT_MARFEL_PROFILE);
   const [showDemoMessage, setShowDemoMessage] = useState(true);
   const [demoCircleMembers, setDemoCircleMembers] = useState<any[]>([]);
+  const [demoCircle, setDemoCircle] = useState<any>({ name: 'Rifelo', resonanceColor: '#D4AF37' });
   
   const [activeCarouselSlide, setActiveCarouselSlide] = useState(0);
+  const [bentoActiveIndex, setBentoActiveIndex] = useState(0);
+  const bentoContainerRef = useRef<HTMLDivElement>(null);
 
   const [subscribeEmail, setSubscribeEmail] = useState('');
   const [subscribeStatus, setSubscribeStatus] = useState<'idle' | 'success'>('idle');
@@ -294,13 +737,23 @@ export default function LandingPage() {
   };
 
   const getDemoMemberName = (index: number) => {
-    const defaultNames = ['You', 'Marfel Ringga', 'Sarah Jin', 'Mike Ross', 'Emma DW', 'David Kim'];
+    const defaultList = [
+      { name: 'Marfel RP (Admin)', color: '#059669' },
+      { name: 'Marfel (Member)', color: '#2563EB' },
+      { name: 'Sarah K.', color: '#FF9500' },
+      { name: 'Alex T.', color: '#FF2D55' },
+      { name: 'Elena R.', color: '#AF52DE' },
+      { name: 'David M.', color: '#00C7BE' }
+    ];
     if (demoCircleMembers && demoCircleMembers[index] && demoCircleMembers[index].profiles) {
-      if (index === 0) return 'You'; // Always show 'You' for the first dot on demo
-      const profile = demoCircleMembers[index].profiles;
-      return profile.full_name || profile.username || defaultNames[index];
+      const p = demoCircleMembers[index].profiles;
+      const roleStr = demoCircleMembers[index].role ? ` (${demoCircleMembers[index].role.trim()})` : '';
+      return {
+        name: (p.full_name || p.username || defaultList[index].name) + (index < 2 ? roleStr : ''),
+        color: demoCircleMembers[index].color || defaultList[index].color
+      };
     }
-    return defaultNames[index];
+    return defaultList[index] || { name: `Member ${index + 1}`, color: '#d4af37' };
   };
 
   const structuredData = {
@@ -314,31 +767,13 @@ export default function LandingPage() {
     "description": "Rifelo is a dynamic profile platform that lets you share your profile with a single tap using NFC."
   };
 
-  const handleResonanceDemo = async () => {
-    if (resonanceStatus !== 'idle') {
-      setResonanceStatus('idle');
-      setActiveIndexes([0, 1]);
+  const handleResonanceDemo = () => {
+    if (phase === 'accelerating') return;
+    if (phase === 'merged') {
+      setPhase('rotating');
       return;
     }
-    
-    setResonanceStatus('activating');
-    
-    // Animate inactive dots becoming active 1 by 1
-    const totalDots = 6;
-    for (let i = 2; i < totalDots; i++) {
-        await new Promise(r => setTimeout(r, 400));
-        setActiveIndexes(prev => [...prev, i]);
-    }
-    
-    // Quick delay after all are active then merge
-    await new Promise(r => setTimeout(r, 600));
-    setResonanceStatus('merged');
-
-    // Reset back to idle after 5 seconds
-    setTimeout(() => {
-      setResonanceStatus('idle');
-      setActiveIndexes([0, 1]);
-    }, 5000);
+    setPhase('accelerating');
   };
 
   useEffect(() => {
@@ -384,14 +819,31 @@ export default function LandingPage() {
           .maybeSingle();
 
         if (data) {
-          const links = data.profile_links || [];
+          const links = (data.profile_links || []).filter((l: any) => l.is_visible !== false);
           links.sort((a: any, b: any) => (a.sort_order || 0) - (b.sort_order || 0));
-          data.profile_links = links.filter((l: any) => l.is_visible !== false);
-          
           const decodedSettings = decodeMessageSettings(data.message_placeholder_name || '');
           setShowDemoMessage(decodedSettings.isEnabled);
           
-          setDemoProfile(data);
+          setDemoProfile({
+            id: data.id,
+            username: data.username,
+            fullName: data.full_name || 'Marfel RP',
+            bio: data.bio || 'Trust yourself',
+            company: data.company || 'Rifelo',
+            email: data.email || 'marfelringga@gmail.com',
+            phone: data.phone || '628159999410',
+            website: data.website || '',
+            jobTitle: data.job_title || 'Founder',
+            links: links.length > 0 ? links : DEFAULT_MARFEL_PROFILE.links,
+            isPublic: data.is_public !== false,
+            allowMessages: decodedSettings.isEnabled,
+            messagePlaceholderName: decodedSettings.cleanName || 'Name / Company',
+            messagePlaceholderContent: data.message_placeholder_content || 'Tell me about your project or idea...',
+            profileMode: data.profile_mode || 'professional',
+            themePreset: data.theme_preset || 'glassmorphism',
+            customTheme: data.custom_theme || DEFAULT_MARFEL_PROFILE.customTheme,
+            isEmbeddedPreview: true
+          });
         }
       } catch (err) {}
     };
@@ -400,15 +852,21 @@ export default function LandingPage() {
       try {
         const { data: circle } = await supabase
           .from('circles')
-          .select('id')
-          .eq('slug', 'rifelo')
+          .select('id, name, slug, description')
+          .eq('slug', 'circle')
           .maybeSingle();
         if (circle?.id) {
+          let resColor = '#D4AF37';
+          try {
+            const parsed = JSON.parse(circle.description);
+            if (parsed.resonanceColor) resColor = parsed.resonanceColor;
+          } catch (e) {}
+          setDemoCircle({ ...circle, resonanceColor: resColor });
+
           const { data: members } = await supabase
             .from('circle_members')
-            .select('profile_id, profiles(full_name, username)')
-            .eq('circle_id', circle.id)
-            .limit(6);
+            .select('id, role, color, profile_id, profiles(id, full_name, username, avatar_url)')
+            .eq('circle_id', circle.id);
           if (members && members.length > 0) {
             setDemoCircleMembers(members);
           }
@@ -441,8 +899,33 @@ export default function LandingPage() {
   const leftX = isMobile ? leftXMobile : leftXDesktop;
   const rightX = isMobile ? rightXMobile : rightXDesktop;
 
+  const resonanceColor = demoCircle?.resonanceColor || '#D4AF37';
+  const currentCircleName = demoCircle?.name || 'Rifelo';
+  const circleMembersList = (demoCircleMembers && demoCircleMembers.length > 0)
+    ? [
+        ...demoCircleMembers.map((m: any, i: number) => ({
+          id: m.id || `m-${i}`,
+          name: m.profiles?.full_name || m.profiles?.username || `Member ${i + 1}`,
+          color: m.color || (i === 0 ? '#059669' : '#2563EB')
+        })),
+        ...(demoCircleMembers.length < 4 ? [
+          { id: 'demo-3', name: 'Sarah K.', color: '#FF9500' },
+          { id: 'demo-4', name: 'Alex T.', color: '#FF2D55' },
+          { id: 'demo-5', name: 'Elena R.', color: '#AF52DE' },
+          { id: 'demo-6', name: 'David M.', color: '#00C7BE' },
+        ].slice(0, 6 - demoCircleMembers.length) : [])
+      ]
+    : [
+        { id: '1', name: 'Marfel RP (Admin)', color: '#059669' },
+        { id: '2', name: 'Marfel (Member)', color: '#2563EB' },
+        { id: '3', name: 'Sarah K.', color: '#FF9500' },
+        { id: '4', name: 'Alex T.', color: '#FF2D55' },
+        { id: '5', name: 'Elena R.', color: '#AF52DE' },
+        { id: '6', name: 'David M.', color: '#00C7BE' }
+      ];
+
   return (
-    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#a299af]/30 selection:text-[#0c0e0b] flex flex-col w-full relative">
+    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#d4af37]/30 selection:text-[#0c0e0b] flex flex-col w-full relative">
       {/* 1. Navbar (Minimalist) */}
       <div className="fixed top-0 left-0 w-full z-50 flex justify-center bg-[#F4F3EE]/60 backdrop-blur-md border-b border-[#0c0e0b]/5">
         <nav className="w-full flex items-center justify-between py-2.5 px-4 md:px-12 max-w-7xl">
@@ -478,7 +961,7 @@ export default function LandingPage() {
       <main ref={containerRef} className="relative w-full h-[260vh]">
         <div className="sticky top-0 flex flex-col items-center justify-center overflow-hidden w-full h-[100svh]">
           {/* Subtle background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-[#a299af]/10 rounded-full blur-3xl pointer-events-none" />
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-5xl mx-auto px-4 relative z-10 w-full flex-1 flex flex-col items-center justify-center">
           
@@ -486,19 +969,18 @@ export default function LandingPage() {
             {/* Center: Text Replaces CTA */}
             <motion.div 
               style={{ opacity: textOpacity, scale: textScale }}
-              className="absolute z-50 flex flex-col items-center justify-center text-center w-[90vw] max-w-2xl pointer-events-none"
+              className="absolute z-50 flex flex-col items-center justify-center text-center w-[90vw] max-w-xl pointer-events-none"
             >
-              <h1 className="font-semibold tracking-tight text-[#0c0e0b] leading-tight flex flex-col items-center justify-center w-full mb-4">
-                <span className="text-[28px] min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl mb-1 lg:mb-2 text-center">Tap Once.</span>
-                <span className="text-[#0c0e0b]/30 text-[26px] min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center">Share Everything.</span>
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#d4af37] mb-2 sm:mb-3 block">
+                NFC Dynamic Profile
+              </span>
+              <h1 className="font-bold tracking-tight text-slate-900 leading-none flex flex-col items-center justify-center w-full mb-4">
+                <span className="text-[32px] min-[360px]:text-4xl sm:text-5xl md:text-6xl lg:text-7xl mb-1 lg:mb-2 text-center font-bold tracking-tight">Tap Once.</span>
+                <span className="text-slate-500 text-[28px] min-[360px]:text-3xl sm:text-4xl md:text-5xl lg:text-6xl text-center font-semibold tracking-tight">Share Everything.</span>
               </h1>
               
-              <p className="text-[#0c0e0b]/60 max-w-lg mx-auto leading-relaxed text-sm sm:text-base font-medium">
-                No App Required. Instantly share your dynamic profile, portfolio, and contact info with any smartphone.
-              </p>
-              
-              <p className="text-[10px] text-[#0c0e0b]/30 uppercase tracking-widest font-semibold mt-6">
-                Replace business cards. Connect instantly. Stay remembered.
+              <p className="text-slate-600 max-w-md mx-auto leading-relaxed text-sm sm:text-base font-normal">
+                Instantly exchange your profile, socials, and contact with any smartphone. No apps required.
               </p>
             </motion.div>
 
@@ -511,7 +993,7 @@ export default function LandingPage() {
                     initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[192px] bg-[#a299af]/30 blur-3xl rounded-full pointer-events-none z-0"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[192px] bg-[#d4af37]/20 blur-3xl rounded-full pointer-events-none z-0"
                   />
                 )}
               </AnimatePresence>
@@ -569,7 +1051,7 @@ export default function LandingPage() {
             <motion.div
               animate={{ y: [0, 6, 0] }}
               transition={{ repeat: Infinity, duration: 2, ease: "easeInOut" }}
-              className="text-[#0c0e0b]/40 hover:text-[#0c0e0b]/70 transition-colors text-[10px] sm:text-xs font-medium tracking-wide uppercase cursor-pointer"
+              className="text-slate-500 hover:text-slate-900 transition-colors text-xs font-semibold tracking-wider uppercase cursor-pointer"
               onClick={() => document.getElementById('circle-demo-section')?.scrollIntoView({ behavior: 'smooth' })}
             >
               Scroll to explore ↓
@@ -580,17 +1062,20 @@ export default function LandingPage() {
       </main>
 
       {/* 2.2 What is Rifelo Section */}
-      <section className="pt-8 pb-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-3xl mx-auto text-center relative z-10">
+      <section className="pt-12 pb-16 md:py-24 px-4 sm:px-6 md:px-12 max-w-3xl mx-auto text-center relative z-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           whileInView={{ opacity: 1, y: 0 }}
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <h2 className="text-2xl md:text-3xl font-semibold mb-6 text-[#0c0e0b]">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+            Unified Identity
+          </span>
+          <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-slate-900">
             One Identity. Everything Connected.
           </h2>
-          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base">
+          <p className="text-slate-600 leading-relaxed text-base sm:text-lg font-normal max-w-2xl mx-auto">
             Rifelo brings your contact info, social links, and portfolio into one dynamic profile. Update it anytime, and share it anywhere — instantly.
           </p>
         </motion.div>
@@ -599,346 +1084,341 @@ export default function LandingPage() {
       {/* 2.5. Circle Demo Section */}
       <section id="circle-demo-section" className="min-h-screen flex flex-col items-center justify-center py-16 md:py-24 px-4 sm:px-6 md:px-12 w-full relative z-10 bg-[#F4F3EE]">
 
-        {/* View Switcher */}
-        <div className="flex bg-white/50 backdrop-blur-md p-[4px] rounded-full relative w-[280px] h-[44px] mb-8 shadow-[0_8px_24px_rgba(12,14,11,0.04)] border border-[#0c0e0b]/10 shrink-0">
-          {/* Highlight background */}
-          <div 
-            className={`absolute top-[4px] bottom-[4px] w-[calc(50%-4px)] bg-white/90 backdrop-blur-sm rounded-full transition-all duration-300 ease-out shadow-sm border border-[#0c0e0b]/5`}
-            style={{ left: circleView === 'public' ? '4px' : 'calc(50%)' }}
-          />
-          <button 
-            onClick={() => setCircleView('public')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-300 ${circleView === 'public' ? 'text-[#0c0e0b]' : 'text-[#0c0e0b]/45 hover:text-[#0c0e0b]'}`}
-          >
-            Digital identity
-          </button>
-          <button 
-            onClick={() => setCircleView('member')}
-            className={`relative z-10 w-1/2 flex items-center justify-center text-xs font-bold uppercase tracking-wider transition-all duration-300 ${circleView === 'member' ? 'text-[#0c0e0b]' : 'text-[#0c0e0b]/45 hover:text-[#0c0e0b]'}`}
-          >
-            Circle
-          </button>
+        {/* View Switcher (Segmented Control matching /profile) */}
+        <div className="flex justify-center w-full mb-8">
+          <div className="relative inline-flex p-1 bg-slate-200/70 border border-slate-300/60 rounded-2xl shadow-xs gap-1">
+            <button 
+              type="button"
+              onClick={() => setCircleView('public')}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-sm font-semibold rounded-xl transition-all ${
+                circleView === 'public' 
+                  ? 'bg-white shadow-sm text-slate-900 border border-slate-200/80' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <User className="w-4 h-4" />
+              <span>Dynamic Profile</span>
+            </button>
+            <button 
+              type="button"
+              onClick={() => setCircleView('member')}
+              className={`flex items-center gap-2 px-4 sm:px-5 py-2 text-sm font-semibold rounded-xl transition-all ${
+                circleView === 'member' 
+                  ? 'bg-white shadow-sm text-slate-900 border border-slate-200/80' 
+                  : 'text-slate-600 hover:text-slate-900'
+              }`}
+            >
+              <Users className="w-4 h-4" />
+              <span>Circle</span>
+            </button>
+          </div>
         </div>
 
         {/* Interactive Mockup + Text Container */}
         <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 w-full max-w-6xl">
-          {/* Interactive Mockup */}
-          <div className="relative flex items-center justify-center w-full max-w-[320px] shrink-0">
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-64 h-64 bg-[#a299af]/20 rounded-full blur-[80px]" />
-            <div id="demo-box" className="relative w-full max-w-[320px] aspect-[9/19] bg-white rounded-3xl p-2 shadow-2xl border-4 border-[#F4F3EE] overflow-hidden scroll-mt-[100px] shrink-0">
-              
-              <div className="w-full h-full bg-[#0c0e0b] rounded-3xl overflow-hidden flex flex-col relative border border-[#aaafbc]/10 hide-scrollbar">
-               <AnimatePresence mode="wait">
-                 {circleView === 'public' ? (
-                   <motion.div
-                     key="public"
-                     initial={{ opacity: 0 }}
-                     animate={{ opacity: 1 }}
-                     exit={{ opacity: 0 }}
-                     transition={{ duration: 0.3 }}
-                     className="flex-1 w-full bg-slate-50 relative flex flex-col overflow-hidden"
-                   >
-                     {/* Browser Header (Identity Demo) */}
-                     <div className="w-full bg-[#f8f9fa] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-[#aaafbc]/20">
-                       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-white rounded-b-xl max-w-[120px] pointer-events-none"></div>
-                       <Link href="/u/marfel" className="w-full bg-white hover:bg-slate-50 transition-colors rounded-md py-1 flex items-center justify-center mt-1 border border-[#aaafbc]/10 shadow-sm cursor-pointer">
-                         <Lock className="w-2 h-2 text-[#aaafbc] mr-1.5" />
-                         <span className="text-[9px] text-[#0c0e0b]/70 font-medium tracking-wide">rifelo.id/u/marfel</span>
-                       </Link>
-                     </div>
-                     
-                     {/* Public Profile Lookalike */}
-                     <div className="flex-1 overflow-y-auto overflow-x-hidden bg-slate-50 p-3 font-sans hide-scrollbar w-full relative z-10">
-                       <div className="w-full bg-white rounded-2xl shadow-sm border border-slate-100 p-5 space-y-6">
-                         {/* Header */}
-                         <div className="flex items-center justify-between">
-                           <div>
-                             <h1 className="text-xl font-bold tracking-tight text-slate-900">{demoProfile?.full_name || 'Marfel Ringga P'}</h1>
-                             <p className="text-[11px] text-slate-500 mt-1">
-                               {demoProfile?.job_title ? `${demoProfile.job_title} at ${demoProfile.company || 'Rifelo'}` : 'Founder at Rifelo'}
-                             </p>
-                           </div>
-                         </div>
-                         
-                         {/* Bio */}
-                         {demoProfile?.bio !== '' && (
-                           <div className="space-y-2">
-                             <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider">About</h2>
-                             <p className="text-[11px] text-slate-700 leading-relaxed whitespace-pre-wrap">{demoProfile?.bio || 'Your profile is always ready. Share your name, links, social media, or anything that represents you — all in one simple page. No need to repeat yourself.'}</p>
-                           </div>
-                         )}
+          {/* Interactive Mockup with 100% Exact Physical Smartphone Chassis from /profile */}
+          <div className="relative flex items-center justify-center shrink-0">
+            {/* Ambient Warm Halo behind the smartphone */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#d4af37]/15 rounded-full blur-[90px] pointer-events-none" />
 
-                         {/* Details */}
-                         <div className="grid grid-cols-1 gap-2">
-                           {demoProfile?.company !== '' && (
-                             <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                               <Briefcase className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                               <span className="text-[11px] truncate">{demoProfile?.company || 'Rifelo'}</span>
-                             </div>
-                           )}
-                           {demoProfile?.email !== '' && (
-                             <div className="flex items-center text-slate-600 bg-slate-50 p-3 rounded-xl border border-slate-100">
-                               <Mail className="w-4 h-4 mr-2 text-slate-400 shrink-0" />
-                               <span className="text-[11px] truncate">{demoProfile?.email || 'support@rifelo.com'}</span>
-                             </div>
-                           )}
-                         </div>
-                         
-                         {/* Links */}
-                         <div className="space-y-3">
-                           <h2 className="text-[9px] font-semibold text-slate-900 uppercase tracking-wider">Platforms & Links</h2>
-                           <div className="space-y-2">
-                             {demoProfile?.profile_links && demoProfile.profile_links.length > 0 ? demoProfile.profile_links.map((link: any, idx: number) => {
-                               const platformInfo = getPlatformInfo(link.title, link.url);
-                               const Icon = platformInfo?.icon || LinkIcon;
-                               const iconColor = platformInfo?.color || 'text-slate-600';
-                               const displayUrl = platformInfo?.username || link.url.replace(/^https?:\/\//,'');
+            {/* Scaled Device Wrapper with exact layout dimensions to fit 100% cleanly on mobile and desktop without clipping */}
+            <div id="demo-box" className="w-[270px] sm:w-[312px] h-[567px] sm:h-[654px] relative shrink-0 flex justify-center my-auto scroll-mt-[100px]">
+              <div className="w-[416px] h-[872px] origin-top scale-[0.65] sm:scale-[0.75] shrink-0 [transform:translateZ(0)]">
+                {/* Physical Smartphone Chassis (Exact 390x844 px screen ratio) */}
+                <div className="w-[416px] h-[872px] bg-[#0c0d12] rounded-[3.4rem] p-[13px] shadow-[0_25px_60px_-15px_rgba(0,0,0,0.5),0_0_0_1px_rgba(255,255,255,0.08)] border-[3.5px] border-slate-700/80 flex flex-col relative shrink-0 select-none">
+                  
+                  {/* Realistic Physical Buttons on Edge */}
+                  <div className="absolute -left-[5.5px] top-28 w-[3.5px] h-7 bg-slate-700 rounded-l-sm" />
+                  <div className="absolute -left-[5.5px] top-40 w-[3.5px] h-12 bg-slate-700 rounded-l-sm" />
+                  <div className="absolute -left-[5.5px] top-56 w-[3.5px] h-12 bg-slate-700 rounded-l-sm" />
+                  <div className="absolute -right-[5.5px] top-44 w-[3.5px] h-16 bg-slate-700 rounded-r-sm" />
 
-                               return (
-                                 <div key={link.id} className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                                   <div className="flex items-center break-all text-ellipsis overflow-hidden">
-                                     <div className={`w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm shrink-0 ${iconColor}`}>
-                                       <Icon className="w-4 h-4" />
-                                     </div>
-                                     <div className="flex flex-col overflow-hidden">
-                                       <span className="font-bold text-slate-900 text-[11px] truncate">{link.title}</span>
-                                       <span className="text-[9px] text-slate-500 truncate">{displayUrl}</span>
-                                     </div>
-                                   </div>
-                                   <LinkIcon className="w-3 h-3 text-slate-300 shrink-0 ml-1" />
-                                 </div>
-                               );
-                             }) : (
-                               <>
-                                 <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                                   <div className="flex items-center break-all text-ellipsis overflow-hidden">
-                                     <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm shrink-0 text-[#E1306C]">
-                                       <Instagram className="w-4 h-4" />
-                                     </div>
-                                     <div className="flex flex-col overflow-hidden">
-                                       <span className="font-bold text-slate-900 text-[11px] truncate">Instagram</span>
-                                       <span className="text-[9px] text-slate-500 truncate">@rifelo.id</span>
-                                     </div>
-                                   </div>
-                                   <LinkIcon className="w-3 h-3 text-slate-300 shrink-0 ml-1" />
-                                 </div>
-                                 <div className="flex items-center justify-between p-3 bg-slate-50 border border-slate-100 rounded-xl">
-                                   <div className="flex items-center break-all text-ellipsis overflow-hidden">
-                                     <div className="w-8 h-8 rounded-lg bg-white border border-slate-100 flex items-center justify-center mr-3 shadow-sm shrink-0 text-[#0077B5]">
-                                       <Linkedin className="w-4 h-4" />
-                                     </div>
-                                     <div className="flex flex-col overflow-hidden">
-                                       <span className="font-bold text-slate-900 text-[11px] truncate">LinkedIn</span>
-                                       <span className="text-[9px] text-slate-500 truncate">in/marfelringga</span>
-                                     </div>
-                                   </div>
-                                   <LinkIcon className="w-3 h-3 text-slate-300 shrink-0 ml-1" />
-                                 </div>
-                               </>
-                             )}
-                           </div>
-                         </div>
-                       </div>
-                     </div>
-                   </motion.div>
-                 ) : (
-                   <motion.div
-                     key="member"
-                     initial={{ opacity: 0 }}
-                     animate={{ opacity: 1 }}
-                     exit={{ opacity: 0 }}
-                     transition={{ duration: 0.3 }}
-                     className="flex-1 w-full relative flex flex-col items-center justify-center p-0 bg-[#0c0e0b] overflow-hidden"
-                   >
-                     {/* Browser Header (Circle Demo) */}
-                     <div className="w-full bg-[#1A1A1A] pt-5 pb-2 px-4 flex flex-col items-center shrink-0 relative z-50 border-b border-white/5">
-                       <div className="absolute top-0 left-1/2 -translate-x-1/2 w-[40%] h-4 bg-[#0c0e0b] rounded-b-xl max-w-[120px] pointer-events-none"></div>
-                       <Link href="/c/rifelo" className="w-full cursor-pointer bg-white/5 hover:bg-white/10 transition-colors rounded-md py-1 flex items-center justify-center mt-1 border border-white/5">
-                         <Lock className="w-2 h-2 text-white/40 mr-1.5" />
-                         <span className="text-[9px] text-white/60 font-medium tracking-wide">rifelo.id/c/rifelo</span>
-                       </Link>
-                     </div>
+                  {/* Top Speaker Ear-piece */}
+                  <div className="w-16 h-1 bg-slate-800 rounded-full mx-auto mb-1.5 opacity-80" />
 
-                     <div className="flex-1 w-full relative flex flex-col items-center text-center text-white overflow-y-auto overflow-x-hidden hide-scrollbar pt-6 pb-6">
-                       {/* Active Resonance Glow effect */}
-                      <AnimatePresence>
-                        {resonanceStatus === 'merged' && (
-                          <motion.div
-                            initial={{ opacity: 0, scale: 0.8 }}
-                            animate={{ opacity: 1, scale: 1 }}
-                            exit={{ opacity: 0, scale: 0.8 }}
-                            transition={{ duration: 1.5, ease: "easeInOut" }}
-                            className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
-                          >
-                            <div 
-                              className="w-[300px] h-[300px] rounded-full blur-[80px] opacity-20"
-                              style={{ backgroundColor: '#a299af' }}
-                            />
-                          </motion.div>
-                        )}
-                      </AnimatePresence>
+                  {/* Phone Screen Viewport (Exact 390px x 844px) */}
+                  <div 
+                    className="w-[390px] h-[844px] rounded-[2.5rem] overflow-hidden flex flex-col relative shadow-inner [transform:translateZ(0)]"
+                    style={{
+                      background: circleView === 'public'
+                        ? (demoProfile?.customTheme?.colors?.background || 'linear-gradient(135deg, #eef2f6 0%, #f8fafc 50%, #e2e8f0 100%)')
+                        : '#0c0e0b'
+                    }}
+                  >
+                    {/* Realistic Native Status Bar */}
+                    <div className={`h-10 px-6 flex items-center justify-between text-xs font-semibold select-none shrink-0 z-30 relative ${
+                      circleView === 'public' ? 'text-slate-900' : 'text-white'
+                    }`}>
+                      <span className="tracking-tight font-medium">9:41</span>
 
-                      {/* Top Navigation */}
-                      <div className="w-full px-4 pt-4 pb-2 flex justify-between items-center z-50 shrink-0">
-                        <div className="flex items-center gap-1.5 text-white/50 hover:text-white transition-colors cursor-pointer">
-                          <ArrowLeft className="w-4 h-4" />
-                          <span className="text-[10px] font-bold uppercase tracking-widest hidden sm:inline">Dashboard</span>
+                      {/* Status Icons */}
+                      <div className="flex items-center gap-1.5 opacity-90 text-[10px]">
+                        <div className="flex items-end gap-[1.5px] h-2.5">
+                          <div className="w-[2px] h-1 bg-current rounded-2xs" />
+                          <div className="w-[2px] h-1.5 bg-current rounded-2xs" />
+                          <div className="w-[2px] h-2 bg-current rounded-2xs" />
+                          <div className="w-[2px] h-2.5 bg-current rounded-2xs" />
                         </div>
-                        
-                        <div className="flex items-center gap-1.5">
-                          <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
-                          <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
-                            6 / 6 Active
-                          </span>
+                        <span className="text-[9px] font-bold">5G</span>
+                        <div className="w-4 h-2.5 border border-current rounded-xs p-[1px] flex items-center">
+                          <div className="w-full h-full bg-current rounded-2xs" />
                         </div>
-                      </div>
-
-                      {/* Header */}
-                      <div className="text-center z-20 mt-6 mb-4 shrink-0">
-                        <h1 className="text-xl font-black text-white tracking-widest uppercase mb-1">
-                          Rifelo
-                        </h1>
-                        <p className="text-[9px] text-white/40 font-bold uppercase tracking-widest transition-colors duration-1000">
-                          {resonanceStatus === 'merged' ? (
-                            <span style={{ color: '#a299af', textShadow: `0 0 10px #a299af` }}>
-                              Resonance Active
-                            </span>
-                          ) : resonanceStatus === 'activating' ? (
-                            <span className="text-white">Resonating...</span>
-                          ) : "Private Live Space"}
-                        </p>
-                      </div>
-
-                      {/* Visualization Hub */}
-                      <div className="relative w-[180px] h-[180px] flex items-center justify-center z-10 shrink-0 mb-6">
-                        <motion.div
-                          animate={{ 
-                            rotate: 360,
-                            scale: resonanceStatus === 'merged' ? 1.1 : 1
-                          }}
-                          transition={{ 
-                            rotate: { repeat: Infinity, duration: resonanceStatus === 'merged' ? 8 : 25, ease: "linear" },
-                            scale: { duration: 1.5, ease: "easeInOut" }
-                          }}
-                          style={{ willChange: 'transform' }}
-                          className="absolute inset-0 flex items-center justify-center z-20 pointer-events-none"
-                        >
-                          {[0, 1, 2, 3, 4, 5].map((i) => {
-                            const angle = (i / 6) * Math.PI * 2;
-                            const radius = 64;
-                            const x = (Math.cos(angle) * radius).toFixed(2);
-                            const y = (Math.sin(angle) * radius).toFixed(2);
-                            const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                            const color = colors[i];
-                            const isActive = activeIndexes.includes(i);
-                            const memberName = getDemoMemberName(i);
-                            
-                            return (
-                              <div
-                                key={i}
-                                className={`absolute shadow-lg group transition-all duration-700 pointer-events-auto cursor-help ${resonanceStatus === 'merged' ? 'opacity-0' : (isActive ? 'opacity-100' : 'opacity-30')}`}
-                                style={{ 
-                                  transform: `translate(${resonanceStatus === 'merged' ? 0 : x}px, ${resonanceStatus === 'merged' ? 0 : y}px) scale(${isActive && resonanceStatus !== 'merged' ? 1.2 : 1})` 
-                                }}
-                              >
-                                <div
-                                  className="relative w-4 h-4 rounded-full border border-white/20 transition-all duration-700"
-                                  style={{ 
-                                    backgroundColor: color, 
-                                    boxShadow: isActive && resonanceStatus !== 'merged' ? `0 0 20px ${color}80` : 'none',
-                                  }}
-                                />
-                                {/* Tooltip */}
-                                <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
-                                  <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
-                                    {memberName}
-                                  </span>
-                                </div>
-                              </div>
-                            );
-                          })}
-                        </motion.div>
-
-                        {/* Giant Merged Circle */}
-                        <div 
-                          className="absolute inset-0 flex items-center justify-center cursor-pointer z-30"
-                          onClick={handleResonanceDemo}
-                          role="button"
-                        >
-                          <div
-                            className={`absolute w-28 h-28 rounded-full flex items-center justify-center p-4 text-center transition-all duration-700 ease-[cubic-bezier(0.34,1.56,0.64,1)] border border-white/10 ${
-                              resonanceStatus === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
-                            }`}
-                            style={{
-                              background: `radial-gradient(circle, #a299af 0%, transparent 80%)`,
-                              boxShadow: `0 0 80px #a299af, inset 0 0 20px rgba(255,255,255,0.1)`
-                            }}
-                          >
-                            <div className="absolute inset-0 rounded-full animate-pulse" style={{ boxShadow: `0 0 60px #a299af` }} />
-                          </div>
-                          <div className={`font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-40 text-center flex flex-col items-center justify-center leading-tight transition-opacity duration-500 hover:opacity-80`}>
-                            Rifelo
-                          </div>
-                        </div>
-                      </div>
-
-                      {/* Minimal Member List */}
-                      <div className="w-full flex flex-col items-center gap-2 pb-6 shrink-0 z-20">
-                        {[0, 1, 2, 3, 4, 5].map((i) => {
-                          const colors = ['#FF3B30', '#FF9500', '#FFCC00', '#4CD964', '#5AC8FA', '#007AFF'];
-                          const isActive = activeIndexes.includes(i);
-                          const color = colors[i];
-                          const memberName = getDemoMemberName(i);
-                          
-                          return (
-                            <div key={i} className="flex items-center gap-2.5">
-                              <div 
-                                className="w-1.5 h-1.5 rounded-full transition-all duration-500"
-                                style={{ 
-                                  backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
-                                  boxShadow: isActive ? `0 0 8px ${color}` : 'none'
-                                }}
-                              />
-                              <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 ${isActive ? 'text-white/90' : 'text-white/30'}`}>
-                                {memberName}
-                              </span>
-                            </div>
-                          );
-                        })}
-                      </div>
-
-                      {/* Small Resonance CTA */}
-                      <div className="absolute bottom-6 left-1/2 -translate-x-1/2 z-50">
-                        <button 
-                          onClick={handleResonanceDemo}
-                          disabled={resonanceStatus === 'activating' || resonanceStatus === 'merged'}
-                          className={`px-4 py-1.5 rounded-full text-[9px] font-bold tracking-widest uppercase shadow-lg transition-all duration-500 border ${
-                            resonanceStatus === 'merged' || resonanceStatus === 'activating'
-                              ? 'bg-[#1A1A1A] text-white/40 border-white/5 opacity-50'
-                              : 'bg-white/10 text-white hover:bg-white/20 border-white/20 backdrop-blur-md active:scale-95'
-                          }`}
-                        >
-                          {resonanceStatus === 'merged' ? 'Resonance Active' : resonanceStatus === 'activating' ? 'Synchronizing...' : 'Trigger Resonance'}
-                        </button>
                       </div>
                     </div>
-                   </motion.div>
-                 )}
-               </AnimatePresence>
+
+                    {/* Mobile Browser Address Bar Header (rifelo.id/u/marfel & rifelo.id/c/circle) */}
+                    <div className={`w-full px-4 py-2 flex items-center justify-between shrink-0 z-30 border-b backdrop-blur-md transition-colors ${
+                      circleView === 'public'
+                        ? 'bg-slate-100/90 border-slate-200/80 text-slate-800'
+                        : 'bg-[#14151a]/90 border-white/10 text-white'
+                    }`}>
+                      <div className="w-5 h-5 flex items-center justify-center opacity-40">
+                        <Globe className="w-3.5 h-3.5" />
+                      </div>
+                      <Link
+                        href={circleView === 'public' ? '/u/marfel' : '/c/circle'}
+                        target="_blank"
+                        className={`flex-1 max-w-[270px] mx-2 h-7 px-3 rounded-full flex items-center justify-center gap-1.5 text-[11px] font-medium tracking-tight shadow-2xs group cursor-pointer transition-all ${
+                          circleView === 'public'
+                            ? 'bg-white border border-slate-200/90 text-slate-700 hover:text-slate-900 hover:border-slate-300'
+                            : 'bg-white/10 border border-white/10 text-white/80 hover:text-white hover:bg-white/15'
+                        }`}
+                      >
+                        <Lock className={`w-3 h-3 shrink-0 ${circleView === 'public' ? 'text-emerald-600' : 'text-[#d4af37]'}`} />
+                        <span className="font-mono text-[11.5px] select-none font-semibold">
+                          {circleView === 'public' ? 'rifelo.id/u/marfel' : 'rifelo.id/c/circle'}
+                        </span>
+                      </Link>
+                      <div className="w-5 h-5 flex items-center justify-center opacity-40">
+                        <RefreshCw className="w-3 h-3" />
+                      </div>
+                    </div>
+
+                    {/* Viewport Content with AnimatePresence */}
+                    <AnimatePresence mode="wait">
+                      {circleView === 'public' ? (
+                        <motion.div
+                          key="public"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-full flex-1 overflow-y-auto overflow-x-hidden scroll-smooth overscroll-contain touch-pan-y relative z-10 [transform:translateZ(0)] hide-scrollbar"
+                        >
+                          <PublicProfileView profile={demoProfile || DEFAULT_MARFEL_PROFILE} />
+                        </motion.div>
+                      ) : (
+                        <motion.div
+                          key="member"
+                          initial={{ opacity: 0 }}
+                          animate={{ opacity: 1 }}
+                          exit={{ opacity: 0 }}
+                          transition={{ duration: 0.3 }}
+                          className="w-full flex-1 overflow-y-auto overflow-x-hidden hide-scrollbar flex flex-col items-center justify-between py-6 px-4 relative z-10 text-white select-none"
+                          style={{
+                            backgroundImage: `radial-gradient(ellipse at 50% 30%, ${resonanceColor}25 0%, transparent 75%)`
+                          }}
+                        >
+                          {/* Active Resonance Glow effect (Exact 100% from /c/circle lines 475-489) */}
+                          <AnimatePresence>
+                            {phase === 'merged' && (
+                              <motion.div
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.8 }}
+                                transition={{ duration: 1.5, ease: "easeInOut" }}
+                                className="absolute inset-0 flex items-center justify-center pointer-events-none z-0"
+                              >
+                                <div 
+                                  className="w-[280px] h-[280px] rounded-full blur-[70px] opacity-25"
+                                  style={{ backgroundColor: resonanceColor }}
+                                />
+                              </motion.div>
+                            )}
+                          </AnimatePresence>
+
+                          {/* Top Navigation Status & Header (Exact 100% from /c/circle lines 501-523) */}
+                          <div className="text-center z-20 mt-2 mb-2 shrink-0">
+                            <div className="flex items-center justify-center gap-1.5 mb-1.5">
+                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
+                                {phase === 'accelerating' || phase === 'merged' ? circleMembersList.length : 2} / {circleMembersList.length} Active
+                              </span>
+                            </div>
+                            <h1 className="text-2xl font-black text-white tracking-widest uppercase mb-1">
+                              {currentCircleName || 'Untitled'}
+                            </h1>
+                            <p className="text-[10px] text-white/50 font-bold uppercase tracking-widest transition-colors duration-1000">
+                              {phase === 'merged' ? (
+                                <span style={{ color: resonanceColor, textShadow: `0 0 10px ${resonanceColor}` }}>
+                                  Resonance Active
+                                </span>
+                              ) : phase === 'accelerating' ? (
+                                <span className="text-white">Resonating...</span>
+                              ) : "Private Live Space"}
+                            </p>
+                          </div>
+
+                          {/* Visualization Hub (Exact 100% from /c/circle lines 525-598) */}
+                          <div className="relative w-[280px] h-[280px] flex items-center justify-center z-10 shrink-0 my-3">
+                            {/* Orbit Track Guideline */}
+                            <div className="absolute inset-[15px] rounded-full border border-dashed border-white/10 pointer-events-none" />
+
+                            {/* Orbit Balls Container with rotate: rotation and scale animation */}
+                            <motion.div
+                              style={{ rotate: rotation }}
+                              animate={{ scale: phase === 'merged' ? 1.1 : 1 }}
+                              transition={{ scale: { duration: 1.5, ease: "easeInOut" } }}
+                              className="absolute inset-0 flex items-center justify-center z-0 pointer-events-none"
+                            >
+                              {circleMembersList.map((member, i, arr) => {
+                                const angle = (i / arr.length) * Math.PI * 2;
+                                
+                                // Dynamic radius: spiral in towards the center during accelerating and merged phases
+                                const isResonating = phase === 'accelerating' || phase === 'merged';
+                                const radius = isResonating ? 0 : 110;
+                                
+                                const x = Math.cos(angle) * radius;
+                                const y = Math.sin(angle) * radius;
+                                const color = member.color || resonanceColor;
+                                const isMerged = phase === 'merged';
+                                const isActive = (phase === 'accelerating' || phase === 'merged') ? true : (i < 2);
+
+                                return (
+                                  <div
+                                    key={member.id || i}
+                                    className="absolute w-5 h-5 rounded-full shadow-lg group border border-white/20 transition-all pointer-events-auto"
+                                    style={{ 
+                                      transitionDuration: phase === 'accelerating' ? '3000ms' : '700ms',
+                                      transitionTimingFunction: phase === 'accelerating' ? 'cubic-bezier(0.85, 0, 1, 0.2)' : 'cubic-bezier(0.34, 1.56, 0.64, 1)',
+                                      backgroundColor: color,
+                                      boxShadow: isActive && !isMerged ? `0 0 20px ${color}80` : 'none',
+                                      transform: `translate(${x}px, ${y}px) scale(${isActive && !isMerged ? 1.2 : 1})`,
+                                      opacity: isMerged ? 0 : (isActive ? 1 : 0.3)
+                                    }}
+                                  >
+                                    {/* Tooltip (Exact from /c/circle lines 563-569) */}
+                                    <div className="absolute top-full left-1/2 -translate-x-1/2 mt-2 opacity-0 group-hover:opacity-100 transition-opacity pointer-events-none z-50">
+                                      <span className="text-[10px] font-bold whitespace-nowrap bg-black/90 px-2 py-1 rounded border border-white/10 text-white shadow-xl">
+                                        {member.name}
+                                      </span>
+                                    </div>
+                                  </div>
+                                );
+                              })}
+                            </motion.div>
+
+                            {/* The Giant Merged Circle (Exact 100% from /c/circle lines 574-598) */}
+                            <div
+                              onClick={handleResonanceDemo}
+                              role="button"
+                              title="Klik untuk demonstrasi Resonance"
+                              className={`absolute w-36 h-36 rounded-full z-40 flex items-center justify-center p-4 text-center transition-all border border-white/10 cursor-pointer ${
+                                phase === 'accelerating' || phase === 'merged' ? 'scale-100 opacity-100' : 'scale-0 opacity-0'
+                              }`}
+                              style={{
+                                transitionDuration: phase === 'accelerating' || phase === 'merged' ? '2000ms' : '700ms',
+                                transitionDelay: phase === 'accelerating' ? '1000ms' : '0ms',
+                                transitionTimingFunction: 'cubic-bezier(0.34,1.56,0.64,1)',
+                                backgroundColor: '#0c0e0b',
+                                backgroundImage: `radial-gradient(circle, ${resonanceColor} 0%, transparent 80%)`,
+                                boxShadow: `0 0 60px ${resonanceColor}, inset 0 0 20px rgba(255,255,255,0.1)`
+                              }}
+                            >
+                              <div
+                                className="absolute inset-0 rounded-full animate-pulse"
+                                style={{
+                                  boxShadow: `0 0 40px ${resonanceColor}`
+                                }}
+                              />
+                              <div className="font-black text-xs tracking-widest text-white drop-shadow-[0_4px_15px_rgba(0,0,0,0.8)] z-20 text-center flex flex-col items-center justify-center leading-tight">
+                                <CircleNameDisplay name={currentCircleName} isVisible={phase === 'accelerating' || phase === 'merged'} />
+                              </div>
+                            </div>
+                          </div>
+
+                          {/* Minimal Member List at Bottom of Viewport (Exact 100% from /c/circle lines 624-656) */}
+                          <div className="w-full flex flex-col items-center gap-1.5 mt-2 mb-3 shrink-0 z-20 overflow-y-auto max-h-[140px] hide-scrollbar px-4">
+                            <AnimatePresence>
+                              {phase !== 'merged' && (
+                                <motion.div
+                                  initial={{ opacity: 0, height: 0 }}
+                                  animate={{ opacity: 1, height: 'auto' }}
+                                  exit={{ opacity: 0, height: 0 }}
+                                  transition={{ duration: 0.5, ease: "easeInOut" }}
+                                  className="w-full flex flex-col items-center gap-2 overflow-hidden"
+                                >
+                                  {circleMembersList.map((member, i) => {
+                                    const isActive = (phase === 'accelerating') ? true : (i < 2);
+                                    const color = member.color || resonanceColor;
+                                    return (
+                                      <div key={member.id || i} className="flex items-center gap-2.5">
+                                        <div 
+                                          className="w-1.5 h-1.5 rounded-full transition-all duration-500 shrink-0"
+                                          style={{ 
+                                            backgroundColor: isActive ? color : 'rgba(255,255,255,0.15)',
+                                            boxShadow: isActive ? `0 0 8px ${color}` : 'none'
+                                          }}
+                                        />
+                                        <span className={`text-[10px] font-medium tracking-widest uppercase transition-colors duration-500 truncate max-w-[200px] ${isActive ? 'text-white/90' : 'text-white/30'}`}>
+                                          {member.name}
+                                        </span>
+                                      </div>
+                                    );
+                                  })}
+                                </motion.div>
+                              )}
+                            </AnimatePresence>
+                          </div>
+
+                          {/* Tombol Aktifkan Resonance untuk demonstrasi asli */}
+                          <div className="w-full px-5 pt-1 pb-1 flex justify-center shrink-0 z-30">
+                            <button
+                              type="button"
+                              onClick={handleResonanceDemo}
+                              disabled={phase === 'accelerating'}
+                              className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wider transition-all duration-300 flex items-center justify-center active:scale-95 cursor-pointer select-none ${
+                                phase === 'merged'
+                                  ? 'bg-[#d4af37] text-black hover:bg-[#e2c77d] shadow-sm'
+                                  : phase === 'accelerating'
+                                  ? 'bg-white/10 text-white/50 border border-white/10 cursor-wait'
+                                  : 'bg-white/10 hover:bg-white/15 text-white/90 hover:text-white border border-white/10'
+                              }`}
+                            >
+                              {phase === 'merged' 
+                                ? 'Resonance Aktif (Reset)' 
+                                : phase === 'accelerating' 
+                                ? 'Resonating...' 
+                                : 'Aktifkan Resonance'}
+                            </button>
+                          </div>
+                        </motion.div>
+                      )}
+                    </AnimatePresence>
+
+                    {/* Bottom iOS Home Indicator Bar (Exact from /circle lines 1137-1140) */}
+                    <div className="h-5 w-full shrink-0 flex items-center justify-center relative z-20 pointer-events-none">
+                      <div className={`w-36 h-1 rounded-full ${circleView === 'public' ? 'bg-slate-900/30' : 'bg-white/30'}`} />
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
           
           {/* Text Description Container */}
           <div className="text-center lg:text-left max-w-xl flex flex-col items-center lg:items-start px-4 shrink-0">
-            <h2 className="font-semibold tracking-tight text-[#0c0e0b] mb-4 leading-tight flex flex-col items-center lg:items-start">
-              <span className="text-[22px] min-[400px]:text-2xl sm:text-3xl md:text-4xl">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-2 sm:mb-3 block">
+              {circleView === 'public' ? 'Instant Access' : 'Shared Frequency'}
+            </span>
+            <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-3 leading-tight flex flex-col items-center lg:items-start">
+              <span>
                 {circleView === 'public' ? 'Dynamic Profile' : 'Circle Resonance'}
               </span>
             </h2>
-            <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base mb-8 lg:mb-10 lg:max-w-md">
+            <p className="text-slate-600 leading-relaxed text-base sm:text-lg mb-8 lg:mb-10 lg:max-w-md font-normal">
               {circleView === 'public' 
-                ? 'Your complete professional identity in one scan. Share your contact info, social links, and portfolio with anyone, anywhere — no app required.' 
+                ? 'Your complete dynamic profile in one scan. Share your contact info, social links, and portfolio with anyone, anywhere — no app required.' 
                 : 'Resonance happens when your circle comes alive. Bring everyone in, stay active together, and watch the connection build in real time.'}
             </p>
 
@@ -947,60 +1427,60 @@ export default function LandingPage() {
               {circleView === 'public' ? (
                 <>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <Smartphone className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <Smartphone className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">No App Required</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Works instantly with any modern smartphone using NFC technology. Just tap and share.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">No App Required</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Works instantly with any modern smartphone using NFC technology. Just tap and share.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <RefreshCw className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <RefreshCw className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Real-Time Updates</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Change your contact info, portfolio, or social links anytime. Your wristband updates instantly.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Updates</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Change your contact info, portfolio, or social links anytime. Your wristband updates instantly.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <Inbox className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <Inbox className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Direct Inbox</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Receive messages straight to your profile. Keep your personal contact details private and secure.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Direct Inbox</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Receive messages straight to your profile. Keep your personal contact details private and secure.</p>
                     </div>
                   </div>
                 </>
               ) : (
                 <>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <Users className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <Users className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Instant Group Sync</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Connect multiple wristbands simultaneously. Create a unified digital presence for your circle.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Instant Group Sync</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Connect multiple wristbands simultaneously. Create a unified digital presence for your circle.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <Activity className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <Activity className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Live Activity</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Watch connections build as members interact. Perfect for community events and networking.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Live Activity</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Watch connections build as members interact. Perfect for community events and networking.</p>
                     </div>
                   </div>
                   <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-[#0c0e0b]/5 flex items-center justify-center shrink-0">
-                      <Radio className="w-4 h-4 text-[#0c0e0b]" />
+                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
+                      <Radio className="w-4 h-4 text-slate-900" />
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] text-sm mb-1">Real-Time Resonance</h4>
-                      <p className="text-xs text-[#0c0e0b]/60 leading-relaxed">Experience seamless synchronization across all devices when members interact within the circle.</p>
+                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Resonance</h4>
+                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Experience seamless synchronization across all devices when members interact within the circle.</p>
                     </div>
                   </div>
                 </>
@@ -1021,11 +1501,14 @@ export default function LandingPage() {
       {/* 2.5 Premium Model Carousel */}
       <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full relative z-10 overflow-hidden">
         <div className="flex flex-col items-center mb-8 sm:mb-12 md:mb-16 text-center">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+            Tactile Craftsmanship
+          </span>
           <motion.h2 
             initial={{ opacity: 0, y: 20 }}
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
-            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0c0e0b] mb-4"
+            className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4"
           >
             Premium by Design.
           </motion.h2>
@@ -1034,7 +1517,7 @@ export default function LandingPage() {
             whileInView={{ opacity: 1, y: 0 }}
             viewport={{ once: true }}
             transition={{ delay: 0.1 }}
-            className="text-[#0c0e0b]/60 max-w-2xl text-base sm:text-lg leading-relaxed"
+            className="text-slate-600 max-w-2xl text-base sm:text-lg leading-relaxed font-normal"
           >
             Every detail is designed to provide maximum comfort and a superior look.
           </motion.p>
@@ -1076,9 +1559,9 @@ export default function LandingPage() {
                 </div>
                 <div className="text-left w-full px-3 xl:px-4 pb-1 flex-grow flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-[#a299af]/90 mb-2.5 block">{item.badge}</span>
-                    <h3 className="text-xl md:text-2xl tracking-tight font-bold text-[#0c0e0b] mb-3 leading-tight">{item.title}</h3>
-                    <p className="text-sm md:text-base text-[#0c0e0b]/70 leading-relaxed font-medium">{item.desc}</p>
+                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-[#d4af37] mb-2.5 block">{item.badge}</span>
+                    <h3 className="text-xl md:text-2xl tracking-tight font-bold text-slate-900 mb-3 leading-tight">{item.title}</h3>
+                    <p className="text-sm md:text-base text-slate-600 leading-relaxed font-normal">{item.desc}</p>
                   </div>
                 </div>
               </motion.div>
@@ -1154,11 +1637,14 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-[#F4F3EE] to-transparent blur-3xl pointer-events-none opacity-50"></div>
          <div className="px-4 sm:px-6 md:px-12 max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col items-center mb-16 text-center">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+              Engineered Simplicity
+            </span>
             <motion.h2 
               initial={{ opacity: 0, y: 20 }}
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
-              className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-[#0c0e0b] mb-4"
+              className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-slate-900 mb-4"
             >
               Just Tap. That’s It.
             </motion.h2>
@@ -1167,23 +1653,36 @@ export default function LandingPage() {
               whileInView={{ opacity: 1, y: 0 }}
               viewport={{ once: true }}
               transition={{ delay: 0.1 }}
-              className="text-[#0c0e0b]/60 max-w-2xl text-base sm:text-lg leading-relaxed"
+              className="text-slate-600 max-w-2xl text-base sm:text-lg leading-relaxed font-normal"
             >
-              Tap your Rifelo NFC tag to any smartphone and instantly open your digital profile. No apps. No friction. Just seamless interaction.
+              Tap your Rifelo wristband to any modern smartphone. Your dynamic profile appears instantly—no apps to install, no accounts to download.
             </motion.p>
           </div>
 
           {/* Bento Grid Feature Area */}
           <div className="max-w-5xl mx-auto w-full">
             {/* Mobile: Horizontal scroll/carousel, Desktop: Grid */}
-            <div className="flex md:grid md:grid-cols-2 lg:grid-cols-12 gap-5 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden">
+            <div 
+              ref={bentoContainerRef}
+              onScroll={(e) => {
+                const el = e.currentTarget;
+                if (el) {
+                  const cardWidth = el.offsetWidth * 0.85;
+                  if (cardWidth > 0) {
+                    const idx = Math.round(el.scrollLeft / cardWidth);
+                    setBentoActiveIndex(Math.min(Math.max(idx, 0), 4));
+                  }
+                }
+              }}
+              className="flex md:grid md:grid-cols-2 lg:grid-cols-12 gap-5 overflow-x-auto md:overflow-visible pb-8 md:pb-0 snap-x snap-mandatory -mx-4 px-4 sm:-mx-6 sm:px-6 md:mx-0 md:px-0 scroll-smooth [scrollbar-width:none] [-ms-overflow-style:none] [&::-webkit-scrollbar]:hidden"
+            >
               
               {/* Feature 1: NFC Wristband */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:scale-110 transition-transform duration-700"></div>
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5 relative z-10 text-center">
-                     <div className="w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-3xl overflow-hidden bg-slate-50 border border-black/5 relative group-hover:shadow-inner transition-all duration-500">
+                     <div className="w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 relative group-hover:shadow-inner transition-all duration-500">
                         <Image 
                            src="https://i.ibb.co/pjs2hJQD/close-up-wristband.png"
                            alt="NFC Wristband"
@@ -1195,343 +1694,112 @@ export default function LandingPage() {
                      </div>
                   </div>
                  <div className="relative z-10">
-                    <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">NFC Wristband</h3>
-                    <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
-                      One tap, instant share. Your wristband becomes the fastest way to exchange your identity—no typing, no apps, no friction.
+                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">NFC Wristband</h3>
+                    <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
+                      One tap, instant share. A dynamic profile wearable that replaces paper cards forever—no typing, no apps, zero delay.
                     </p>
                  </div>
               </div>
 
-              {/* Feature 2: Digital Identity */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-8 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col md:flex-row gap-5 sm:gap-6 md:gap-8 justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-indigo-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:scale-110 transition-transform duration-700"></div>
-                 
-                 <div className="flex-1 flex flex-col justify-between py-1 relative z-10">
-                   <div className="relative z-10 w-full mb-1">
-                     <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Dynamic Profile</h3>
-                     <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium max-w-md mt-2">
-                       Create once, update forever. Your profile card reflects who you are—customize links, bio, colors, and contacts in real-time from your dashboard.
-                     </p>
-                   </div>
-                 </div>
-
-                 {/* Image Area - Digital Identity Mockup */}
-                 <div className="relative z-10 w-full md:w-[260px] lg:w-[280px] h-52 md:h-auto rounded-3xl overflow-hidden bg-slate-50 flex-shrink-0 border border-black/5 flex items-center justify-center p-3 text-center group-hover:scale-[1.02] transition-transform duration-500">
-                     {/* UI Mockup matching the actual Digital Identity */}
-                     <div className="w-[85%] max-w-[195px] h-[95%] max-h-full bg-white rounded-xl shadow-[0_4px_10px_-4px_rgba(0,0,0,0.08)] border border-slate-100 flex flex-col pt-3 px-3 relative overflow-hidden text-left">
-                       {/* Header */}
-                       <div className="mb-3">
-                         <div className="font-bold text-[11px] tracking-tight text-slate-900 leading-none">Marfel Ringga P</div>
-                         <div className="text-[7.5px] text-slate-500 mt-0.5">Founder at Rifelo</div>
-                       </div>
-                       
-                       {/* Contact Details */}
-                       <div className="flex flex-col gap-1 mb-2">
-                         <div className="flex items-center text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                           <Briefcase className="w-2.5 h-2.5 mr-1 text-slate-400 shrink-0" />
-                           <span className="text-[7px] font-medium truncate">Rifelo</span>
-                         </div>
-                         <div className="flex items-center text-slate-600 bg-slate-50 p-1.5 rounded-lg border border-slate-100">
-                           <Mail className="w-2.5 h-2.5 mr-1 text-slate-400 shrink-0" />
-                           <span className="text-[7px] font-medium truncate flex-1">support@rifelo.com</span>
-                         </div>
-                       </div>
-
-                       {/* Links */}
-                       <div className="flex gap-2">
-                         <div className="w-16 h-6 bg-slate-50 border border-slate-100 rounded-md flex items-center px-1.5 shadow-sm">
-                           <Instagram className="w-2.5 h-2.5 text-[#E1306C] mr-0.5 shrink-0" />
-                           <span className="text-[7px] font-bold text-slate-900 truncate">Instagram</span>
-                         </div>
-                         <div className="w-16 h-6 bg-slate-50 border border-slate-100 rounded-md flex items-center px-1.5 shadow-sm">
-                           <Linkedin className="w-2.5 h-2.5 text-[#0077B5] mr-0.5 shrink-0" />
-                           <span className="text-[7px] font-bold text-slate-900 truncate">LinkedIn</span>
-                         </div>
-                       </div>
-
-                       <div className="absolute bottom-0 left-0 w-full h-8 bg-gradient-to-t from-white to-transparent" />
-                     </div>
-                 </div>
-              </div>
-
-              {/* Feature 3: Privacy First Control */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[390px] lg:min-h-[430px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-emerald-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-emerald-500/15 transition-all duration-700"></div>
+              {/* Feature 2: Privacy First Control */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Privacy Shield/Toggle */}
-                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/50 transition-colors duration-500">
-                     <div className="flex flex-col items-center gap-3 w-full px-4">
-                       <div className="w-full bg-white border border-slate-100 rounded-xl p-3 shadow-sm flex items-center justify-between">
-                         <div className="flex items-center gap-2">
-                           <motion.div 
-                             animate={{ backgroundColor: ["#f1f5f9", "#d1fae5", "#f1f5f9"] }}
-                             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
-                             className="w-6 h-6 rounded-full flex items-center justify-center"
-                           >
-                              <motion.div
-                                animate={{ color: ["#64748b", "#059669", "#64748b"] }}
-                                transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
-                              >
-                               <Lock className="w-3 h-3" />
-                              </motion.div>
-                           </motion.div>
-                           <div className="flex flex-col items-start gap-1">
-                             <div className="w-12 h-1.5 bg-slate-800 rounded-full" />
-                             {/* Fading element to represent hiding/showing */}
-                             <motion.div 
-                               animate={{ opacity: [0.1, 1, 0.1] }}
-                               transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
-                               className="w-16 h-1 bg-slate-400 rounded-full" 
-                             />
-                           </div>
-                         </div>
-                         {/* Animated Toggle */}
-                         <motion.div 
-                           animate={{ backgroundColor: ["#e2e8f0", "#10b981", "#e2e8f0"] }}
-                           transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
-                           className="w-8 h-4.5 rounded-full relative p-0.5"
-                         >
-                           <motion.div 
-                             animate={{ x: [0, 14, 0] }}
-                             transition={{ repeat: Infinity, duration: 4, ease: "easeInOut", times: [0, 0.5, 1] }}
-                             className="w-3.5 h-3.5 bg-white rounded-full shadow-sm"
-                           />
-                         </motion.div>
-                       </div>
-                     </div>
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/30 transition-colors duration-500">
+                     <PrivacyControlMockup />
                    </div>
                  </div>
 
                  <div className="relative z-10">
-                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Privacy First Control</h3>
-                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
-                     You decide what's visible. Toggle who sees what—public, private, or circle-exclusive—with zero data leaks.
+                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">Privacy First Control</h3>
+                   <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
+                     Toggle visibility with a single tap. Instantly hide personal numbers or social links without deleting them—complete control over what you share.
                    </p>
                  </div>
               </div>
               
-              {/* Feature 4: Custom Direct */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-[#0c0e0b] border border-transparent rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group shadow-[0_12px_32px_-4px_rgba(0,0,0,0.2)]">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-amber-500/10 rounded-full blur-3xl -translate-y-1/2 translate-x-1/3 group-hover:bg-amber-500/20 transition-all duration-700"></div>
+              {/* Feature 3: Custom Direct */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
                  
-                 <div className="relative z-10 mb-4 md:mb-5">
-                   <h3 className="text-xl sm:text-2xl font-bold text-white mb-1.5">Custom Direct</h3>
-                   <p className="text-white/70 leading-relaxed text-sm sm:text-base font-medium">
+                 {/* Visual Mockup - Top aligned with Card 2 and Card 4 */}
+                 <div className="flex justify-center items-start mb-4 md:mb-5">
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-2.5 sm:p-3">
+                      <SpecialCustomDirectMockup />
+                   </div>
+                 </div>
+
+                 {/* Text Content - Bottom aligned */}
+                 <div className="relative z-10">
+                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">Custom Direct</h3>
+                   <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
                      Skip the profile, go straight to the point. Redirect users directly to any URL—your latest video, campaign, or portfolio.
                    </p>
                  </div>
-
-                 <div className="flex justify-center items-start mt-1 md:mt-2">
-                   {/* Image Area - Custom Direct Mockup from /tags */}
-                   <div className="relative z-10 w-full h-40 sm:h-44 md:h-36 lg:h-40 rounded-2xl overflow-hidden bg-white/5 border border-white/10 flex flex-col justify-center p-3">
-                      
-                      {/* Mockup of Edit Tag Form */} <SpecialCustomDirectMockup /> <div className="hidden pb-0 select-none pointer-events-none"> {/* */}
-                      <div className="w-full max-w-[200px] mx-auto bg-white rounded-xl shadow-lg border border-slate-100 p-3 relative z-10">
-                        <div className="flex justify-between items-center mb-2">
-                           <div className="text-[10px] font-bold text-slate-800">Edit Tag</div>
-                           <div className="w-4 h-4 rounded-full hover:bg-slate-100 flex items-center justify-center">
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-                           </div>
-                        </div>
-
-                        <div className="mb-2">
-                           <div className="text-[7px] font-medium text-slate-500 mb-1">Interaction Mode</div>
-                           <div className="flex items-center justify-between w-full px-2 py-1.5 rounded-lg border border-slate-200 bg-white">
-                              <span className="text-[8px] font-medium text-slate-800 truncate">Custom URL Redirect</span>
-                              <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" className="text-slate-400"><polyline points="6 9 12 15 18 9"></polyline></svg>
-                           </div>
-                        </div>
-
-                        <div className="space-y-1.5">
-                           <div>
-                              <div className="text-[7px] font-medium text-slate-500 mb-1">Custom URL</div>
-                              <div className="w-full px-2 py-1.5 rounded-lg border border-purple-500/50 bg-purple-50/30 flex items-center shadow-[0_0_0_1px_rgba(168,85,247,0.1)] overflow-hidden">
-                                 <div className="flex items-center min-w-max">
-                                    <span className="text-[8px] text-slate-800 font-medium font-mono">https://rifelo.com/my-latest-video</span>
-                                    <motion.div 
-                                       animate={{ opacity: [1, 0] }}
-                                       transition={{ repeat: Infinity, duration: 0.8, ease: "linear" }}
-                                       className="w-px h-3 bg-slate-800 ml-0.5"
-                                    ></motion.div>
-                                 </div>
-                              </div>
-                           </div>
-                        </div>
-                        
-                        <div className="mt-3">
-                           <div className="w-full bg-slate-900 text-white rounded-lg py-1.5 flex items-center justify-center gap-1 shadow-sm transition-transform hover:scale-95 cursor-default">
-                              <span className="text-[8px] font-bold pb-px">Save Changes</span>
-                           </div>
-                        </div>
-                      </div>
-
-                      {/* */} </div> {/* Decoration floating elements */}
-                      <div className="absolute rounded-full w-20 h-20 bg-purple-500/20 blur-xl top-0 left-0 group-hover:bg-purple-500/30 transition-colors duration-500 delay-100"></div>
-                   </div>
-                 </div>
               </div>
 
-              {/* Feature 5: Inbox */}
-              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-4 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[445px] sm:min-h-[470px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute -bottom-10 -right-10 w-64 h-64 bg-rose-500/10 rounded-full blur-3xl group-hover:bg-rose-500/15 group-hover:scale-110 transition-all duration-700"></div>
+              {/* Feature 4: Direct Inbox */}
+              <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Inbox Mockup */}
-                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-100/50 border border-black/5 flex items-center justify-center flex-col perspective-1000">
-                     
-                      {/* Custom Inbox Animation */}
-                      <div className="relative w-full h-full">
-                        {/* 1. Sender View (Leave a Message) */}
-                        <motion.div 
-                          animate={{ opacity: [1, 1, 0, 0, 1], y: [0, 0, -10, 10, 0] }}
-                          transition={{ repeat: Infinity, duration: 6, times: [0, 0.4, 0.45, 0.95, 1], ease: "easeInOut" }}
-                          className="absolute inset-0 flex items-center justify-center p-4"
-                        >
-                          <div className="w-[90%] bg-white border border-slate-200 rounded-2xl p-3 sm:p-3.5 shadow-sm flex flex-col gap-2 sm:gap-2.5 relative">
-                            <div>
-                              <div className="text-[10px] font-bold text-slate-900 mb-0.5">Leave a Message</div>
-                              <div className="text-[8px] text-slate-500">Send a secret message or say hello.</div>
-                            </div>
-                            <div className="flex flex-col gap-2">
-                              {/* Pseudo Name Input */}
-                              <div className="w-full h-6 border border-slate-200 rounded-lg bg-slate-50 flex items-center px-2">
-                                <div className="w-16 h-1.5 bg-slate-300 rounded-full" />
-                              </div>
-                              {/* Pseudo Textarea */}
-                              <div className="w-full h-12 border border-slate-200 rounded-lg bg-slate-50 p-2 flex flex-col gap-1.5">
-                                <div className="w-[80%] h-1.5 bg-slate-300 rounded-full" />
-                                <div className="w-[60%] h-1.5 bg-slate-300 rounded-full" />
-                              </div>
-                              {/* Send Button */}
-                              <motion.div 
-                                animate={{ scale: [1, 1, 0.95, 1, 1], backgroundColor: ["#0f172a", "#0f172a", "#3b82f6", "#0f172a", "#0f172a"] }}
-                                transition={{ repeat: Infinity, duration: 6, times: [0, 0.25, 0.3, 0.35, 1] }}
-                                className="w-full h-7 bg-slate-900 rounded-lg flex items-center justify-center gap-1 mt-1 shadow-sm"
-                              >
-                                <svg width="10" height="10" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="text-white">
-                                  <line x1="22" y1="2" x2="11" y2="13"></line>
-                                  <polygon points="22 2 15 22 11 13 2 9 22 2"></polygon>
-                                </svg>
-                                <span className="text-white text-[9px] font-medium">Send Message</span>
-                              </motion.div>
-                            </div>
-                          </div>
-                        </motion.div>
-
-                        {/* 2. Receiver Inbox View */}
-                        <motion.div 
-                          animate={{ opacity: [0, 0, 1, 1, 0], y: [10, 10, 0, 0, -10] }}
-                          transition={{ repeat: Infinity, duration: 6, times: [0, 0.45, 0.5, 0.9, 1], ease: "easeInOut" }}
-                          className="absolute inset-0 flex items-center justify-center flex-col px-4"
-                        >
-                          {/* Background message card */}
-                          <div className="absolute top-[20%] left-1/2 -translate-x-1/2 w-[85%] bg-white border border-slate-200 rounded-2xl p-4 flex flex-col scale-90 opacity-60 z-0">
-                             <div className="flex justify-between items-start mb-2">
-                               <div className="flex flex-col">
-                                 <div className="w-16 h-2 rounded-full bg-slate-200 mb-1" />
-                                 <div className="w-10 h-1.5 rounded-full bg-slate-100" />
-                               </div>
-                               <div className="w-4 h-4 rounded hover:bg-red-50 text-slate-300" />
-                             </div>
-                             <div className="bg-slate-50 rounded-xl p-2 h-8" />
-                          </div>
-
-                          {/* Foreground new message card */}
-                          <motion.div 
-                            animate={{ y: [0, 0, -15, -15, 0], scale: [0.95, 0.95, 1, 1, 0.95], opacity: [0, 0, 1, 1, 0] }}
-                            transition={{ repeat: Infinity, duration: 6, times: [0, 0.45, 0.5, 0.9, 1] }}
-                            className="relative w-[90%] bg-white border border-slate-200 rounded-2xl p-2.5 sm:p-4 flex flex-col z-10 shadow-lg mt-4 sm:mt-6"
-                          >
-                            <div className="flex justify-between items-start mb-2 pr-4 relative">
-                              <button className="absolute top-0 right-0 text-slate-300 hover:text-red-500">
-                                <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                                  <polyline points="3 6 5 6 21 6"></polyline>
-                                  <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
-                                  <line x1="10" y1="11" x2="10" y2="17"></line>
-                                  <line x1="14" y1="11" x2="14" y2="17"></line>
-                                </svg>
-                              </button>
-                              <div>
-                                <h3 className="font-semibold text-slate-900 text-[10px]">Sarah Jenkins</h3>
-                                <div className="flex items-center text-[8px] text-slate-400 mt-0.5">
-                                  <svg width="8" height="8" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" className="mr-1">
-                                    <circle cx="12" cy="12" r="10"></circle>
-                                    <polyline points="12 6 12 12 16 14"></polyline>
-                                  </svg>
-                                  Just now
-                                </div>
-                              </div>
-                            </div>
-                            <div className="bg-slate-50 p-2.5 rounded-xl text-slate-700 text-[9px] leading-relaxed">
-                              Hi! I loved your portfolio. I would like to discuss a potential collaboration...
-                            </div>
-                          </motion.div>
-                        </motion.div>
-                      </div>
-
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-2.5 sm:p-3">
+                     <DirectInboxMockup />
                    </div>
                  </div>
 
                  <div className="relative z-10">
-                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Inbox</h3>
-                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
-                     Receive messages, inquiries, and connections straight from your digital profile. Centralize your network effortlessly.
+                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">Direct Inbox</h3>
+                   <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
+                     Direct access to your inbox. Let contacts send messages, inquiries, and collaboration requests straight from your profile page.
                    </p>
                  </div>
               </div>
 
-              {/* Feature 6: Circle Management */}
+              {/* Feature 5: Circle Management */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-12 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 md:gap-8 relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-1/4 w-96 h-96 bg-purple-500/5 rounded-full blur-3xl group-hover:bg-purple-500/10 transition-all duration-700"></div>
+                 <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
                  <div className="flex-1 relative z-10 max-w-2xl">
-                   <h3 className="text-xl sm:text-2xl font-bold text-[#0c0e0b] mb-1.5">Circle Management</h3>
-                   <p className="text-[#0c0e0b]/60 leading-relaxed text-sm sm:text-base font-medium">
+                   <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">Circle Management</h3>
+                   <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
                      Different worlds, one identity. Create circles for work, friends, events—share different versions of you with different people.
                    </p>
                  </div>
                  {/* Image Area - Circle Management Graphic */}
-                 <div className="relative z-10 w-full md:w-[340px] h-64 md:h-auto self-stretch rounded-3xl overflow-hidden bg-slate-900 flex-shrink-0 border border-black/5 flex items-center justify-center p-4 text-center group-hover:bg-slate-800 transition-colors duration-500">
-                    <div className="relative w-full h-full flex flex-col items-center justify-center">
-                       {/* Resonance Animation */}
-                       <div className="relative w-32 h-32 sm:w-36 sm:h-36 md:w-28 md:h-28 lg:w-28 lg:h-28 xl:w-28 xl:h-28 flex items-center justify-center mx-auto my-auto mt-4 mb-4">
-                          {/* Base Glow */}
-                          <div
-                            className="absolute inset-0 rounded-full transition-all duration-700"
-                            style={{
-                              background: `radial-gradient(circle, #a855f7 0%, transparent 80%)`,
-                              boxShadow: `0 0 55px #a855f7, inset 0 0 15px rgba(255,255,255,0.1)`
-                            }}
-                          />
-                          
-                          {/* Pulse Glow */}
-                          <div
-                            className="absolute inset-0 rounded-full animate-pulse"
-                            style={{ boxShadow: `0 0 45px #a855f7` }}
-                          />
-                          
-                          {/* Orbiting Aura Circle */}
-                          <div 
-                            className="absolute inset-[-18px] md:inset-[-14px] rounded-full animate-[spin_6s_linear_infinite]"
-                          >
-                            <div 
-                              className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2 w-4 h-4 rounded-full shadow-lg"
-                              style={{ 
-                                backgroundColor: '#10b981',
-                                boxShadow: `0 0 10px #10b981, 0 0 20px #10b981`
-                              }}
-                            />
-                          </div>
-                          
-                          {/* Text inside the circle */}
-                          <div className="relative w-full h-full flex items-center justify-center z-20">
-                             <div className="text-white font-bold tracking-widest text-[12px] uppercase">Rifelo</div>
-                          </div>
-                       </div>
-                    </div>
+                 <div className="relative z-10 w-full md:w-[340px] h-64 md:h-auto self-stretch rounded-2xl overflow-hidden bg-[#040e0b] flex-shrink-0 border border-teal-500/20 flex items-center justify-center p-4 text-center group-hover:border-teal-500/40 transition-colors duration-500">
+                    <CircleResonanceMockup />
                  </div>
               </div>
 
+            </div>
+
+            {/* Mobile Carousel Indicator Dots */}
+            <div className="flex md:hidden justify-center items-center gap-1.5 mt-2 pt-1">
+              {[0, 1, 2, 3, 4].map((idx) => (
+                <button
+                  key={idx}
+                  type="button"
+                  onClick={() => {
+                    if (bentoContainerRef.current) {
+                      const cardWidth = bentoContainerRef.current.offsetWidth * 0.85;
+                      bentoContainerRef.current.scrollTo({
+                        left: idx * cardWidth,
+                        behavior: 'smooth'
+                      });
+                      setBentoActiveIndex(idx);
+                    }
+                  }}
+                  className={`h-1.5 rounded-full transition-all duration-300 ${
+                    bentoActiveIndex === idx 
+                      ? 'w-6 bg-[#d4af37]' 
+                      : 'w-1.5 bg-slate-300 hover:bg-slate-400'
+                  }`}
+                  aria-label={`Slide ${idx + 1}`}
+                />
+              ))}
             </div>
           </div>
         </div>
@@ -1546,10 +1814,13 @@ export default function LandingPage() {
            transition={{ duration: 0.8 }}
            className="text-center flex flex-col items-center justify-center"
         >
-          <h2 className="text-[22px] sm:text-3xl md:text-4xl font-semibold mb-6 text-[#0c0e0b]">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+            Built For Real-World Connection
+          </span>
+          <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 text-slate-900">
             Built for Real-World Interaction.
           </h2>
-          <p className="text-[#0c0e0b]/70 leading-relaxed text-sm sm:text-base max-w-2xl mx-auto mb-8">
+          <p className="text-slate-600 leading-relaxed text-base sm:text-lg max-w-2xl mx-auto mb-8 font-normal">
             From school and communities to business and networking events, Rifelo helps you share who you are without effort. No more missed connections.
           </p>
           <motion.div
@@ -1611,7 +1882,7 @@ export default function LandingPage() {
                   </div>
                   <span className="font-bold text-xl sm:text-2xl tracking-tight text-[#0c0e0b]">Rifelo</span>
                 </Link>
-                <p className="text-sm text-[#0c0e0b]/50 leading-relaxed font-medium mb-8">
+                <p className="text-sm text-slate-600 leading-relaxed font-normal mb-8">
                   Designing the future of intentional connections. Rifelo is an NFC-powered dynamic profile platform for modern networking.
                 </p>
                 <div className="flex gap-4 sm:gap-5">
@@ -1625,7 +1896,7 @@ export default function LandingPage() {
                       href={social.href} 
                       target="_blank" 
                       title={social.label}
-                      className="p-2 rounded-xl bg-[#F4F3EE] text-[#0c0e0b]/40 hover:text-white hover:bg-[#1A1A1A] transition-all duration-300"
+                      className="p-2.5 rounded-xl bg-[#F4F3EE] text-slate-500 hover:text-white hover:bg-[#1A1A1A] transition-all duration-300"
                     >
                       <social.icon className="w-4 h-4 sm:w-5 sm:h-5" />
                     </Link>
@@ -1639,28 +1910,28 @@ export default function LandingPage() {
                 <div className="grid grid-cols-2 gap-x-12 gap-y-10 sm:gap-16">
                   {/* Product */}
                   <div>
-                    <h4 className="font-bold text-[#0c0e0b] mb-5 text-sm uppercase tracking-wider">Product</h4>
-                    <ul className="space-y-3 text-sm text-[#0c0e0b]/50 font-medium">
-                      <li><Link href="/what-is-rifelo" className="hover:text-[#0c0e0b] transition-colors">Features</Link></li>
-                      <li><Link href="/rifelo-features" className="hover:text-[#0c0e0b] transition-colors">Pricing</Link></li>
-                      <li><Link href="/join-rifelo" className="hover:text-[#0c0e0b] transition-colors">Dynamic Profile</Link></li>
+                    <h4 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-wider">Product</h4>
+                    <ul className="space-y-3 text-sm text-slate-600 font-normal">
+                      <li><Link href="/what-is-rifelo" className="hover:text-slate-900 transition-colors">Features</Link></li>
+                      <li><Link href="/rifelo-features" className="hover:text-slate-900 transition-colors">Pricing</Link></li>
+                      <li><Link href="/join-rifelo" className="hover:text-slate-900 transition-colors">Dynamic Profile</Link></li>
                     </ul>
                   </div>
 
                   {/* Support & Legal Combined on mobile maybe? No, let's keep it clear */}
                   <div className="space-y-10">
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] mb-5 text-sm uppercase tracking-wider">Support</h4>
-                      <ul className="space-y-3 text-sm text-[#0c0e0b]/50 font-medium">
-                        <li><Link href="/contact" className="hover:text-[#0c0e0b] transition-colors">Help Center</Link></li>
-                        <li><Link href="/contact" className="hover:text-[#0c0e0b] transition-colors">Contact Us</Link></li>
+                      <h4 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-wider">Support</h4>
+                      <ul className="space-y-3 text-sm text-slate-600 font-normal">
+                        <li><Link href="/contact" className="hover:text-slate-900 transition-colors">Help Center</Link></li>
+                        <li><Link href="/contact" className="hover:text-slate-900 transition-colors">Contact Us</Link></li>
                       </ul>
                     </div>
                     <div>
-                      <h4 className="font-bold text-[#0c0e0b] mb-5 text-sm uppercase tracking-wider">Legal</h4>
-                      <ul className="space-y-3 text-sm text-[#0c0e0b]/50 font-medium">
-                        <li><Link href="/privacy" className="hover:text-[#0c0e0b] transition-colors">Privacy Policy</Link></li>
-                        <li><Link href="/terms" className="hover:text-[#0c0e0b] transition-colors">Terms of Service</Link></li>
+                      <h4 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-wider">Legal</h4>
+                      <ul className="space-y-3 text-sm text-slate-600 font-normal">
+                        <li><Link href="/privacy" className="hover:text-slate-900 transition-colors">Privacy Policy</Link></li>
+                        <li><Link href="/terms" className="hover:text-slate-900 transition-colors">Terms of Service</Link></li>
                       </ul>
                     </div>
                   </div>
@@ -1668,8 +1939,8 @@ export default function LandingPage() {
 
                 {/* Newsletter Shortcut */}
                 <div className="max-w-[280px]">
-                   <h4 className="font-bold text-[#0c0e0b] mb-5 text-sm uppercase tracking-wider">Stay Connected</h4>
-                   <p className="text-xs text-[#0c0e0b]/50 mb-4 leading-relaxed font-medium">
+                   <h4 className="font-bold text-slate-900 mb-4 text-xs uppercase tracking-wider">Stay Connected</h4>
+                   <p className="text-xs text-slate-500 mb-4 leading-relaxed font-normal">
                      Get the latest updates on NFC features and networking tips.
                    </p>
                    {subscribeStatus === 'success' ? (
@@ -1678,9 +1949,9 @@ export default function LandingPage() {
                        animate={{ opacity: 1, scale: 1 }}
                        className="p-4 rounded-xl bg-[#F4F3EE] border border-black/5 flex flex-col items-center text-center gap-1"
                      >
-                       <CheckCircle2 className="w-5 h-5 text-green-600 mb-1 animate-bounce" />
-                       <span className="text-xs font-bold text-[#0c0e0b]">Subscribed!</span>
-                       <span className="text-[10px] text-[#0c0e0b]/50 font-medium leading-normal">
+                       <CheckCircle2 className="w-5 h-5 text-emerald-600 mb-1" />
+                       <span className="text-xs font-bold text-slate-900">Subscribed!</span>
+                       <span className="text-[11px] text-slate-500 font-normal leading-normal">
                          Thank you for subscribing to Rifelo updates.
                        </span>
                      </motion.div>
@@ -1705,14 +1976,14 @@ export default function LandingPage() {
 
             {/* Bottom Row */}
             <div className="pt-8 border-t border-[#0c0e0b]/5 flex flex-col sm:flex-row items-center justify-between gap-6">
-              <p className="text-xs sm:text-sm text-[#0c0e0b]/40 font-medium order-2 sm:order-1">
+              <p className="text-xs sm:text-sm text-slate-500 font-normal order-2 sm:order-1">
                 © {mounted ? new Date().getFullYear() : '2026'} Rifelo Inc. All rights reserved.
               </p>
-              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-[11px] sm:text-xs font-bold uppercase tracking-widest order-1 sm:order-2">
-                <Link href="/privacy" className="text-[#0c0e0b]/30 hover:text-[#0c0e0b] transition-colors">Privacy</Link>
-                <Link href="/terms" className="text-[#0c0e0b]/30 hover:text-[#0c0e0b] transition-colors">Terms</Link>
-                <div className="w-1 h-1 rounded-full bg-[#0c0e0b]/10 hidden sm:block" />
-                <button className="text-[#0c0e0b]/30 hover:text-[#0c0e0b] transition-colors">Cookies</button>
+              <div className="flex flex-wrap items-center justify-center gap-6 sm:gap-8 text-xs font-semibold uppercase tracking-wider order-1 sm:order-2">
+                <Link href="/privacy" className="text-slate-500 hover:text-slate-900 transition-colors">Privacy</Link>
+                <Link href="/terms" className="text-slate-500 hover:text-slate-900 transition-colors">Terms</Link>
+                <div className="w-1 h-1 rounded-full bg-slate-300 hidden sm:block" />
+                <button className="text-slate-500 hover:text-slate-900 transition-colors">Cookies</button>
               </div>
             </div>
           </div>
