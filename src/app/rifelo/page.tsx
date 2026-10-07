@@ -2,8 +2,8 @@ import Link from "next/link";
 import { Metadata } from 'next';
 
 export const metadata: Metadata = {
-  title: "Rifelo - Your Identity, Instantly Shared",
-  description: "Rifelo is a digital identity platform that makes it easy to share who you are and connect instantly.",
+  title: "Rifelo - Your Dynamic Profile, Instantly Shared",
+  description: "Rifelo is a dynamic profile platform that makes it easy to share who you are and connect instantly.",
   alternates: {
     canonical: "https://rifelo.id/rifelo",
   }
@@ -34,16 +34,16 @@ export default function RifeloEntityPage() {
           
           <div className="space-y-6 text-[#0c0e0b]/80 leading-relaxed text-base md:text-lg">
             <p>
-              <strong>Rifelo</strong> is a digital identity platform that makes it easy to share who you are and connect instantly.
+              <strong>Rifelo</strong> is a dynamic profile platform that makes it easy to share who you are and connect instantly.
             </p>
             <p>
-              With a simple tap, your profile opens and allows others to view your information, explore your links, and interact with you right away.
+              With a simple tap, your dynamic profile opens and allows others to view your information, explore your links, and interact with you right away.
             </p>
             <p>
               Rifelo is designed for real-world situations where speed and simplicity matter. Whether you're at school, events, or meeting new people, Rifelo removes friction and makes interaction effortless.
             </p>
             <p>
-              By combining physical access (like NFC) with dynamic digital profiles, Rifelo creates a seamless bridge between the physical and digital world.
+              By combining physical access (like NFC) with dynamic profiles, Rifelo creates a seamless bridge between the physical and digital world.
             </p>
             <p className="pt-6 border-t border-[#aaafbc]/10 text-sm md:text-base mt-2">
               Rifelo operates through its official domain at <strong>rifelo.id</strong>.
