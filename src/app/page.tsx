@@ -155,7 +155,7 @@ function PrivacyControlMockup() {
       >
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs">
-            <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-pink-600" />
+            <Instagram className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-800" />
           </div>
           <div className="flex-1 truncate">
             <p className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate leading-tight">
@@ -175,7 +175,7 @@ function PrivacyControlMockup() {
             className={`p-1.5 rounded-md transition-colors ${
               isInstagramHidden
                 ? 'text-slate-400 bg-slate-100'
-                : 'text-emerald-500 bg-emerald-50/80'
+                : 'text-slate-900 bg-slate-100 border border-slate-200/60'
             }`}
           >
             {isInstagramHidden ? (
@@ -197,7 +197,7 @@ function PrivacyControlMockup() {
       <div className="flex items-center justify-between px-3 py-2 sm:py-2.5 rounded-2xl border border-slate-200/90 bg-white shadow-2xs transition-all">
         <div className="flex items-center gap-2.5 flex-1 min-w-0">
           <div className="w-7 h-7 sm:w-8 sm:h-8 rounded-xl bg-white border border-slate-200/70 flex items-center justify-center shrink-0 shadow-2xs">
-            <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-emerald-500" />
+            <MessageCircle className="w-3.5 h-3.5 sm:w-4 sm:h-4 text-slate-800" />
           </div>
           <div className="flex-1 truncate">
             <p className="text-xs sm:text-[13px] font-semibold text-slate-900 truncate leading-tight">
@@ -211,7 +211,7 @@ function PrivacyControlMockup() {
 
         {/* Action controls directly matching /profile */}
         <div className="flex items-center gap-1 shrink-0 ml-2">
-          <div className="p-1.5 text-emerald-500 bg-emerald-50/80 rounded-md">
+          <div className="p-1.5 text-slate-900 bg-slate-100 border border-slate-200/60 rounded-md">
             <Eye className="w-3.5 h-3.5" />
           </div>
           <div className="p-1.5 text-slate-400 rounded-md">
@@ -292,17 +292,13 @@ function DirectInboxMockup() {
               Hi, I'm the one who just talked to you on the bus, nice portfolio btw!
             </div>
 
-            {/* Send Button directly styled with warm gold from screenshot */}
+            {/* Send Button styled with minimalist monochrome */}
             <motion.div
               animate={isSending ? { scale: 0.95, opacity: 0.9 } : { scale: 1, opacity: 1 }}
               transition={{ duration: 0.2 }}
-              className="w-full flex items-center justify-center px-3 py-1.5 sm:py-2 text-[9px] sm:text-[9.5px] font-bold rounded-xl shadow-2xs cursor-pointer select-none"
-              style={{
-                backgroundColor: '#dfc681',
-                color: '#524116',
-              }}
+              className="w-full flex items-center justify-center px-3 py-1.5 sm:py-2 text-[9px] sm:text-[9.5px] font-bold rounded-xl shadow-2xs cursor-pointer select-none bg-[#1A1A1A] hover:bg-black text-white"
             >
-              <Send className="w-3 h-3 mr-1.5 text-[#524116]" />
+              <Send className="w-3 h-3 mr-1.5 text-white" />
               {isSending ? 'Sending...' : 'Send Message'}
             </motion.div>
           </motion.div>
@@ -353,72 +349,72 @@ function DirectInboxMockup() {
 function CircleResonanceMockup() {
   return (
     <div className="relative w-full h-full min-h-[220px] flex items-center justify-center select-none overflow-hidden p-6">
-      {/* Deep Ambient Radial Glow behind the central circle (exact teal/emerald aura from image) */}
+      {/* Deep Ambient Monochrome Glow behind the central circle */}
       <div 
         className="absolute w-44 h-44 sm:w-52 sm:h-52 rounded-full pointer-events-none transition-transform duration-1000"
         style={{
-          background: 'radial-gradient(circle, rgba(20, 184, 166, 0.5) 0%, rgba(13, 148, 136, 0.25) 40%, rgba(5, 150, 105, 0.08) 65%, transparent 80%)',
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.1) 0%, rgba(255, 255, 255, 0.03) 40%, transparent 75%)',
           filter: 'blur(22px)',
         }}
       />
       
       {/* Pulsing Aura Wave */}
       <motion.div 
-        animate={{ scale: [1, 1.08, 1], opacity: [0.6, 0.85, 0.6] }}
+        animate={{ scale: [1, 1.08, 1], opacity: [0.4, 0.7, 0.4] }}
         transition={{ repeat: Infinity, duration: 4, ease: "easeInOut" }}
         className="absolute w-36 h-36 sm:w-42 sm:h-42 rounded-full pointer-events-none"
         style={{
-          background: 'radial-gradient(circle, rgba(45, 212, 191, 0.45) 0%, rgba(20, 184, 166, 0.18) 45%, transparent 70%)',
+          background: 'radial-gradient(circle, rgba(255, 255, 255, 0.08) 0%, rgba(255, 255, 255, 0.02) 45%, transparent 70%)',
           filter: 'blur(14px)',
         }}
       />
 
-      {/* Orbit Stage - properly scaled with breathing room to prevent clipping */}
+      {/* Orbit Stage */}
       <div className="relative w-36 h-36 sm:w-40 sm:h-40 flex items-center justify-center">
-        {/* 4 Auras without names revolving smoothly around the circle (NO dashed line) */}
+        {/* 4 Neutral Silver Auras revolving smoothly around the circle */}
         <div className="absolute inset-0 animate-[spin_24s_linear_infinite]">
           {/* Aura 1: Top (0°) */}
           <div className="absolute top-0 left-1/2 -translate-x-1/2 -translate-y-1/2">
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
-              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+              <div className="absolute w-5 h-5 rounded-full bg-white/20 blur-sm animate-pulse" />
+              <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border border-white/80" />
             </div>
           </div>
 
           {/* Aura 2: Right (90°) */}
           <div className="absolute top-1/2 right-0 translate-x-1/2 -translate-y-1/2">
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
-              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+              <div className="absolute w-5 h-5 rounded-full bg-white/20 blur-sm animate-pulse" />
+              <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border border-white/80" />
             </div>
           </div>
 
           {/* Aura 3: Bottom (180°) */}
           <div className="absolute bottom-0 left-1/2 -translate-x-1/2 translate-y-1/2">
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
-              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+              <div className="absolute w-5 h-5 rounded-full bg-white/20 blur-sm animate-pulse" />
+              <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border border-white/80" />
             </div>
           </div>
 
           {/* Aura 4: Left (270°) */}
           <div className="absolute top-1/2 left-0 -translate-x-1/2 -translate-y-1/2">
             <div className="relative flex items-center justify-center">
-              <div className="absolute w-6 h-6 rounded-full bg-teal-400/35 blur-md animate-pulse" />
-              <div className="w-3.5 h-3.5 rounded-full bg-teal-300 shadow-[0_0_12px_rgba(45,212,191,0.9),0_0_20px_rgba(20,184,166,0.6)] border border-white/70" />
+              <div className="absolute w-5 h-5 rounded-full bg-white/20 blur-sm animate-pulse" />
+              <div className="w-3 h-3 rounded-full bg-white shadow-[0_0_10px_rgba(255,255,255,0.8)] border border-white/80" />
             </div>
           </div>
         </div>
 
-        {/* Large Central Circle with 'Rifelo' (exact match with image.png) */}
+        {/* Large Central Circle with 'Rifelo' in Matte Obsidian */}
         <div 
-          className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full flex items-center justify-center z-10 shadow-[0_0_30px_rgba(13,148,136,0.4),inset_0_0_20px_rgba(0,0,0,0.7)] border border-teal-500/30 transition-transform duration-500 group-hover:scale-105"
+          className="relative w-22 h-22 sm:w-26 sm:h-26 rounded-full flex items-center justify-center z-10 shadow-[0_0_30px_rgba(0,0,0,0.8),inset_0_0_15px_rgba(255,255,255,0.05)] border border-white/15 transition-transform duration-500 group-hover:scale-105"
           style={{
-            background: 'radial-gradient(circle at 45% 45%, #0d2822 0%, #061713 70%, #030d0a 100%)',
+            background: 'radial-gradient(circle at 45% 45%, #222222 0%, #141414 70%, #0a0a0a 100%)',
           }}
         >
-          {/* Subtle inner emerald rim glow */}
-          <div className="absolute inset-0 rounded-full border border-teal-300/10 pointer-events-none" />
+          {/* Subtle inner rim */}
+          <div className="absolute inset-0 rounded-full border border-white/5 pointer-events-none" />
           
           {/* Text 'Rifelo' */}
           <span className="text-white font-bold text-base sm:text-lg tracking-wide drop-shadow-[0_2px_8px_rgba(0,0,0,0.8)]">
@@ -530,7 +526,7 @@ function SpecialCustomDirectMockup() {
             transition={{ duration: 0.25 }}
             className={`w-full py-1.5 rounded-lg font-semibold text-[8.5px] sm:text-[9px] transition-all shadow-2xs flex items-center justify-center gap-1.5 cursor-pointer ${
               isSaved 
-                ? 'bg-emerald-600 text-white' 
+                ? 'bg-[#1A1A1A] text-white' 
                 : 'bg-slate-900 text-white hover:bg-slate-800'
             }`}
           >
@@ -638,7 +634,7 @@ function PremiumDesignCard({ item, index, activeCarouselSlide, setActiveCarousel
       
       <div className="text-left w-full px-3 pb-1 flex-grow flex flex-col justify-between select-none pointer-events-none">
         <div>
-          <span className="text-[10px] uppercase tracking-widest font-bold text-[#d4af37] mb-2 block">{item.badge}</span>
+          <span className="text-[10px] uppercase tracking-widest font-bold text-slate-700 mb-2 block">{item.badge}</span>
           <h3 className="text-lg font-bold tracking-tight text-[#0c0e0b] mb-2">{item.title}</h3>
           <p className="text-xs sm:text-sm text-[#0c0e0b]/70 leading-relaxed font-medium line-clamp-3">{item.desc}</p>
         </div>
@@ -753,7 +749,7 @@ export default function LandingPage() {
         color: demoCircleMembers[index].color || defaultList[index].color
       };
     }
-    return defaultList[index] || { name: `Member ${index + 1}`, color: '#d4af37' };
+    return defaultList[index] || { name: `Member ${index + 1}`, color: '#1A1A1A' };
   };
 
   const structuredData = {
@@ -906,26 +902,26 @@ export default function LandingPage() {
         ...demoCircleMembers.map((m: any, i: number) => ({
           id: m.id || `m-${i}`,
           name: m.profiles?.full_name || m.profiles?.username || `Member ${i + 1}`,
-          color: m.color || (i === 0 ? '#059669' : '#2563EB')
+          color: m.color || (i === 0 ? '#1A1A1A' : '#333333')
         })),
         ...(demoCircleMembers.length < 4 ? [
-          { id: 'demo-3', name: 'Sarah K.', color: '#FF9500' },
-          { id: 'demo-4', name: 'Alex T.', color: '#FF2D55' },
-          { id: 'demo-5', name: 'Elena R.', color: '#AF52DE' },
-          { id: 'demo-6', name: 'David M.', color: '#00C7BE' },
+          { id: 'demo-3', name: 'Sarah K.', color: '#404040' },
+          { id: 'demo-4', name: 'Alex T.', color: '#525252' },
+          { id: 'demo-5', name: 'Elena R.', color: '#666666' },
+          { id: 'demo-6', name: 'David M.', color: '#787878' },
         ].slice(0, 6 - demoCircleMembers.length) : [])
       ]
     : [
-        { id: '1', name: 'Marfel RP (Admin)', color: '#059669' },
-        { id: '2', name: 'Marfel (Member)', color: '#2563EB' },
-        { id: '3', name: 'Sarah K.', color: '#FF9500' },
-        { id: '4', name: 'Alex T.', color: '#FF2D55' },
-        { id: '5', name: 'Elena R.', color: '#AF52DE' },
-        { id: '6', name: 'David M.', color: '#00C7BE' }
+        { id: '1', name: 'Marfel RP (Admin)', color: '#1A1A1A' },
+        { id: '2', name: 'Marfel (Member)', color: '#2E2E2E' },
+        { id: '3', name: 'Sarah K.', color: '#404040' },
+        { id: '4', name: 'Alex T.', color: '#525252' },
+        { id: '5', name: 'Elena R.', color: '#666666' },
+        { id: '6', name: 'David M.', color: '#787878' }
       ];
 
   return (
-    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-[#d4af37]/30 selection:text-[#0c0e0b] flex flex-col w-full relative">
+    <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-slate-900 selection:text-white flex flex-col w-full relative">
       {/* 1. Navbar (Minimalist) */}
       <div className="fixed top-0 left-0 w-full z-50 flex justify-center bg-[#F4F3EE]/60 backdrop-blur-md border-b border-[#0c0e0b]/5">
         <nav className="w-full flex items-center justify-between py-2.5 px-4 md:px-12 max-w-7xl">
@@ -960,8 +956,8 @@ export default function LandingPage() {
       {/* 2. Hero Section */}
       <main ref={containerRef} className="relative w-full h-[260vh]">
         <div className="sticky top-0 flex flex-col items-center justify-center overflow-hidden w-full h-[100svh]">
-          {/* Subtle background glow */}
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-[#d4af37]/5 rounded-full blur-3xl pointer-events-none" />
+          {/* Subtle background ambient depth */}
+          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[600px] bg-black/[0.02] rounded-full blur-3xl pointer-events-none" />
 
           <div className="max-w-5xl mx-auto px-4 relative z-10 w-full flex-1 flex flex-col items-center justify-center">
           
@@ -971,7 +967,7 @@ export default function LandingPage() {
               style={{ opacity: textOpacity, scale: textScale }}
               className="absolute z-50 flex flex-col items-center justify-center text-center w-[90vw] max-w-xl pointer-events-none"
             >
-              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-[#d4af37] mb-2 sm:mb-3 block">
+              <span className="text-[11px] sm:text-xs font-bold uppercase tracking-[0.2em] text-slate-900 mb-2 sm:mb-3 block">
                 NFC Dynamic Profile
               </span>
               <h1 className="font-bold tracking-tight text-slate-900 leading-none flex flex-col items-center justify-center w-full mb-4">
@@ -993,7 +989,7 @@ export default function LandingPage() {
                     initial={{ opacity: 0, scale: 0.5 }}
                     animate={{ opacity: 1, scale: 1 }}
                     transition={{ delay: 0.1, duration: 0.5, ease: "easeOut" }}
-                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[192px] bg-[#d4af37]/20 blur-3xl rounded-full pointer-events-none z-0"
+                    className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 aspect-square w-full max-w-[192px] bg-black/10 blur-3xl rounded-full pointer-events-none z-0"
                   />
                 )}
               </AnimatePresence>
@@ -1069,7 +1065,7 @@ export default function LandingPage() {
           viewport={{ once: true }}
           transition={{ duration: 0.8 }}
         >
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700 mb-3 block">
             Unified Identity
           </span>
           <h2 className="text-3xl sm:text-4xl font-bold tracking-tight mb-4 text-slate-900">
@@ -1118,8 +1114,8 @@ export default function LandingPage() {
         <div className="flex flex-col lg:flex-row items-center justify-center gap-12 lg:gap-24 w-full max-w-6xl">
           {/* Interactive Mockup with 100% Exact Physical Smartphone Chassis from /profile */}
           <div className="relative flex items-center justify-center shrink-0">
-            {/* Ambient Warm Halo behind the smartphone */}
-            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-[#d4af37]/15 rounded-full blur-[90px] pointer-events-none" />
+            {/* Ambient Neutral Halo behind the smartphone */}
+            <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-80 h-80 bg-black/5 rounded-full blur-[80px] pointer-events-none" />
 
             {/* Scaled Device Wrapper with exact layout dimensions to fit 100% cleanly on mobile and desktop without clipping */}
             <div id="demo-box" className="w-[270px] sm:w-[312px] h-[567px] sm:h-[654px] relative shrink-0 flex justify-center my-auto scroll-mt-[100px]">
@@ -1184,7 +1180,7 @@ export default function LandingPage() {
                             : 'bg-white/10 border border-white/10 text-white/80 hover:text-white hover:bg-white/15'
                         }`}
                       >
-                        <Lock className={`w-3 h-3 shrink-0 ${circleView === 'public' ? 'text-emerald-600' : 'text-[#d4af37]'}`} />
+                        <Lock className={`w-3 h-3 shrink-0 ${circleView === 'public' ? 'text-slate-700' : 'text-white/80'}`} />
                         <span className="font-mono text-[11.5px] select-none font-semibold">
                           {circleView === 'public' ? 'rifelo.id/u/marfel' : 'rifelo.id/c/circle'}
                         </span>
@@ -1240,7 +1236,7 @@ export default function LandingPage() {
                           {/* Top Navigation Status & Header (Exact 100% from /c/circle lines 501-523) */}
                           <div className="text-center z-20 mt-2 mb-2 shrink-0">
                             <div className="flex items-center justify-center gap-1.5 mb-1.5">
-                              <div className="w-1.5 h-1.5 rounded-full bg-emerald-500 animate-pulse" />
+                              <div className="w-1.5 h-1.5 rounded-full bg-white/80 animate-pulse" />
                               <span className="text-[9px] font-black uppercase tracking-widest text-white/50">
                                 {phase === 'accelerating' || phase === 'merged' ? circleMembersList.length : 2} / {circleMembersList.length} Active
                               </span>
@@ -1379,7 +1375,7 @@ export default function LandingPage() {
                               disabled={phase === 'accelerating'}
                               className={`w-full py-2.5 px-4 rounded-xl text-xs font-semibold tracking-wider transition-all duration-300 flex items-center justify-center active:scale-95 cursor-pointer select-none ${
                                 phase === 'merged'
-                                  ? 'bg-[#d4af37] text-black hover:bg-[#e2c77d] shadow-sm'
+                                  ? 'bg-white text-black hover:bg-slate-200 shadow-sm'
                                   : phase === 'accelerating'
                                   ? 'bg-white/10 text-white/50 border border-white/10 cursor-wait'
                                   : 'bg-white/10 hover:bg-white/15 text-white/90 hover:text-white border border-white/10'
@@ -1408,7 +1404,7 @@ export default function LandingPage() {
           
           {/* Text Description Container */}
           <div className="text-center lg:text-left max-w-xl flex flex-col items-center lg:items-start px-4 shrink-0">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-2 sm:mb-3 block">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700 mb-2 sm:mb-3 block">
               {circleView === 'public' ? 'Instant Access' : 'Shared Frequency'}
             </span>
             <h2 className="text-3xl sm:text-4xl font-bold tracking-tight text-slate-900 mb-3 leading-tight flex flex-col items-center lg:items-start">
@@ -1501,7 +1497,7 @@ export default function LandingPage() {
       {/* 2.5 Premium Model Carousel */}
       <section className="py-16 md:py-20 lg:py-24 px-4 sm:px-6 md:px-12 max-w-7xl mx-auto w-full relative z-10 overflow-hidden">
         <div className="flex flex-col items-center mb-8 sm:mb-12 md:mb-16 text-center">
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700 mb-3 block">
             Tactile Craftsmanship
           </span>
           <motion.h2 
@@ -1559,7 +1555,7 @@ export default function LandingPage() {
                 </div>
                 <div className="text-left w-full px-3 xl:px-4 pb-1 flex-grow flex flex-col justify-between">
                   <div>
-                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-[#d4af37] mb-2.5 block">{item.badge}</span>
+                    <span className="text-[10px] md:text-xs uppercase tracking-widest font-bold text-slate-700 mb-2.5 block">{item.badge}</span>
                     <h3 className="text-xl md:text-2xl tracking-tight font-bold text-slate-900 mb-3 leading-tight">{item.title}</h3>
                     <p className="text-sm md:text-base text-slate-600 leading-relaxed font-normal">{item.desc}</p>
                   </div>
@@ -1637,7 +1633,7 @@ export default function LandingPage() {
         <div className="absolute bottom-0 right-0 w-[500px] h-[500px] bg-gradient-to-tl from-[#F4F3EE] to-transparent blur-3xl pointer-events-none opacity-50"></div>
          <div className="px-4 sm:px-6 md:px-12 max-w-6xl mx-auto relative z-10">
           <div className="flex flex-col items-center mb-16 text-center">
-            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+            <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700 mb-3 block">
               Engineered Simplicity
             </span>
             <motion.h2 
@@ -1679,7 +1675,7 @@ export default function LandingPage() {
               
               {/* Feature 1: NFC Wristband */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-black/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-black/[0.04] transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5 relative z-10 text-center">
                      <div className="w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 relative group-hover:shadow-inner transition-all duration-500">
@@ -1703,11 +1699,11 @@ export default function LandingPage() {
 
               {/* Feature 2: Privacy First Control */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-black/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-black/[0.04] transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Privacy Shield/Toggle */}
-                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-emerald-50/30 transition-colors duration-500">
+                   <div className="relative z-10 w-full h-52 sm:h-56 md:h-48 lg:h-52 rounded-2xl overflow-hidden bg-slate-50 border border-black/5 flex items-center justify-center p-3 text-center group-hover:bg-slate-100/40 transition-colors duration-500">
                      <PrivacyControlMockup />
                    </div>
                  </div>
@@ -1722,7 +1718,7 @@ export default function LandingPage() {
               
               {/* Feature 3: Custom Direct */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-black/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-black/[0.04] transition-all duration-700 pointer-events-none"></div>
                  
                  {/* Visual Mockup - Top aligned with Card 2 and Card 4 */}
                  <div className="flex justify-center items-start mb-4 md:mb-5">
@@ -1742,7 +1738,7 @@ export default function LandingPage() {
 
               {/* Feature 4: Direct Inbox */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-1 lg:col-span-6 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col justify-between min-h-[440px] sm:min-h-[460px] md:min-h-[400px] lg:min-h-[440px] relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-0 w-64 h-64 bg-[#d4af37]/5 rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
+                 <div className="absolute top-0 right-0 w-64 h-64 bg-black/[0.02] rounded-full blur-3xl -translate-y-1/2 translate-x-1/2 group-hover:bg-black/[0.04] transition-all duration-700 pointer-events-none"></div>
                  
                  <div className="flex justify-center items-start mb-4 md:mb-5">
                    {/* Image Area - Inbox Mockup */}
@@ -1761,7 +1757,7 @@ export default function LandingPage() {
 
               {/* Feature 5: Circle Management */}
               <div className="flex-shrink-0 w-[85vw] sm:w-[320px] md:w-auto md:col-span-2 lg:col-span-12 bg-white border border-[#0c0e0b]/10 rounded-3xl p-6 lg:p-7 flex flex-col md:flex-row items-center justify-between gap-5 sm:gap-6 md:gap-8 relative overflow-hidden snap-center group hover:shadow-[0_12px_32px_-4px_rgba(0,0,0,0.06)] hover:border-[#0c0e0b]/20 transition-all duration-300">
-                 <div className="absolute top-0 right-1/4 w-96 h-96 bg-[#d4af37]/5 rounded-full blur-3xl group-hover:bg-[#d4af37]/10 transition-all duration-700 pointer-events-none"></div>
+                 <div className="absolute top-0 right-1/4 w-96 h-96 bg-black/[0.02] rounded-full blur-3xl group-hover:bg-black/[0.04] transition-all duration-700 pointer-events-none"></div>
                  <div className="flex-1 relative z-10 max-w-2xl">
                    <h3 className="text-xl sm:text-2xl font-bold tracking-tight text-slate-900 mb-1.5">Circle Management</h3>
                    <p className="text-slate-600 leading-relaxed text-sm sm:text-base font-normal">
@@ -1769,7 +1765,7 @@ export default function LandingPage() {
                    </p>
                  </div>
                  {/* Image Area - Circle Management Graphic */}
-                 <div className="relative z-10 w-full md:w-[340px] h-64 md:h-auto self-stretch rounded-2xl overflow-hidden bg-[#040e0b] flex-shrink-0 border border-teal-500/20 flex items-center justify-center p-4 text-center group-hover:border-teal-500/40 transition-colors duration-500">
+                 <div className="relative z-10 w-full md:w-[340px] h-64 md:h-auto self-stretch rounded-2xl overflow-hidden bg-[#0a0a0a] flex-shrink-0 border border-white/10 flex items-center justify-center p-4 text-center group-hover:border-white/20 transition-colors duration-500">
                     <CircleResonanceMockup />
                  </div>
               </div>
@@ -1794,7 +1790,7 @@ export default function LandingPage() {
                   }}
                   className={`h-1.5 rounded-full transition-all duration-300 ${
                     bentoActiveIndex === idx 
-                      ? 'w-6 bg-[#d4af37]' 
+                      ? 'w-6 bg-[#1A1A1A]' 
                       : 'w-1.5 bg-slate-300 hover:bg-slate-400'
                   }`}
                   aria-label={`Slide ${idx + 1}`}
@@ -1814,7 +1810,7 @@ export default function LandingPage() {
            transition={{ duration: 0.8 }}
            className="text-center flex flex-col items-center justify-center"
         >
-          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-[#d4af37] mb-3 block">
+          <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-slate-700 mb-3 block">
             Built For Real-World Connection
           </span>
           <h2 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight mb-4 text-slate-900">
@@ -1949,7 +1945,7 @@ export default function LandingPage() {
                        animate={{ opacity: 1, scale: 1 }}
                        className="p-4 rounded-xl bg-[#F4F3EE] border border-black/5 flex flex-col items-center text-center gap-1"
                      >
-                       <CheckCircle2 className="w-5 h-5 text-emerald-600 mb-1" />
+                       <CheckCircle2 className="w-5 h-5 text-slate-900 mb-1" />
                        <span className="text-xs font-bold text-slate-900">Subscribed!</span>
                        <span className="text-[11px] text-slate-500 font-normal leading-normal">
                          Thank you for subscribing to Rifelo updates.
