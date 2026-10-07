@@ -3,7 +3,7 @@
 This document serves as the absolute source of truth for UI/UX design, styling, and copywriting across the Rifelo web application, with a specific focus on the `/nfcwristband` product launch pages. It ensures consistency with the main Home page and strictly prohibits generic "AI Slop" patterns.
 
 ## 1. Core Design Philosophy
-- **Physical meets Digital:** Rifelo is a bridge between physical hardware (NFC) and digital identity. The design must feel grounded, tactile, premium, and deliberate. 
+- **Physical meets Digital:** Rifelo is a bridge between physical hardware (NFC) and dynamic profiles. The design must feel grounded, tactile, premium, and deliberate. 
 - **Premium Elegance:** Think fashion, high-end tech (Apple, Teenage Engineering), or luxury automotive. Less noise, more intent.
 - **Anti-Slop Mandate:** Absolutely NO arbitrary glowing drop-shadows, NO purple-to-blue neon gradients, NO "glassmorphism" overload, and NO generic SaaS copywriting (e.g., "Supercharge your workflow", "Empower your network").
 
