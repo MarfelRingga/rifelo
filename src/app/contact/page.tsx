@@ -66,7 +66,7 @@ export default async function ContactPage() {
             Get in Touch
           </h1>
           <p className="text-lg text-slate-600 max-w-2xl mx-auto">
-            Need help setting up your digital identity? Our support team and community channels are here to assist you with everything you need.
+            Need help setting up your dynamic profile? Our support team and community channels are here to assist you with everything you need.
           </p>
         </div>
 
