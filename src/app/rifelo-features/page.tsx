@@ -2,8 +2,8 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: "Rifelo Features - Digital Identity & NFC Interaction",
-  description: "Explore Rifelo features: Digital Profiles, Tap to Connect, and Real-Time Circles.",
+  title: "Rifelo Features - Dynamic Profile & NFC Interaction",
+  description: "Explore Rifelo features: Dynamic Profiles, Tap to Connect, and Real-Time Circles.",
 };
 
 export default function RifeloFeatures() {
@@ -31,8 +31,8 @@ export default function RifeloFeatures() {
         <div className="text-[#0c0e0b]/80 space-y-6 md:text-lg leading-relaxed">
           <div className="space-y-8 mt-12">
             <div>
-              <h2 className="text-xl md:text-2xl font-semibold text-[#0c0e0b] mb-3 tracking-tight">Digital Profile</h2>
-              <p>Create a simple profile that represents who you are and keeps everything in one place.</p>
+              <h2 className="text-xl md:text-2xl font-semibold text-[#0c0e0b] mb-3 tracking-tight">Dynamic Profile</h2>
+              <p>Create a simple dynamic profile that represents who you are and keeps everything in one place.</p>
             </div>
             
             <div>
