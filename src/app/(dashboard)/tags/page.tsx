@@ -417,7 +417,7 @@ function NFCTagsContent() {
   const getSelectedModeInfo = () => {
     if (interactionMode === 'profile') {
       return {
-        label: 'Digital Profile (Default)',
+        label: 'Dynamic Profile (Default)',
         sublabel: 'Directs to your public profile',
         icon: Globe,
         iconColor: 'text-slate-700',
@@ -493,7 +493,7 @@ function NFCTagsContent() {
     }
 
     return {
-      label: 'Digital Profile (Default)',
+      label: 'Dynamic Profile (Default)',
       sublabel: 'Directs to your public profile',
       icon: Globe,
       iconColor: 'text-slate-700',
@@ -819,7 +819,7 @@ function NFCTagsContent() {
                 {isInteractionModeOpen && (
                   <div className="mt-2.5 bg-slate-50/60 border border-slate-200/90 rounded-2xl p-1.5 max-h-72 overflow-y-auto divide-y divide-slate-100 shadow-2xs animate-in fade-in slide-in-from-top-1 duration-150">
                     
-                    {/* 1. Digital Profile default */}
+                    {/* 1. Dynamic Profile default */}
                     <div className="py-1">
                       <button
                         type="button"
@@ -838,7 +838,7 @@ function NFCTagsContent() {
                             <Globe className="w-4 h-4 text-slate-700" />
                           </div>
                           <div className="min-w-0">
-                            <div className="text-sm font-semibold truncate">Digital Profile (Default)</div>
+                            <div className="text-sm font-semibold truncate">Dynamic Profile (Default)</div>
                             <div className="text-[11px] text-slate-400 truncate">Directs to your public profile</div>
                           </div>
                         </div>
