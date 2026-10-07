@@ -2,7 +2,7 @@ import { Metadata } from 'next';
 import Link from 'next/link';
 
 export const metadata: Metadata = {
-  title: "What is Rifelo? - Digital Identity Platform",
+  title: "What is Rifelo? - Dynamic Profile Platform",
   description: "Rifelo is a simple way to connect with people in real life. Learn how to tap and connect instantly.",
 };
 
