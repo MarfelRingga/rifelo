@@ -444,7 +444,7 @@ CREATE POLICY "Allow admin write access on app_settings"
                   rows={6}
                   value={emailWelcomeBody || ''}
                   onChange={(e) => setEmailWelcomeBody(e.target.value)}
-                  placeholder={`Hi {name},\n\nYou can now set up your profile and start sharing your identity instantly. It only takes a minute.`}
+                  placeholder={`Hi {name},\n\nYou can now set up your dynamic profile and start sharing instantly. It only takes a minute.`}
                   className="block w-full px-3 py-2 border border-slate-200 rounded-xl focus:ring-2 focus:ring-slate-900 focus:border-slate-900 text-xs font-mono transition-all bg-white whitespace-pre-wrap"
                   disabled={needsMigration}
                 />
