@@ -38,11 +38,7 @@ import {
   AtSign,
   Music,
   Link as LinkIcon,
-  Smartphone,
-  RefreshCw,
-  Activity,
-  Inbox,
-  Radio
+  RefreshCw
 } from 'lucide-react';
 
 import { decodeMessageSettings } from '@/lib/messageSettings';
@@ -1419,65 +1415,35 @@ export default function LandingPage() {
             </p>
 
             {/* Feature Highlights to fill empty vertical space on desktop */}
-            <div className="flex flex-col gap-5 sm:gap-6 w-full max-w-md mb-10 lg:mb-12">
+            <div className="flex flex-col gap-6 sm:gap-7 w-full max-w-md mb-10 lg:mb-12">
               {circleView === 'public' ? (
                 <>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <Smartphone className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">No App Required</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Works instantly with any modern smartphone using NFC technology. Just tap and share.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">No App Required</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Works instantly with any modern smartphone using NFC technology. Just tap and share.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <RefreshCw className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Updates</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Change your contact info, portfolio, or social links anytime. Your wristband updates instantly.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Updates</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Change your contact info, portfolio, or social links anytime. Your wristband updates instantly.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <Inbox className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Direct Inbox</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Receive messages straight to your profile. Keep your personal contact details private and secure.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Direct Inbox</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Receive messages straight to your profile. Keep your personal contact details private and secure.</p>
                   </div>
                 </>
               ) : (
                 <>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <Users className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Instant Group Sync</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Connect multiple wristbands simultaneously. Create a unified digital presence for your circle.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Instant Group Sync</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Connect multiple wristbands simultaneously. Create a unified digital presence for your circle.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <Activity className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Live Activity</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Watch connections build as members interact. Perfect for community events and networking.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Live Activity</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Watch connections build as members interact. Perfect for community events and networking.</p>
                   </div>
-                  <div className="flex items-start gap-4 text-left">
-                    <div className="w-10 h-10 rounded-full bg-white shadow-sm border border-black/5 flex items-center justify-center shrink-0">
-                      <Radio className="w-4 h-4 text-slate-900" />
-                    </div>
-                    <div>
-                      <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Resonance</h4>
-                      <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Experience seamless synchronization across all devices when members interact within the circle.</p>
-                    </div>
+                  <div className="text-left">
+                    <h4 className="font-bold text-slate-900 text-sm sm:text-base mb-1">Real-Time Resonance</h4>
+                    <p className="text-xs sm:text-sm text-slate-500 leading-relaxed font-normal">Experience seamless synchronization across all devices when members interact within the circle.</p>
                   </div>
                 </>
               )}
