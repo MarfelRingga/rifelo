@@ -646,6 +646,23 @@ export default function LandingPage() {
     offset: ["start start", "end end"]
   });
 
+  // Track window scroll to hide navbar on scroll down and show on scroll up / at top
+  const { scrollY } = useScroll();
+  const [isNavbarVisible, setIsNavbarVisible] = useState(true);
+  const lastScrollYRef = useRef(0);
+
+  useMotionValueEvent(scrollY, "change", (latest) => {
+    const previous = lastScrollYRef.current;
+    if (latest <= 60) {
+      setIsNavbarVisible(true);
+    } else if (latest > previous + 8) {
+      setIsNavbarVisible(false);
+    } else if (latest < previous - 8) {
+      setIsNavbarVisible(true);
+    }
+    lastScrollYRef.current = latest;
+  });
+
   const textOpacity = useTransform(scrollYProgress, [0, 0.25], [1, 0]);
   const textScale = useTransform(scrollYProgress, [0, 0.25], [1, 0.95]);
 
@@ -918,8 +935,12 @@ export default function LandingPage() {
 
   return (
     <div className="min-h-screen bg-[#F4F3EE] font-sans selection:bg-slate-900 selection:text-white flex flex-col w-full relative">
-      {/* 1. Navbar (Minimalist) */}
-      <div className="fixed top-0 left-0 w-full z-50 flex justify-center bg-[#F4F3EE]/60 backdrop-blur-md border-b border-[#0c0e0b]/5">
+      {/* 1. Navbar (Minimalist - auto-hide on scroll down, visible at top & scroll up) */}
+      <div 
+        className={`fixed top-0 left-0 w-full z-50 flex justify-center bg-[#F4F3EE]/80 backdrop-blur-md border-b border-[#0c0e0b]/5 transition-transform duration-300 ease-in-out ${
+          isNavbarVisible ? 'translate-y-0' : '-translate-y-full'
+        }`}
+      >
         <nav className="w-full flex items-center justify-between py-2.5 px-4 md:px-12 max-w-7xl">
           <Link href="/" className="flex items-center gap-2 group">
           <div className="relative w-7 h-7 transition-transform group-hover:scale-105">
